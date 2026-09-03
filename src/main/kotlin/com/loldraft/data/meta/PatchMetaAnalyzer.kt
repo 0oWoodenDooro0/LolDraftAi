@@ -7,6 +7,7 @@ import com.loldraft.data.models.PickSelection
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.normalization.ChampionNormalizer
+import kotlin.math.log10
 
 class PatchMetaAnalyzer(
     private val defaultConfig: PatchMetaConfig = PatchMetaConfig(),
@@ -195,7 +196,7 @@ class PatchMetaAnalyzer(
             val winRateB = statsMap[cB]?.winRate ?: 0.50
             val expectedWinRate = (winRateA + winRateB) / 2.0
             val winRateDelta = synergyWinRate - expectedWinRate
-            val synergyScore = winRateDelta * (1.0 + Math.log10(gamesTogether.toDouble()))
+            val synergyScore = winRateDelta * (1.0 + log10(gamesTogether.toDouble()))
 
             synergies.add(
                 ChampionSynergy(
