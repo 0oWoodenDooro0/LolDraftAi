@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class ActionType {
     BAN,
-    PICK
+    PICK,
 }

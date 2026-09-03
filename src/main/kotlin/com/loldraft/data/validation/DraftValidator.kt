@@ -5,10 +5,12 @@ import com.loldraft.data.models.DraftTurn
 import com.loldraft.data.models.DraftTurnSpec
 
 class DraftValidator(
-    private val allowEmptyBans: Boolean = false
+    private val allowEmptyBans: Boolean = false,
 ) {
-
-    fun validateTurn(turn: DraftTurn, previousTurns: List<DraftTurn>): ValidationResult {
+    fun validateTurn(
+        turn: DraftTurn,
+        previousTurns: List<DraftTurn>,
+    ): ValidationResult {
         val errors = mutableListOf<String>()
 
         if (turn.turnNumber !in 1..20) {
@@ -36,9 +38,10 @@ class DraftValidator(
 
         val trimmedChamp = turn.championId.trim().lowercase()
         if (trimmedChamp.isNotBlank()) {
-            val previousChamps = previousTurns
-                .map { it.championId.trim().lowercase() }
-                .toSet()
+            val previousChamps =
+                previousTurns
+                    .map { it.championId.trim().lowercase() }
+                    .toSet()
 
             if (previousChamps.contains(trimmedChamp)) {
                 errors.add("Champion '${turn.championId}' has already been selected in a previous turn")
@@ -91,20 +94,23 @@ class DraftValidator(
             errors.add("Expected Red side to have 5 picks, found ${state.redPicks.size}")
         }
 
-        val allChamps = state.blueBans + state.redBans +
+        val allChamps =
+            state.blueBans + state.redBans +
                 state.bluePicks.map { it.championId } +
                 state.redPicks.map { it.championId }
 
-        val duplicates = allChamps
-            .filter { it.isNotBlank() }
-            .groupingBy { it.trim().lowercase() }
-            .eachCount()
-            .filter { it.value > 1 }
+        val duplicates =
+            allChamps
+                .filter { it.isNotBlank() }
+                .groupingBy { it.trim().lowercase() }
+                .eachCount()
+                .filter { it.value > 1 }
 
         if (duplicates.isNotEmpty()) {
-            val dupDisplayNames = allChamps
-                .filter { champ -> duplicates.containsKey(champ.trim().lowercase()) }
-                .distinct()
+            val dupDisplayNames =
+                allChamps
+                    .filter { champ -> duplicates.containsKey(champ.trim().lowercase()) }
+                    .distinct()
             errors.add("Duplicate champions found: $dupDisplayNames")
         }
 

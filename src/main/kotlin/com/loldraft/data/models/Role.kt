@@ -8,5 +8,5 @@ enum class Role {
     JUNGLE,
     MID,
     BOT,
-    SUPPORT
+    SUPPORT,
 }
