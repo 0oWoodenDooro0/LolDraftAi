@@ -72,4 +72,38 @@ class OraclesElixirCsvParserTest {
         assertEquals("OE_2024_002", games[1].id)
         assertEquals("14.2", games[1].patch)
     }
+
+    @Test
+    fun `should parse early game stats, kills, and tournament metadata from Oracle's Elixir CSV`() {
+        val detailedCsv =
+            """
+            gameid,league,year,split,date,game,patch,side,position,playername,playerid,teamname,teamid,champion,ban1,ban2,ban3,ban4,ban5,gamelength,result,firstblood,firstdragon,golddiffat15,teamkills
+            OE_2024_003,LCK,2024,Spring,2024-01-17 17:00:00,1,14.01,Blue,top,Zeus,p1,T1,t1,Aatrox,Lucian,Kalista,Ashe,Poppy,Vi,1800,1,1,1,1250,18
+            OE_2024_003,LCK,2024,Spring,2024-01-17 17:00:00,1,14.01,Blue,team,,,T1,t1,,Lucian,Kalista,Ashe,Poppy,Vi,1800,1,1,1,1250,18
+            OE_2024_003,LCK,2024,Spring,2024-01-17 17:00:00,1,14.01,Red,top,Kiin,p6,Gen.G,t2,K'Sante,Sejuani,Azir,Rell,Lee Sin,Jarvan IV,1800,0,0,0,-1250,8
+            OE_2024_003,LCK,2024,Spring,2024-01-17 17:00:00,1,14.01,Red,team,,,Gen.G,t2,,Sejuani,Azir,Rell,Lee Sin,Jarvan IV,1800,0,0,0,-1250,8
+            """.trimIndent()
+
+        val parser = OraclesElixirCsvParser()
+        val games = parser.parseCsv(detailedCsv)
+
+        assertEquals(1, games.size)
+        val game = games.first()
+
+        assertEquals("LCK", game.tournament)
+        assertEquals("Spring", game.season)
+        assertEquals(2024, game.year)
+
+        assertNotNull(game.blueStats)
+        assertEquals(true, game.blueStats!!.firstBlood)
+        assertEquals(true, game.blueStats!!.firstDragon)
+        assertEquals(1250.0, game.blueStats!!.goldDiffAt15)
+        assertEquals(18, game.blueStats!!.kills)
+
+        assertNotNull(game.redStats)
+        assertEquals(false, game.redStats!!.firstBlood)
+        assertEquals(false, game.redStats!!.firstDragon)
+        assertEquals(-1250.0, game.redStats!!.goldDiffAt15)
+        assertEquals(8, game.redStats!!.kills)
+    }
 }

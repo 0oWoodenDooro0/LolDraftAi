@@ -12,4 +12,9 @@ data class Game(
     val draftState: DraftState,
     val winner: Side? = null,
     val durationSeconds: Int? = null,
+    val blueStats: TeamGameStats? = null,
+    val redStats: TeamGameStats? = null,
+    val tournament: String? = null,
+    val season: String? = null,
+    val year: Int? = null,
 )
