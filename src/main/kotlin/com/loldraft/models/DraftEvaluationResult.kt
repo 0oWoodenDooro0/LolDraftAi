@@ -19,4 +19,7 @@ data class DraftEvaluationResult(
     val dominantFactors: List<EvaluationFactor> = emptyList(),
     val features: DraftFeatures,
     val flaws: DraftFlawAnalysisResult? = null,
+    val evalBar: EvalBarScore? = null,
+    val timeCurve: TimeCurve? = null,
+    val compositionRadar: CompositionRadarScore? = null,
 )

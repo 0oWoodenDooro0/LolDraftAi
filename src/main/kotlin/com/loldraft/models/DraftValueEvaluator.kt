@@ -11,7 +11,6 @@ import java.io.InputStream
 import java.nio.FloatBuffer
 import kotlin.math.abs
 import kotlin.math.exp
-import kotlin.math.ln
 import kotlin.math.roundToInt
 
 interface DraftEvaluator : AutoCloseable {
@@ -35,6 +34,7 @@ interface DraftEvaluator : AutoCloseable {
 class AnalyticalDraftEvaluator(
     private val featureExtractor: DraftFeatureExtractor = DraftFeatureExtractor(),
     private val flawDetector: CompositionFlawDetector = CompositionFlawDetector(featureExtractor.tagRegistry),
+    private val timeCurveCalculator: TimeCurveCalculator = TimeCurveCalculator(featureExtractor.tagRegistry),
 ) : DraftEvaluator {
     override fun evaluate(
         draftState: DraftState,
@@ -43,7 +43,7 @@ class AnalyticalDraftEvaluator(
         redTeamProfile: TeamTacticalProfile?,
     ): DraftEvaluationResult {
         val features = featureExtractor.extract(draftState, patchMeta, blueTeamProfile, redTeamProfile)
-        return evaluateFromFeatures(features, draftState)
+        return evaluateFromFeatures(features, draftState, patchMeta, blueTeamProfile, redTeamProfile)
     }
 
     override fun evaluateBatch(
@@ -56,6 +56,9 @@ class AnalyticalDraftEvaluator(
     fun evaluateFromFeatures(
         features: DraftFeatures,
         draftState: DraftState? = null,
+        patchMeta: PatchMetaMatrix? = null,
+        blueTeamProfile: TeamTacticalProfile? = null,
+        redTeamProfile: TeamTacticalProfile? = null,
     ): DraftEvaluationResult {
         val totalPicks = (draftState?.bluePicks?.size ?: 5) + (draftState?.redPicks?.size ?: 5)
         val confidence = (totalPicks / 10.0).coerceIn(0.1, 1.0)
@@ -186,14 +189,35 @@ class AnalyticalDraftEvaluator(
         val sortedFactors = factorContributions.sortedByDescending { abs(it.impact) }
         val flaws = draftState?.let { flawDetector.analyzeDraft(it) }
 
+        val evalBar = EvalBarCalculator.calculate(blueWinRate)
+        val timeCurve =
+            timeCurveCalculator.calculate(
+                draftState = draftState ?: DraftState(),
+                features = features,
+                baselineBlueWinRate = blueWinRate,
+                patchMeta = patchMeta,
+                blueTeamProfile = blueTeamProfile,
+                redTeamProfile = redTeamProfile,
+            )
+        val compositionRadar =
+            CompositionRadarCalculator.calculate(
+                blueRadar = features.blueRadar,
+                redRadar = features.redRadar,
+                blueDamageProfile = features.blueDamageProfile,
+                redDamageProfile = features.redDamageProfile,
+            )
+
         return DraftEvaluationResult(
             blueWinRate = blueWinRate,
             redWinRate = redWinRate,
-            evalScore = logit,
+            evalScore = evalBar.score,
             confidence = confidence,
             dominantFactors = sortedFactors,
             features = features,
             flaws = flaws,
+            evalBar = evalBar,
+            timeCurve = timeCurve,
+            compositionRadar = compositionRadar,
         )
     }
 }
@@ -202,7 +226,9 @@ class DraftValueEvaluator(
     val featureExtractor: DraftFeatureExtractor = DraftFeatureExtractor(),
     val modelPath: String? = null,
     val flawDetector: CompositionFlawDetector = CompositionFlawDetector(featureExtractor.tagRegistry),
-    val fallbackEvaluator: DraftEvaluator = AnalyticalDraftEvaluator(featureExtractor, flawDetector),
+    val timeCurveCalculator: TimeCurveCalculator = TimeCurveCalculator(featureExtractor.tagRegistry),
+    val fallbackEvaluator: DraftEvaluator =
+        AnalyticalDraftEvaluator(featureExtractor, flawDetector, timeCurveCalculator),
 ) : DraftEvaluator {
     private val session: OrtSession?
     private val environment: OrtEnvironment?
@@ -253,11 +279,31 @@ class DraftValueEvaluator(
                         if (prob != null) {
                             val blueWinRate = prob.coerceIn(0.01, 0.99)
                             val redWinRate = 1.0 - blueWinRate
-                            val evalScore = ln(blueWinRate / redWinRate)
+                            val evalBar = EvalBarCalculator.calculate(blueWinRate)
+                            val evalScore = evalBar.score
                             val totalPicks = draftState.bluePicks.size + draftState.redPicks.size
                             val confidence = (totalPicks / 10.0).coerceIn(0.1, 1.0)
-                            val analytical = (fallbackEvaluator as? AnalyticalDraftEvaluator)?.evaluateFromFeatures(features, draftState)
+                            val analytical =
+                                (fallbackEvaluator as? AnalyticalDraftEvaluator)
+                                    ?.evaluateFromFeatures(features, draftState, patchMeta, blueTeamProfile, redTeamProfile)
                             val flaws = flawDetector.analyzeDraft(draftState)
+
+                            val timeCurve =
+                                timeCurveCalculator.calculate(
+                                    draftState = draftState,
+                                    features = features,
+                                    baselineBlueWinRate = blueWinRate,
+                                    patchMeta = patchMeta,
+                                    blueTeamProfile = blueTeamProfile,
+                                    redTeamProfile = redTeamProfile,
+                                )
+                            val compositionRadar =
+                                CompositionRadarCalculator.calculate(
+                                    blueRadar = features.blueRadar,
+                                    redRadar = features.redRadar,
+                                    blueDamageProfile = features.blueDamageProfile,
+                                    redDamageProfile = features.redDamageProfile,
+                                )
 
                             return DraftEvaluationResult(
                                 blueWinRate = blueWinRate,
@@ -267,6 +313,9 @@ class DraftValueEvaluator(
                                 dominantFactors = analytical?.dominantFactors ?: emptyList(),
                                 features = features,
                                 flaws = flaws,
+                                evalBar = evalBar,
+                                timeCurve = timeCurve,
+                                compositionRadar = compositionRadar,
                             )
                         }
                     }
@@ -320,13 +369,31 @@ class DraftValueEvaluator(
                                 val features = allFeatures[i]
                                 val blueWinRate = probs[i].coerceIn(0.01, 0.99)
                                 val redWinRate = 1.0 - blueWinRate
-                                val evalScore = ln(blueWinRate / redWinRate)
+                                val evalBar = EvalBarCalculator.calculate(blueWinRate)
+                                val evalScore = evalBar.score
                                 val totalPicks = draft.bluePicks.size + draft.redPicks.size
                                 val confidence = (totalPicks / 10.0).coerceIn(0.1, 1.0)
                                 val analytical =
                                     (fallbackEvaluator as? AnalyticalDraftEvaluator)
-                                        ?.evaluateFromFeatures(features, draft)
+                                        ?.evaluateFromFeatures(features, draft, patchMeta, blueTeamProfile, redTeamProfile)
                                 val flaws = flawDetector.analyzeDraft(draft)
+
+                                val timeCurve =
+                                    timeCurveCalculator.calculate(
+                                        draftState = draft,
+                                        features = features,
+                                        baselineBlueWinRate = blueWinRate,
+                                        patchMeta = patchMeta,
+                                        blueTeamProfile = blueTeamProfile,
+                                        redTeamProfile = redTeamProfile,
+                                    )
+                                val compositionRadar =
+                                    CompositionRadarCalculator.calculate(
+                                        blueRadar = features.blueRadar,
+                                        redRadar = features.redRadar,
+                                        blueDamageProfile = features.blueDamageProfile,
+                                        redDamageProfile = features.redDamageProfile,
+                                    )
 
                                 DraftEvaluationResult(
                                     blueWinRate = blueWinRate,
@@ -336,6 +403,9 @@ class DraftValueEvaluator(
                                     dominantFactors = analytical?.dominantFactors ?: emptyList(),
                                     features = features,
                                     flaws = flaws,
+                                    evalBar = evalBar,
+                                    timeCurve = timeCurve,
+                                    compositionRadar = compositionRadar,
                                 )
                             }
                         }
