@@ -1,4 +1,5 @@
 plugins {
+    application
     kotlin("jvm") version "2.1.21"
     kotlin("plugin.serialization") version "2.1.21"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
@@ -6,6 +7,10 @@ plugins {
 
 group = "com.loldraft"
 version = "0.1.0-SNAPSHOT"
+
+application {
+    mainClass.set("com.loldraft.server.ApplicationKt")
+}
 
 repositories {
     mavenCentral()
@@ -25,6 +30,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     implementation("io.ktor:ktor-server-websockets:$ktorVersion")
+    implementation("io.ktor:ktor-server-cors:$ktorVersion")
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.14.4")
@@ -34,6 +40,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    maxHeapSize = "2g"
 }
 
 kotlin {

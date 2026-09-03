@@ -54,12 +54,43 @@ class OraclesElixirCsvParser(
         val deathsIdx = colIndex["teamdeaths"] ?: colIndex["deaths"]
         val towersIdx = colIndex["towers"]
 
+        val maxIdx =
+            listOfNotNull(
+                gameIdIdx,
+                patchIdx,
+                sideIdx,
+                posIdx,
+                playerIdx,
+                playerIdIdx,
+                teamIdx,
+                teamIdIdx,
+                champIdx,
+                ban1Idx,
+                ban2Idx,
+                ban3Idx,
+                ban4Idx,
+                ban5Idx,
+                lenIdx,
+                resIdx,
+                gameNumIdx,
+                leagueIdx,
+                yearIdx,
+                splitIdx,
+                fbIdx,
+                fdIdx,
+                gd15Idx,
+                killsIdx,
+                deathsIdx,
+                towersIdx,
+            ).maxOrNull() ?: gameIdIdx
+        val colLimit = maxIdx + 1
+
         val rowsByGameId = mutableMapOf<String, MutableList<List<String>>>()
 
         while (iterator.hasNext()) {
             val line = iterator.next().trim()
             if (line.isBlank()) continue
-            val row = parseCsvLine(line)
+            val row = parseCsvLine(line, colLimit)
             if (row.size <= gameIdIdx) continue
             val gameId = row[gameIdIdx].trim()
             if (gameId.isBlank() || gameId.equals("gameid", ignoreCase = true)) continue
@@ -307,7 +338,10 @@ class OraclesElixirCsvParser(
             else -> null
         }
 
-    private fun parseCsvLine(line: String): List<String> {
+    private fun parseCsvLine(
+        line: String,
+        limit: Int = Int.MAX_VALUE,
+    ): List<String> {
         val result = mutableListOf<String>()
         val current = StringBuilder()
         var inQuotes = false
@@ -318,6 +352,9 @@ class OraclesElixirCsvParser(
                 ch == ',' && !inQuotes -> {
                     result.add(current.toString())
                     current.clear()
+                    if (result.size >= limit) {
+                        return result
+                    }
                 }
                 else -> current.append(ch)
             }
