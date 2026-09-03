@@ -4,17 +4,36 @@
   "repo": "0oWoodenDooro0/LolDraftAi",
   "branchPrefix": "feature/",
   "operator": "Antigravity",
-  "verify": [],
+  "verify": [
+    "./gradlew test"
+  ],
   "hooks": {
     "pre-commit": [],
-    "pre-submit-pr": [],
-    "pre-complete-review": []
+    "pre-submit-pr": [
+      "./gradlew test"
+    ],
+    "pre-complete-review": [
+      "./gradlew test"
+    ]
   },
-  "workflows": {},
+  "workflows": {
+    "build": {
+      "description": "Build Kotlin project artifacts",
+      "steps": [
+        "./gradlew build"
+      ]
+    },
+    "test": {
+      "description": "Run Kotlin unit test suite",
+      "steps": [
+        "./gradlew test"
+      ]
+    }
+  },
   "workflow": {
     "mergeMethod": "squash",
     "deleteBranchOnMerge": true,
-    "requireVerification": false,
+    "requireVerification": true,
     "checkoutBaseOnComplete": true,
     "checkoutBaseOnSubmitPr": true,
     "requestColumn": "REQUEST",
