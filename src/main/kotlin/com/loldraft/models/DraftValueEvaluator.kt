@@ -14,13 +14,22 @@ import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.roundToInt
 
-interface DraftEvaluator {
+interface DraftEvaluator : AutoCloseable {
     fun evaluate(
         draftState: DraftState,
         patchMeta: PatchMetaMatrix? = null,
         blueTeamProfile: TeamTacticalProfile? = null,
         redTeamProfile: TeamTacticalProfile? = null,
     ): DraftEvaluationResult
+
+    fun evaluateBatch(
+        draftStates: List<DraftState>,
+        patchMeta: PatchMetaMatrix? = null,
+        blueTeamProfile: TeamTacticalProfile? = null,
+        redTeamProfile: TeamTacticalProfile? = null,
+    ): List<DraftEvaluationResult> = draftStates.map { evaluate(it, patchMeta, blueTeamProfile, redTeamProfile) }
+
+    override fun close() {}
 }
 
 class AnalyticalDraftEvaluator(
@@ -35,6 +44,13 @@ class AnalyticalDraftEvaluator(
         val features = featureExtractor.extract(draftState, patchMeta, blueTeamProfile, redTeamProfile)
         return evaluateFromFeatures(features, draftState)
     }
+
+    override fun evaluateBatch(
+        draftStates: List<DraftState>,
+        patchMeta: PatchMetaMatrix?,
+        blueTeamProfile: TeamTacticalProfile?,
+        redTeamProfile: TeamTacticalProfile?,
+    ): List<DraftEvaluationResult> = draftStates.map { evaluate(it, patchMeta, blueTeamProfile, redTeamProfile) }
 
     fun evaluateFromFeatures(
         features: DraftFeatures,
@@ -257,6 +273,85 @@ class DraftValueEvaluator(
         return fallbackEvaluator.evaluate(draftState, patchMeta, blueTeamProfile, redTeamProfile)
     }
 
+    override fun evaluateBatch(
+        draftStates: List<DraftState>,
+        patchMeta: PatchMetaMatrix?,
+        blueTeamProfile: TeamTacticalProfile?,
+        redTeamProfile: TeamTacticalProfile?,
+    ): List<DraftEvaluationResult> {
+        if (draftStates.isEmpty()) return emptyList()
+
+        val currentSession = session
+        val currentEnv = environment
+
+        if (currentSession != null && currentEnv != null) {
+            try {
+                val batchSize = draftStates.size
+                val allFeatures =
+                    draftStates.map {
+                        featureExtractor.extract(it, patchMeta, blueTeamProfile, redTeamProfile)
+                    }
+                val totalFloats = batchSize * DraftFeatures.FEATURE_COUNT
+                val inputBuffer = FloatBuffer.allocate(totalFloats)
+                for (feat in allFeatures) {
+                    inputBuffer.put(feat.values)
+                }
+                inputBuffer.flip()
+
+                val shape = longArrayOf(batchSize.toLong(), DraftFeatures.FEATURE_COUNT.toLong())
+                val tensor = OnnxTensor.createTensor(currentEnv, inputBuffer, shape)
+
+                tensor.use { onnxTensor ->
+                    val inputName = currentSession.inputNames.iterator().next()
+                    val results = currentSession.run(mapOf(inputName to onnxTensor))
+
+                    results.use { ortResults ->
+                        val outputValue = ortResults.get(0).value
+                        val probs = extractBatchProbabilities(outputValue, batchSize)
+                        if (probs != null && probs.size == batchSize) {
+                            return draftStates.indices.map { i ->
+                                val draft = draftStates[i]
+                                val features = allFeatures[i]
+                                val blueWinRate = probs[i].coerceIn(0.01, 0.99)
+                                val redWinRate = 1.0 - blueWinRate
+                                val evalScore = ln(blueWinRate / redWinRate)
+                                val totalPicks = draft.bluePicks.size + draft.redPicks.size
+                                val confidence = (totalPicks / 10.0).coerceIn(0.1, 1.0)
+                                val analytical =
+                                    (fallbackEvaluator as? AnalyticalDraftEvaluator)
+                                        ?.evaluateFromFeatures(features, draft)
+
+                                DraftEvaluationResult(
+                                    blueWinRate = blueWinRate,
+                                    redWinRate = redWinRate,
+                                    evalScore = evalScore,
+                                    confidence = confidence,
+                                    dominantFactors = analytical?.dominantFactors ?: emptyList(),
+                                    features = features,
+                                )
+                            }
+                        }
+                    }
+                }
+            } catch (_: Throwable) {
+                // Fall back to sequential evaluation if batch tensor fails
+            }
+        }
+
+        return draftStates.map { evaluate(it, patchMeta, blueTeamProfile, redTeamProfile) }
+    }
+
+    override fun close() {
+        try {
+            session?.close()
+        } catch (_: Throwable) {
+        }
+        try {
+            environment?.close()
+        } catch (_: Throwable) {
+        }
+    }
+
     private fun extractProbability(outputValue: Any?): Double? =
         when (outputValue) {
             is Array<*> -> {
@@ -273,6 +368,33 @@ class DraftValueEvaluator(
             is Number -> outputValue.toDouble()
             else -> null
         }
+
+    private fun extractBatchProbabilities(
+        outputValue: Any?,
+        batchSize: Int,
+    ): List<Double>? {
+        if (outputValue is FloatArray && outputValue.size == batchSize) {
+            return outputValue.map { it.toDouble() }
+        }
+        if (outputValue is DoubleArray && outputValue.size == batchSize) {
+            return outputValue.toList()
+        }
+        if (outputValue is Array<*>) {
+            val list = mutableListOf<Double>()
+            for (row in outputValue) {
+                val prob =
+                    when (row) {
+                        is FloatArray -> row.getOrNull(0)?.toDouble()
+                        is DoubleArray -> row.getOrNull(0)
+                        is Number -> row.toDouble()
+                        else -> null
+                    } ?: return null
+                list.add(prob)
+            }
+            return if (list.size == batchSize) list else null
+        }
+        return null
+    }
 
     private fun loadModelBytes(path: String?): ByteArray? {
         if (path != null) {

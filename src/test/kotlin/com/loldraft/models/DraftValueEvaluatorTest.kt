@@ -252,4 +252,33 @@ class DraftValueEvaluatorTest {
             "Team rating advantage should further increase blue win rate",
         )
     }
+
+    @Test
+    fun `should implement AutoCloseable and close cleanly without errors`() {
+        val closableEvaluator = DraftValueEvaluator()
+        // Use Kotlin's .use extension to verify AutoCloseable behavior
+        closableEvaluator.use {
+            val draft = createStrongBlueDraft()
+            val result = it.evaluate(draft)
+            assertTrue(result.blueWinRate in 0.0..1.0)
+        }
+    }
+
+    @Test
+    fun `should evaluate batch of multiple draft states efficiently with evaluateBatch`() {
+        val draft1 = createStrongBlueDraft()
+        val draft2 =
+            DraftState(
+                bluePicks = draft1.redPicks,
+                redPicks = draft1.bluePicks,
+            )
+        val draftList = listOf(draft1, draft2)
+
+        val batchResults = evaluator.evaluateBatch(draftList)
+
+        assertEquals(2, batchResults.size)
+        assertTrue(batchResults[0].blueWinRate in 0.0..1.0)
+        assertTrue(batchResults[1].blueWinRate in 0.0..1.0)
+        assertTrue(batchResults[0].blueWinRate > batchResults[1].blueWinRate)
+    }
 }
