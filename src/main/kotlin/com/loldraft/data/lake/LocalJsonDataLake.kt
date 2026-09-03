@@ -7,6 +7,8 @@ import java.io.File
 class LocalJsonDataLake(
     val baseDir: File,
 ) : DataLakeStorage {
+    constructor(baseDirPath: String) : this(File(baseDirPath))
+
     private val json =
         Json {
             prettyPrint = true
