@@ -281,4 +281,22 @@ class DraftValueEvaluatorTest {
         assertTrue(batchResults[1].blueWinRate in 0.0..1.0)
         assertTrue(batchResults[0].blueWinRate > batchResults[1].blueWinRate)
     }
+
+    @Test
+    fun `should enrich DraftEvaluationResult with evalBar, timeCurve, and compositionRadar`() {
+        val draft = createStrongBlueDraft()
+        val result = evaluator.evaluate(draft)
+
+        val evalBar = result.evalBar
+        assertNotNull(evalBar)
+        assertEquals(result.evalScore, evalBar.score, 0.0001)
+
+        val timeCurve = result.timeCurve
+        assertNotNull(timeCurve)
+        assertEquals(7, timeCurve.points.size)
+
+        val compRadar = result.compositionRadar
+        assertNotNull(compRadar)
+        assertTrue(compRadar.blueRadar.laning in 0.0..10.0)
+    }
 }
