@@ -27,39 +27,47 @@
 - **專案規格文件**: [`README.md`](../README.md)
 - **Agent 指南規範**: [`AGENTS.md`](../AGENTS.md)
 - **GitHub Milestones**:
-  - `M1: 數據底座與標準化 (Data Asset & Engine)` (#1)
-  - `M2: 陣容評估大腦構建 (AI Decision Brain)` (#2)
-  - `M3: 即時 BP 推演成型 (Pro Platform & Simulation)` (#3)
-  - `M4: 賽後複盤與歸因 (Post-match Debrief)` (#4)
-  - `M5: 排位賽輔助拓展 (SoloQ Client - Phase 2)` (#5)
+  - `M1: 數據底座與標準化 (Data Asset & Engine)` (#1) [✅ 100% DONE]
+  - `M2: 陣容評估大腦構建 (AI Decision Brain)` (#2) [✅ 100% DONE]
+  - `M3: 即時 BP 推演成型 (Pro Platform & Simulation)` (#3) [✅ 100% DONE]
+  - `M4: 賽後複盤與歸因 (Post-match Debrief)` (#4) [✅ 100% DONE]
+  - `M5: 排位賽輔助拓展 (SoloQ Client - Phase 2)` (#5) [⏸️ 暫緩 / 延後]
+  - `M6: 職業賽即時預測整合與 Web 儀表板 (Pro Real-time BP Platform)` [🚀 進行中]
 
 ---
 
-## 參、 漸進式架構依賴圖 (14 項 Issues)
+## 參、 漸進式架構依賴圖 (15 項 Issues)
 
 ```mermaid
 graph TD
-    subgraph M1 [M1: Kotlin 數據工程底座]
-        I1["#1 feat(data): 核心對局資料模型與 20 輪 BP 日誌 Schema [Kotlin]"]
-        I2["#2 feat(data): 職業賽事歷史數據接入與清洗管線 [Kotlin]"]
-        I3["#3 feat(data): 戰隊風格標籤與紅藍選邊傾向分析器 [Kotlin]"]
-        I4["#4 feat(data): 職業選手生涯池與天梯練角突增預警器 [Kotlin]"]
-        I5["#5 feat(data): 英雄五維屬性標籤庫與版本環境矩陣 [Kotlin]"]
+    subgraph M1 [M1: Kotlin 數據工程底座 (已完成)]
+        I1["#1 核心對局模型與 20 輪 BP 日誌 Schema [✅ DONE]"]
+        I2["#2 職業賽事數據接入與清洗管線 [✅ DONE]"]
+        I3["#3 戰隊風格標籤與紅藍選邊分析器 [✅ DONE]"]
+        I4["#4 選手生涯池與天梯練角預警器 [✅ DONE]"]
+        I5["#5 英雄五維屬性標籤庫與版本環境 [✅ DONE]"]
     end
 
-    subgraph M2 [M2: AI 決策大腦 (Docker Python 訓練 + ONNX / Kotlin 推論)]
-        I6["#6 feat(model): 5v5 陣容特徵工程與勝率期望值評估模型 [Python Docker + ONNX]"]
-        I7["#7 feat(model): 陣容形勢評估值 (Eval Bar) 與前後期勝率曲線演算法 [Kotlin]"]
-        I8["#8 feat(model): 陣容失衡預警規則引擎 [Kotlin]"]
-        I9["#9 feat(model): 下一手 BP 意圖預測、反制推薦與搖擺位識別 [Kotlin + ONNX]"]
+    subgraph M2 [M2: AI 決策大腦 (已完成)]
+        I6["#6 5v5 陣容特徵工程與勝率評估模型 [✅ DONE]"]
+        I7["#7 陣容形勢 Eval Bar 與前後期曲線 [✅ DONE]"]
+        I8["#8 陣容失衡預警規則引擎 [✅ DONE]"]
+        I9["#9 下一手意圖預測、反制推薦與搖擺位 [✅ DONE]"]
     end
 
-    subgraph M3_M5 [M3~M5: Kotlin 平台應用與排位客戶端]
-        I10["#10 feat(platform): 賽前沙盤推演與劇本模擬 [Ktor / Kotlin]"]
-        I11["#11 feat(platform): 實時觀賽助手與動態 Eval Bar 視覺化 [Ktor / Web]"]
-        I12["#12 feat(platform): 賽後 BP 複盤與得失分歸因系統 [Kotlin]"]
-        I13["#13 feat(client): 排位賽選角自動感知與輕量懸浮視窗 [Compose Desktop / LCU]"]
-        I14["#14 feat(client): 排位專屬個人熟練度與線路剋制推薦引擎 [Kotlin]"]
+    subgraph M3_M4 [M3~M4: 核心平台應用 (已完成)]
+        I10["#10 賽前沙盤推演與劇本模擬 [✅ DONE]"]
+        I11["#11 實時觀賽助手與動態 Eval Bar [✅ DONE]"]
+        I12["#12 賽後 BP 複盤與歸因系統 [✅ DONE]"]
+    end
+
+    subgraph M6 [M6: 職業賽即時預測整合平台 (當前目標)]
+        I15["#15 (Issue #27) 職業賽即時 BP 預測整合伺服器與 Web 控制台 [🚀 ACTIVE]"]
+    end
+
+    subgraph M5_Deferred [Phase 2: 排位客戶端 (暫緩)]
+        I13["#13 排位賽選角自動感知與輕量懸浮視窗 [⏸️ DEFERRED]"]
+        I14["#14 排位專屬個人熟練度與線路剋制引擎 [⏸️ DEFERRED]"]
     end
 
     I1 --> I2
@@ -75,8 +83,10 @@ graph TD
     I7 --> I11
     I9 --> I11
     I6 --> I12
-    I7 --> I14
-    I13 --> I14
+    I10 --> I15
+    I11 --> I15
+    I12 --> I15
+    I2 --> I15
 ```
 
 ---
@@ -207,16 +217,40 @@ graph TD
 - **技術棧**: Kotlin
 - **說明**: 量化兩隊教練 BP 得失分，區隔陣容優劣 vs 選手發揮歸因，導出複盤報告。
 
-#### 13. `feat(client): 排位賽選角自動感知與輕量懸浮視窗 (Ranked Client Companion & Overlay)`
+#### 13. `feat(client): 排位賽選角自動感知與輕量懸浮視窗 (Ranked Client Companion & Overlay)` [⏸️ 暫緩 / 延後]
 - **GitHub Issue**: [#13](https://github.com/0oWoodenDooro0/LolDraftAi/issues/13) | **AiKanban Task**: #2
-- **Scope**: `client` | **Priority**: `LOW` | **Milestone**: M5
+- **Scope**: `client` | **Priority**: `LOW` | **Milestone**: M5 (Deferred)
 - **Branch**: `feature/client-ranked-overlay`
 - **技術棧**: Kotlin, Compose Multiplatform (Desktop), Ktor Client (LCU API)
-- **說明**: LCU API 對接與桌面輕量懸浮 UI，即時感知識別當前對局選角狀態。
+- **說明**: LCU API 對接與桌面輕量懸浮 UI，即時感知識別當前對局選角狀態。（因 Linux 平台缺乏 Vanguard 官方客戶端環境，優先權調降並暫緩）。
 
-#### 14. `feat(client): 排位專屬個人熟練度與線路剋制推薦引擎 (SoloQ Counter & Mastery Recommendation)`
+#### 14. `feat(client): 排位專屬個人熟練度與線路剋制推薦引擎 (SoloQ Counter & Mastery Recommendation)` [⏸️ 暫緩 / 延後]
 - **GitHub Issue**: [#14](https://github.com/0oWoodenDooro0/LolDraftAi/issues/14) | **AiKanban Task**: #1
-- **Scope**: `client` | **Priority**: `LOW` | **Milestone**: M5
+- **Scope**: `client` | **Priority**: `LOW` | **Milestone**: M5 (Deferred)
 - **Branch**: `feature/client-soloq-engine`
 - **技術棧**: Kotlin
-- **說明**: 玩家常用英雄池加權、單線對線剋制優先推薦與智慧補位提示。
+- **說明**: 玩家常用英雄池加權、單線對線剋制優先推薦與智慧補位提示。（同上，隨客戶端功能一併暫緩）。
+
+---
+
+### Milestone 6: 職業賽即時預測整合與 Web 儀表板 (Pro Real-time BP Platform)
+
+#### 15. `feat(platform): 職業賽即時 BP 預測整合伺服器與 Web 控制台 (Pro Match Real-time BP Prediction Server & Web Dashboard)` [🚀 當前焦點]
+- **GitHub Issue**: [#27](https://github.com/0oWoodenDooro0/LolDraftAi/issues/27) | **AiKanban Task**: #15
+- **Scope**: `platform` | **Priority**: `HIGH` | **Milestone**: M6
+- **Branch**: `feature/platform-pro-bp-server-dashboard`
+- **技術棧**: Kotlin, Ktor Server (Netty, WebSockets, CORS, Static Content), HTML5/CSS/ES6 WebSocket Dashboard
+- **說明**:
+  - 將 Phase 1 已開發完成的賽前推演、實時觀賽、賽後復盤三大引擎整合為單一可執行 Ktor 伺服器 (`Application.kt`)，支援 Gradle `./gradlew run`。
+  - 內建 `ProMatchRepository`，啟動時自動解析載入 2026 職業賽事真實對局 CSV (`2026_LoL_esports_match_data_from_OraclesElixir.csv`)，提供 LCK/LPL/LEC/LCS 等賽區戰隊檔案與選手常用英雄 API。
+  - 提供現代化響應式電競觀賽副屏 Web 控制台（直接由 Ktor 託管於 `http://localhost:8080`），支援下拉選擇對陣戰隊、20 輪標準 BP 棋盤即時點選、實時動態勝率 Eval Bar、敵方下一手意圖預測 Top 3、己方反制推薦、陣容失衡預警及一鍵賽後復盤報告導出。
+- **交付物**:
+  - `src/main/kotlin/com/loldraft/server/Application.kt` (伺服器統一入口)
+  - `src/main/kotlin/com/loldraft/server/ProMatchRepository.kt` (職業賽事與戰隊情報儲存庫)
+  - `src/main/kotlin/com/loldraft/platform/pro/api/ProApiRouting.kt` (職業聯賽、戰隊情報 REST API)
+  - `src/main/resources/static/index.html` (電競 BP 控制台 Web UI)
+  - `src/main/resources/static/css/style.css` (暗黑電競科技風樣式)
+  - `src/main/resources/static/js/app.js` (WebSocket 實時連線與 BP 互動引擎)
+  - `src/test/kotlin/com/loldraft/server/ProMatchRepositoryTest.kt` (資料載入單元測試)
+  - `src/test/kotlin/com/loldraft/server/ServerApplicationTest.kt` (伺服器端到端整合測試)
+
