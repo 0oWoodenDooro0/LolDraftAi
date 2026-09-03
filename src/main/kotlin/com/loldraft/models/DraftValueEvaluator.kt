@@ -34,6 +34,7 @@ interface DraftEvaluator : AutoCloseable {
 
 class AnalyticalDraftEvaluator(
     private val featureExtractor: DraftFeatureExtractor = DraftFeatureExtractor(),
+    private val flawDetector: CompositionFlawDetector = CompositionFlawDetector(featureExtractor.tagRegistry),
 ) : DraftEvaluator {
     override fun evaluate(
         draftState: DraftState,
@@ -183,6 +184,7 @@ class AnalyticalDraftEvaluator(
         val redWinRate = 1.0 - blueWinRate
 
         val sortedFactors = factorContributions.sortedByDescending { abs(it.impact) }
+        val flaws = draftState?.let { flawDetector.analyzeDraft(it) }
 
         return DraftEvaluationResult(
             blueWinRate = blueWinRate,
@@ -191,6 +193,7 @@ class AnalyticalDraftEvaluator(
             confidence = confidence,
             dominantFactors = sortedFactors,
             features = features,
+            flaws = flaws,
         )
     }
 }
@@ -198,7 +201,8 @@ class AnalyticalDraftEvaluator(
 class DraftValueEvaluator(
     val featureExtractor: DraftFeatureExtractor = DraftFeatureExtractor(),
     val modelPath: String? = null,
-    val fallbackEvaluator: DraftEvaluator = AnalyticalDraftEvaluator(featureExtractor),
+    val flawDetector: CompositionFlawDetector = CompositionFlawDetector(featureExtractor.tagRegistry),
+    val fallbackEvaluator: DraftEvaluator = AnalyticalDraftEvaluator(featureExtractor, flawDetector),
 ) : DraftEvaluator {
     private val session: OrtSession?
     private val environment: OrtEnvironment?
@@ -253,6 +257,7 @@ class DraftValueEvaluator(
                             val totalPicks = draftState.bluePicks.size + draftState.redPicks.size
                             val confidence = (totalPicks / 10.0).coerceIn(0.1, 1.0)
                             val analytical = (fallbackEvaluator as? AnalyticalDraftEvaluator)?.evaluateFromFeatures(features, draftState)
+                            val flaws = flawDetector.analyzeDraft(draftState)
 
                             return DraftEvaluationResult(
                                 blueWinRate = blueWinRate,
@@ -261,6 +266,7 @@ class DraftValueEvaluator(
                                 confidence = confidence,
                                 dominantFactors = analytical?.dominantFactors ?: emptyList(),
                                 features = features,
+                                flaws = flaws,
                             )
                         }
                     }
@@ -320,6 +326,7 @@ class DraftValueEvaluator(
                                 val analytical =
                                     (fallbackEvaluator as? AnalyticalDraftEvaluator)
                                         ?.evaluateFromFeatures(features, draft)
+                                val flaws = flawDetector.analyzeDraft(draft)
 
                                 DraftEvaluationResult(
                                     blueWinRate = blueWinRate,
@@ -328,6 +335,7 @@ class DraftValueEvaluator(
                                     confidence = confidence,
                                     dominantFactors = analytical?.dominantFactors ?: emptyList(),
                                     features = features,
+                                    flaws = flaws,
                                 )
                             }
                         }

@@ -18,4 +18,5 @@ data class DraftEvaluationResult(
     val confidence: Double,
     val dominantFactors: List<EvaluationFactor> = emptyList(),
     val features: DraftFeatures,
+    val flaws: DraftFlawAnalysisResult? = null,
 )
