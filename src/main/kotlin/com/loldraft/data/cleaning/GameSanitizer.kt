@@ -9,6 +9,7 @@ class GameSanitizer(
     val minDurationSeconds: Int = 300,
     val draftValidator: DraftValidator = DraftValidator(),
     val patchNormalizer: PatchNormalizer = PatchNormalizer,
+    val championNormalizer: ChampionNormalizer = ChampionNormalizer,
 ) {
     fun sanitize(game: Game): SanitizationResult {
         val reasons = mutableListOf<AnomalyReason>()
@@ -35,13 +36,14 @@ class GameSanitizer(
             details.add("Insufficient champion picks: found $totalPicks (expected 10)")
         }
 
-        // 4. Duplicate champions
+        // 4. Duplicate champions (pre-normalized via championNormalizer to catch alias mismatches like monkeyking vs Wukong)
         val allChamps =
             (
                 draft.blueBans + draft.redBans +
                     draft.bluePicks.map { it.championId } +
                     draft.redPicks.map { it.championId }
-            ).filter { it.isNotBlank() }
+            ).map { championNormalizer.normalize(it) }
+                .filter { it.isNotBlank() }
 
         val duplicates =
             allChamps
@@ -53,9 +55,13 @@ class GameSanitizer(
             details.add("Duplicate champions found: ${duplicates.keys}")
         }
 
-        // 5. Sequence validation if turns are present
+        // 5. Sequence validation if turns are present (pre-normalizing champion IDs)
         if (draft.turns.isNotEmpty()) {
-            val seqResult = draftValidator.validateDraftSequence(draft.turns)
+            val normalizedTurns =
+                draft.turns.map {
+                    it.copy(championId = championNormalizer.normalize(it.championId))
+                }
+            val seqResult = draftValidator.validateDraftSequence(normalizedTurns)
             if (!seqResult.isValid) {
                 reasons.add(AnomalyReason.CORRUPT_TURNS)
                 details.addAll(seqResult.errors)

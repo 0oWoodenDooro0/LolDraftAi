@@ -139,4 +139,56 @@ class GameSanitizerTest {
         assertIs<SanitizationResult.Rejected>(result)
         assertTrue(result.reasons.contains(AnomalyReason.INVALID_PATCH))
     }
+
+    @Test
+    fun `should reject game with alias duplicate champions like monkeyking and Wukong`() {
+        val champs =
+            listOf(
+                "Wukong",
+                "monkeyking",
+                "C3",
+                "C4",
+                "C5",
+                "C6",
+                "C7",
+                "C8",
+                "C9",
+                "C10",
+                "C11",
+                "C12",
+                "C13",
+                "C14",
+                "C15",
+                "C16",
+                "C17",
+                "C18",
+                "C19",
+                "C20",
+            )
+        val turns =
+            DraftTurnSpec.SPECS.mapIndexed { idx, spec ->
+                DraftTurn(spec.turnNumber, spec.side, spec.actionType, champs[idx])
+            }
+        val blueBans = turns.filter { it.side == Side.BLUE && it.actionType == ActionType.BAN }.map { it.championId }
+        val redBans = turns.filter { it.side == Side.RED && it.actionType == ActionType.BAN }.map { it.championId }
+        val bluePicks = turns.filter { it.side == Side.BLUE && it.actionType == ActionType.PICK }.map { PickSelection(it.championId) }
+        val redPicks = turns.filter { it.side == Side.RED && it.actionType == ActionType.PICK }.map { PickSelection(it.championId) }
+
+        val game =
+            Game(
+                id = "alias_dup_game",
+                gameNumber = 1,
+                patch = "14.1",
+                blueTeam = Team("t1", "T1", "T1"),
+                redTeam = Team("t2", "Gen.G", "GEN"),
+                draftState = DraftState(blueBans, redBans, bluePicks, redPicks, turns),
+                winner = Side.BLUE,
+                durationSeconds = 1800,
+            )
+
+        val result = sanitizer.sanitize(game)
+        assertFalse(result.isValid)
+        assertIs<SanitizationResult.Rejected>(result)
+        assertTrue(result.reasons.contains(AnomalyReason.DUPLICATE_CHAMPION))
+    }
 }
