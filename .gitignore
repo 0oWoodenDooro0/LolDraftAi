@@ -79,6 +79,7 @@ out/
 *.pt
 *.pth
 *.onnx
+!src/main/resources/models/*.onnx
 *.pkl
 *.joblib
 data/raw/
