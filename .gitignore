@@ -82,6 +82,11 @@ data/processed/
 data/cache/
 !data/README.md
 
+# Databases / SQLite lock & temporary files
+*.db-wal
+*.db-shm
+*.db-journal
+
 # IDEs
 .idea/
 .vscode/
@@ -89,3 +94,4 @@ data/cache/
 *.swo
 *~
 .DS_Store
+
