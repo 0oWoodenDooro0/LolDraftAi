@@ -1,0 +1,24 @@
+{
+  "provider": "github",
+  "defaultBaseBranch": "main",
+  "repo": "0oWoodenDooro0/LolDraftAi",
+  "branchPrefix": "feature/",
+  "operator": "Antigravity",
+  "verify": [],
+  "hooks": {
+    "pre-commit": [],
+    "pre-submit-pr": [],
+    "pre-complete-review": []
+  },
+  "workflows": {},
+  "workflow": {
+    "mergeMethod": "squash",
+    "deleteBranchOnMerge": true,
+    "requireVerification": false,
+    "checkoutBaseOnComplete": true,
+    "checkoutBaseOnSubmitPr": true,
+    "requestColumn": "REQUEST",
+    "doneColumn": "DONE",
+    "reviewColumn": "REVIEW"
+  }
+}
