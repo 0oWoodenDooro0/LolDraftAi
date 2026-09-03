@@ -11,6 +11,8 @@ data class SpikeDetectorConfig(
     val offMetaProGamesThreshold: Int = 2,
     val highWinRateThreshold: Double = 0.60,
     val highSeverityRecentGames: Int = 6,
+    val syntheticBaselineGames: Double = 0.5,
+    val syntheticBaselineRate: Double? = null,
 )
 
 class PracticeSpikeDetector(
@@ -45,12 +47,15 @@ class PracticeSpikeDetector(
             val baselineCount = champBaselineGames.size
             val baselineDailyRate = baselineCount.toDouble() / baselineDaysEffective
 
+            val effectiveSyntheticDailyRate =
+                config.syntheticBaselineRate ?: (config.syntheticBaselineGames / baselineDaysEffective)
+
             val frequencyMultiplier =
                 if (baselineDailyRate > 0.0) {
                     recentDailyRate / baselineDailyRate
                 } else {
                     // Effective synthetic baseline for zero baseline games
-                    recentDailyRate / (0.5 / baselineDaysEffective)
+                    recentDailyRate / effectiveSyntheticDailyRate
                 }
 
             val careerRecord = careerStats?.championRecords?.get(championId)

@@ -149,4 +149,30 @@ class PracticeSpikeDetectorTest {
         val alerts = detector.detectSpikes(games, emptyCareerStats(), referenceTimeMs = nowMs)
         assertTrue(alerts.isEmpty())
     }
+
+    @Test
+    fun `should respect custom synthetic baseline configuration`() {
+        val customDetector =
+            PracticeSpikeDetector(
+                config =
+                    SpikeDetectorConfig(
+                        recentDays = 2,
+                        baselineDays = 20,
+                        minRecentGamesForSpike = 4,
+                        syntheticBaselineRate = 0.4,
+                    ),
+            )
+
+        val games = mutableListOf<SoloQGame>()
+        for (i in 1..4) {
+            games.add(createSoloQGame("cho_$i", "chogath", daysAgo = 0.4 * i, win = true))
+        }
+
+        val alerts = customDetector.detectSpikes(games, emptyCareerStats(), referenceTimeMs = nowMs)
+
+        assertEquals(1, alerts.size)
+        val alert = alerts[0]
+        // recentDailyRate = 4 / 2 = 2.0. With syntheticBaselineRate = 0.4 -> multiplier = 2.0 / 0.4 = 5.0
+        assertEquals(5.0, alert.frequencyMultiplier, 0.001)
+    }
 }
