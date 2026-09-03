@@ -6,6 +6,7 @@ import com.loldraft.data.models.PickSelection
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.models.Team
+import com.loldraft.data.models.TeamGameStats
 import com.loldraft.data.normalization.ChampionNormalizer
 import com.loldraft.data.normalization.PatchNormalizer
 
@@ -43,6 +44,15 @@ class OraclesElixirCsvParser(
         val lenIdx = colIndex["gamelength"]
         val resIdx = colIndex["result"]
         val gameNumIdx = colIndex["game"]
+        val leagueIdx = colIndex["league"]
+        val yearIdx = colIndex["year"]
+        val splitIdx = colIndex["split"]
+        val fbIdx = colIndex["firstblood"]
+        val fdIdx = colIndex["firstdragon"]
+        val gd15Idx = colIndex["golddiffat15"]
+        val killsIdx = colIndex["teamkills"] ?: colIndex["kills"]
+        val deathsIdx = colIndex["teamdeaths"] ?: colIndex["deaths"]
+        val towersIdx = colIndex["towers"]
 
         val rowsByGameId = mutableMapOf<String, MutableList<List<String>>>()
 
@@ -63,6 +73,22 @@ class OraclesElixirCsvParser(
             var blueTeamName = "BlueTeam"
             var redTeamName = "RedTeam"
             var winner: Side? = null
+            var tournament: String? = null
+            var season: String? = null
+            var year: Int? = null
+
+            var blueFb: Boolean? = null
+            var redFb: Boolean? = null
+            var blueFd: Boolean? = null
+            var redFd: Boolean? = null
+            var blueGd15: Double? = null
+            var redGd15: Double? = null
+            var blueKills: Int? = null
+            var redKills: Int? = null
+            var blueDeaths: Int? = null
+            var redDeaths: Int? = null
+            var blueTowers: Int? = null
+            var redTowers: Int? = null
 
             val blueBans = mutableListOf<String>()
             val redBans = mutableListOf<String>()
@@ -79,6 +105,51 @@ class OraclesElixirCsvParser(
                 val playerName = playerIdx?.let { row.getOrNull(it)?.trim() } ?: playerIdIdx?.let { row.getOrNull(it)?.trim() }
                 val rawPatch = patchIdx?.let { row.getOrNull(it)?.trim() }
                 val result = resIdx?.let { row.getOrNull(it)?.trim()?.toIntOrNull() }
+
+                if (tournament == null && leagueIdx != null) {
+                    row
+                        .getOrNull(leagueIdx)
+                        ?.trim()
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { tournament = it }
+                }
+                if (season == null && splitIdx != null) {
+                    row
+                        .getOrNull(splitIdx)
+                        ?.trim()
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { season = it }
+                }
+                if (year == null && yearIdx != null) {
+                    row
+                        .getOrNull(yearIdx)
+                        ?.trim()
+                        ?.toIntOrNull()
+                        ?.let { year = it }
+                }
+
+                val fbVal = fbIdx?.let { row.getOrNull(it)?.trim() }?.let { it == "1" || it.equals("true", ignoreCase = true) }
+                val fdVal = fdIdx?.let { row.getOrNull(it)?.trim() }?.let { it == "1" || it.equals("true", ignoreCase = true) }
+                val gd15Val = gd15Idx?.let { row.getOrNull(it)?.trim()?.toDoubleOrNull() }
+                val killsVal = killsIdx?.let { row.getOrNull(it)?.trim()?.toIntOrNull() }
+                val deathsVal = deathsIdx?.let { row.getOrNull(it)?.trim()?.toIntOrNull() }
+                val towersVal = towersIdx?.let { row.getOrNull(it)?.trim()?.toIntOrNull() }
+
+                if (isBlue) {
+                    if (fbVal != null && blueFb == null) blueFb = fbVal
+                    if (fdVal != null && blueFd == null) blueFd = fdVal
+                    if (gd15Val != null && blueGd15 == null) blueGd15 = gd15Val
+                    if (killsVal != null && blueKills == null) blueKills = killsVal
+                    if (deathsVal != null && blueDeaths == null) blueDeaths = deathsVal
+                    if (towersVal != null && blueTowers == null) blueTowers = towersVal
+                } else if (isRed) {
+                    if (fbVal != null && redFb == null) redFb = fbVal
+                    if (fdVal != null && redFd == null) redFd = fdVal
+                    if (gd15Val != null && redGd15 == null) redGd15 = gd15Val
+                    if (killsVal != null && redKills == null) redKills = killsVal
+                    if (deathsVal != null && redDeaths == null) redDeaths = deathsVal
+                    if (towersVal != null && redTowers == null) redTowers = towersVal
+                }
 
                 if (!rawPatch.isNullOrBlank() && patch == "unknown") {
                     patch = patchNormalizer.normalize(rawPatch)
@@ -178,6 +249,36 @@ class OraclesElixirCsvParser(
                     turns = emptyList(),
                 )
 
+            val blueStats =
+                if (blueFb != null || blueFd != null || blueGd15 != null || blueKills != null) {
+                    TeamGameStats(
+                        teamId = blueTeam.id,
+                        firstBlood = blueFb,
+                        firstDragon = blueFd,
+                        goldDiffAt15 = blueGd15,
+                        kills = blueKills,
+                        deaths = blueDeaths,
+                        towers = blueTowers,
+                    )
+                } else {
+                    null
+                }
+
+            val redStats =
+                if (redFb != null || redFd != null || redGd15 != null || redKills != null) {
+                    TeamGameStats(
+                        teamId = redTeam.id,
+                        firstBlood = redFb,
+                        firstDragon = redFd,
+                        goldDiffAt15 = redGd15,
+                        kills = redKills,
+                        deaths = redDeaths,
+                        towers = redTowers,
+                    )
+                } else {
+                    null
+                }
+
             Game(
                 id = gameId,
                 gameNumber = gameNumber,
@@ -187,6 +288,11 @@ class OraclesElixirCsvParser(
                 draftState = draftState,
                 winner = winner,
                 durationSeconds = durationSeconds,
+                blueStats = blueStats,
+                redStats = redStats,
+                tournament = tournament,
+                season = season,
+                year = year,
             )
         }
     }
