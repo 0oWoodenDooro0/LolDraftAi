@@ -11,5 +11,5 @@ data class Game(
     val redTeam: Team,
     val draftState: DraftState,
     val winner: Side? = null,
-    val durationSeconds: Int? = null
+    val durationSeconds: Int? = null,
 )

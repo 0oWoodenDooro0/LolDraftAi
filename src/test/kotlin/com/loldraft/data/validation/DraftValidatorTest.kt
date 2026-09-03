@@ -12,48 +12,65 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class DraftValidatorTest {
-
     private val validator = DraftValidator()
 
     // Canonical sample 20 champions
-    private val canonicalChampions = listOf(
-        // Turns 1..6: Bans
-        "Aatrox", "Ahri", "Akali", "Ashe", "Azir", "Braum",
-        // Turns 7..12: Picks (B1, R1, R2, B2, B3, R3)
-        "Caitlyn", "Corki", "Darius", "Ezreal", "Fiora", "Galio",
-        // Turns 13..16: Bans (R4, B4, R5, B5)
-        "Gnar", "Jax", "Jinx", "Kaisa",
-        // Turns 17..20: Picks (R4, B4, B5, R5)
-        "LeeSin", "Leona", "Lulu", "Nautilus"
-    )
+    private val canonicalChampions =
+        listOf(
+            // Turns 1..6: Bans
+            "Aatrox",
+            "Ahri",
+            "Akali",
+            "Ashe",
+            "Azir",
+            "Braum",
+            // Turns 7..12: Picks (B1, R1, R2, B2, B3, R3)
+            "Caitlyn",
+            "Corki",
+            "Darius",
+            "Ezreal",
+            "Fiora",
+            "Galio",
+            // Turns 13..16: Bans (R4, B4, R5, B5)
+            "Gnar",
+            "Jax",
+            "Jinx",
+            "Kaisa",
+            // Turns 17..20: Picks (R4, B4, B5, R5)
+            "LeeSin",
+            "Leona",
+            "Lulu",
+            "Nautilus",
+        )
 
     private fun buildCanonicalTurns(): List<DraftTurn> {
         val turns = mutableListOf<DraftTurn>()
         for (turnNum in 1..20) {
             val champ = canonicalChampions[turnNum - 1]
-            val (side, action) = when (turnNum) {
-                1 -> Side.BLUE to ActionType.BAN
-                2 -> Side.RED to ActionType.BAN
-                3 -> Side.BLUE to ActionType.BAN
-                4 -> Side.RED to ActionType.BAN
-                5 -> Side.BLUE to ActionType.BAN
-                6 -> Side.RED to ActionType.BAN
-                7 -> Side.BLUE to ActionType.PICK
-                8 -> Side.RED to ActionType.PICK
-                9 -> Side.RED to ActionType.PICK
-                10 -> Side.BLUE to ActionType.PICK
-                11 -> Side.BLUE to ActionType.PICK
-                12 -> Side.RED to ActionType.PICK
-                13 -> Side.RED to ActionType.BAN
-                14 -> Side.BLUE to ActionType.BAN
-                15 -> Side.RED to ActionType.BAN
-                16 -> Side.BLUE to ActionType.BAN
-                17 -> Side.RED to ActionType.PICK
-                18 -> Side.BLUE to ActionType.PICK
-                19 -> Side.BLUE to ActionType.PICK
-                20 -> Side.RED to ActionType.PICK
-                else -> error("Invalid turn")
-            }
+            val (side, action) =
+                when (turnNum) {
+                    1 -> Side.BLUE to ActionType.BAN
+                    2 -> Side.RED to ActionType.BAN
+                    3 -> Side.BLUE to ActionType.BAN
+                    4 -> Side.RED to ActionType.BAN
+                    5 -> Side.BLUE to ActionType.BAN
+                    6 -> Side.RED to ActionType.BAN
+                    7 -> Side.BLUE to ActionType.PICK
+                    8 -> Side.RED to ActionType.PICK
+                    9 -> Side.RED to ActionType.PICK
+                    10 -> Side.BLUE to ActionType.PICK
+                    11 -> Side.BLUE to ActionType.PICK
+                    12 -> Side.RED to ActionType.PICK
+                    13 -> Side.RED to ActionType.BAN
+                    14 -> Side.BLUE to ActionType.BAN
+                    15 -> Side.RED to ActionType.BAN
+                    16 -> Side.BLUE to ActionType.BAN
+                    17 -> Side.RED to ActionType.PICK
+                    18 -> Side.BLUE to ActionType.PICK
+                    19 -> Side.BLUE to ActionType.PICK
+                    20 -> Side.RED to ActionType.PICK
+                    else -> error("Invalid turn")
+                }
             turns.add(DraftTurn(turnNumber = turnNum, side = side, actionType = action, championId = champ))
         }
         return turns
@@ -163,25 +180,29 @@ class DraftValidatorTest {
 
     @Test
     fun `should fail complete draft validation if duplicate champions exist across teams`() {
-        val state = DraftState(
-            blueBans = listOf("Aatrox", "Ahri", "Akali", "Ashe", "Azir"),
-            redBans = listOf("Braum", "Corki", "Darius", "Ezreal", "Fiora"),
-            bluePicks = listOf(
-                PickSelection("Galio", Role.MID),
-                PickSelection("Gnar", Role.TOP),
-                PickSelection("Jax", Role.JUNGLE),
-                PickSelection("Jinx", Role.BOT),
-                PickSelection("Kaisa", Role.SUPPORT)
-            ),
-            redPicks = listOf(
-                PickSelection("Galio", Role.MID), // DUPLICATE with blue pick!
-                PickSelection("LeeSin", Role.JUNGLE),
-                PickSelection("Leona", Role.SUPPORT),
-                PickSelection("Lulu", Role.TOP),
-                PickSelection("Nautilus", Role.BOT)
-            ),
-            turns = emptyList()
-        )
+        val state =
+            DraftState(
+                blueBans = listOf("Aatrox", "Ahri", "Akali", "Ashe", "Azir"),
+                redBans = listOf("Braum", "Corki", "Darius", "Ezreal", "Fiora"),
+                bluePicks =
+                    listOf(
+                        PickSelection("Galio", Role.MID),
+                        PickSelection("Gnar", Role.TOP),
+                        PickSelection("Jax", Role.JUNGLE),
+                        PickSelection("Jinx", Role.BOT),
+                        PickSelection("Kaisa", Role.SUPPORT),
+                    ),
+                redPicks =
+                    listOf(
+                        // DUPLICATE with blue pick!
+                        PickSelection("Galio", Role.MID),
+                        PickSelection("LeeSin", Role.JUNGLE),
+                        PickSelection("Leona", Role.SUPPORT),
+                        PickSelection("Lulu", Role.TOP),
+                        PickSelection("Nautilus", Role.BOT),
+                    ),
+                turns = emptyList(),
+            )
 
         val result = validator.validateCompleteDraft(state)
         assertFalse(result.isValid)

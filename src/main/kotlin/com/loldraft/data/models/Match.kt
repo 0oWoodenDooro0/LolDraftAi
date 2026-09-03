@@ -11,5 +11,5 @@ data class Match(
     val blueTeam: Team,
     val redTeam: Team,
     val games: List<Game> = emptyList(),
-    val winnerTeamId: String? = null
+    val winnerTeamId: String? = null,
 )

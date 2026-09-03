@@ -18,11 +18,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class DraftSerializationTest {
-
-    private val json = Json {
-        prettyPrint = false
-        ignoreUnknownKeys = true
-    }
+    private val json =
+        Json {
+            prettyPrint = false
+            ignoreUnknownKeys = true
+        }
 
     @Test
     fun `should serialize and deserialize Side, Role, ActionType, DraftPhase`() {
@@ -41,14 +41,15 @@ class DraftSerializationTest {
 
     @Test
     fun `should round-trip serialize DraftTurn`() {
-        val turn = DraftTurn(
-            turnNumber = 7,
-            side = Side.BLUE,
-            actionType = ActionType.PICK,
-            championId = "Caitlyn",
-            role = Role.BOT,
-            player = "Gumayusi"
-        )
+        val turn =
+            DraftTurn(
+                turnNumber = 7,
+                side = Side.BLUE,
+                actionType = ActionType.PICK,
+                championId = "Caitlyn",
+                role = Role.BOT,
+                player = "Gumayusi",
+            )
 
         val serialized = json.encodeToString(turn)
         val deserialized = json.decodeFromString<DraftTurn>(serialized)
@@ -60,16 +61,18 @@ class DraftSerializationTest {
 
     @Test
     fun `should round-trip serialize DraftState`() {
-        val state = DraftState(
-            blueBans = listOf("Aatrox", "Ahri"),
-            redBans = listOf("Akali", "Ashe"),
-            bluePicks = listOf(PickSelection("Caitlyn", Role.BOT, "Gumayusi")),
-            redPicks = listOf(PickSelection("Corki", Role.MID, "Chovy")),
-            turns = listOf(
-                DraftTurn(1, Side.BLUE, ActionType.BAN, "Aatrox"),
-                DraftTurn(2, Side.RED, ActionType.BAN, "Akali")
+        val state =
+            DraftState(
+                blueBans = listOf("Aatrox", "Ahri"),
+                redBans = listOf("Akali", "Ashe"),
+                bluePicks = listOf(PickSelection("Caitlyn", Role.BOT, "Gumayusi")),
+                redPicks = listOf(PickSelection("Corki", Role.MID, "Chovy")),
+                turns =
+                    listOf(
+                        DraftTurn(1, Side.BLUE, ActionType.BAN, "Aatrox"),
+                        DraftTurn(2, Side.RED, ActionType.BAN, "Akali"),
+                    ),
             )
-        )
 
         val serialized = json.encodeToString(state)
         val deserialized = json.decodeFromString<DraftState>(serialized)
@@ -83,27 +86,29 @@ class DraftSerializationTest {
         val gen = Team("team_gen", "Gen.G", "GEN", "LCK")
         val player = Player("p_faker", "Faker", Role.MID, t1.id)
 
-        val game = Game(
-            id = "g_1",
-            gameNumber = 1,
-            patch = "14.18",
-            blueTeam = t1,
-            redTeam = gen,
-            draftState = DraftState.empty(),
-            winner = Side.BLUE,
-            durationSeconds = 1920
-        )
+        val game =
+            Game(
+                id = "g_1",
+                gameNumber = 1,
+                patch = "14.18",
+                blueTeam = t1,
+                redTeam = gen,
+                draftState = DraftState.empty(),
+                winner = Side.BLUE,
+                durationSeconds = 1920,
+            )
 
-        val match = Match(
-            id = "m_1",
-            tournament = "Worlds 2024",
-            patch = "14.18",
-            bestOf = 5,
-            blueTeam = t1,
-            redTeam = gen,
-            games = listOf(game),
-            winnerTeamId = t1.id
-        )
+        val match =
+            Match(
+                id = "m_1",
+                tournament = "Worlds 2024",
+                patch = "14.18",
+                bestOf = 5,
+                blueTeam = t1,
+                redTeam = gen,
+                games = listOf(game),
+                winnerTeamId = t1.id,
+            )
 
         val serializedMatch = json.encodeToString(match)
         val deserializedMatch = json.decodeFromString<Match>(serializedMatch)

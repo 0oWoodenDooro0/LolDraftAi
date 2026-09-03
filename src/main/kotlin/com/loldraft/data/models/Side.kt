@@ -5,11 +5,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class Side {
     BLUE,
-    RED;
+    RED,
+    ;
 
     val opposite: Side
-        get() = when (this) {
-            BLUE -> RED
-            RED -> BLUE
-        }
+        get() =
+            when (this) {
+                BLUE -> RED
+                RED -> BLUE
+            }
 }

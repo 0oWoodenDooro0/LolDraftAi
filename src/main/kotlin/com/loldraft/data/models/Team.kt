@@ -7,5 +7,5 @@ data class Team(
     val id: String,
     val name: String,
     val code: String,
-    val region: String? = null
+    val region: String? = null,
 )

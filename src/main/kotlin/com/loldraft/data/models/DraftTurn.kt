@@ -9,5 +9,5 @@ data class DraftTurn(
     val actionType: ActionType,
     val championId: String,
     val role: Role? = null,
-    val player: String? = null
+    val player: String? = null,
 )

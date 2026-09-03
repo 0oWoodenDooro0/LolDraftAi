@@ -5,15 +5,15 @@
   "branchPrefix": "feature/",
   "operator": "Antigravity",
   "verify": [
-    "./gradlew test"
+    "./gradlew check"
   ],
   "hooks": {
     "pre-commit": [],
     "pre-submit-pr": [
-      "./gradlew test"
+      "./gradlew check"
     ],
     "pre-complete-review": [
-      "./gradlew test"
+      "./gradlew check"
     ]
   },
   "workflows": {
@@ -27,6 +27,18 @@
       "description": "Run Kotlin unit test suite",
       "steps": [
         "./gradlew test"
+      ]
+    },
+    "lint": {
+      "description": "Run ktlint code style verification",
+      "steps": [
+        "./gradlew ktlintCheck"
+      ]
+    },
+    "format": {
+      "description": "Auto-format Kotlin code with ktlint",
+      "steps": [
+        "./gradlew ktlintFormat"
       ]
     }
   },

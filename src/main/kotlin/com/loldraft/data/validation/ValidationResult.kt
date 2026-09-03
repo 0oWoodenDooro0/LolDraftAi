@@ -2,7 +2,7 @@ package com.loldraft.data.validation
 
 data class ValidationResult(
     val isValid: Boolean,
-    val errors: List<String> = emptyList()
+    val errors: List<String> = emptyList(),
 ) {
     val isSuccess: Boolean
         get() = isValid

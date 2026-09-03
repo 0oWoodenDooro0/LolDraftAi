@@ -6,7 +6,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class DraftModelTest {
-
     @Test
     fun `Side opposite should invert correctly`() {
         assertEquals(Side.RED, Side.BLUE.opposite)
@@ -60,27 +59,29 @@ class DraftModelTest {
         val fバイker = Player(id = "player_faker", name = "Faker", role = Role.MID, teamId = t1.id)
         val chovy = Player(id = "player_chovy", name = "Chovy", role = Role.MID, teamId = gen.id)
 
-        val game1 = Game(
-            id = "game_1",
-            gameNumber = 1,
-            patch = "14.18",
-            blueTeam = t1,
-            redTeam = gen,
-            draftState = DraftState.empty(),
-            winner = Side.BLUE,
-            durationSeconds = 1860
-        )
+        val game1 =
+            Game(
+                id = "game_1",
+                gameNumber = 1,
+                patch = "14.18",
+                blueTeam = t1,
+                redTeam = gen,
+                draftState = DraftState.empty(),
+                winner = Side.BLUE,
+                durationSeconds = 1860,
+            )
 
-        val match = Match(
-            id = "match_finals",
-            tournament = "Worlds 2024",
-            patch = "14.18",
-            bestOf = 5,
-            blueTeam = t1,
-            redTeam = gen,
-            games = listOf(game1),
-            winnerTeamId = t1.id
-        )
+        val match =
+            Match(
+                id = "match_finals",
+                tournament = "Worlds 2024",
+                patch = "14.18",
+                bestOf = 5,
+                blueTeam = t1,
+                redTeam = gen,
+                games = listOf(game1),
+                winnerTeamId = t1.id,
+            )
 
         assertEquals("Worlds 2024", match.tournament)
         assertEquals(5, match.bestOf)

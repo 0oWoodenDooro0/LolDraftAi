@@ -7,5 +7,5 @@ data class Player(
     val id: String,
     val name: String,
     val role: Role,
-    val teamId: String? = null
+    val teamId: String? = null,
 )
