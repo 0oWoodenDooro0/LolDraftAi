@@ -5,6 +5,8 @@ import com.loldraft.data.models.Game
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.models.Team
+import com.loldraft.data.player.PlayerIntelligenceService
+import com.loldraft.data.player.ProPlayerDetailedProfile
 import com.loldraft.data.sources.OraclesElixirCsvParser
 import com.loldraft.data.style.TeamStyleAnalyzer
 import com.loldraft.data.style.TeamTacticalProfile
@@ -51,6 +53,20 @@ class ProMatchRepository(
             }
         }
         initialized = true
+    }
+
+    val playerIntelligenceService: PlayerIntelligenceService by lazy {
+        PlayerIntelligenceService(proMatchRepository = this)
+    }
+
+    fun getAllGames(): List<Game> {
+        ensureInitialized()
+        return games.toList()
+    }
+
+    fun getTeamPlayerProfiles(teamId: String): List<ProPlayerDetailedProfile> {
+        ensureInitialized()
+        return playerIntelligenceService.getTeamPlayerProfiles(teamId)
     }
 
     fun getLeagues(): List<String> {

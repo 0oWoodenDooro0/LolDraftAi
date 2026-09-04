@@ -4,6 +4,7 @@ import com.loldraft.data.lake.DataLakeStorage
 import com.loldraft.data.models.ActionType
 import com.loldraft.data.models.Game
 import com.loldraft.data.models.Role
+import com.loldraft.data.models.Side
 
 class PlayerTracker(
     val accountRegistry: PlayerAccountRegistry = PlayerAccountRegistry(),
@@ -40,14 +41,33 @@ class PlayerTracker(
             // Extract historical blind or early picks (Phase 1 turns: B1 or early picks)
             val earlyPickOutcomes = mutableListOf<Boolean>()
             for (game in proGames) {
-                for (turn in game.draftState.turns) {
-                    if (turn.actionType == ActionType.PICK &&
-                        turn.championId == champId &&
-                        turn.player.equals(playerId, ignoreCase = true)
-                    ) {
-                        // Early/Blind pick defined as pick in Phase 1 (turns 7 to 11)
-                        if (turn.turnNumber <= 11) {
-                            val won = game.winner != null && game.winner == turn.side
+                if (game.draftState.turns.isNotEmpty()) {
+                    for (turn in game.draftState.turns) {
+                        if (turn.actionType == ActionType.PICK &&
+                            turn.championId.equals(champId, ignoreCase = true) &&
+                            turn.player.equals(playerId, ignoreCase = true)
+                        ) {
+                            // Early/Blind pick defined as pick in Phase 1 (turns 7 to 11)
+                            if (turn.turnNumber <= 11) {
+                                val won = game.winner != null && game.winner == turn.side
+                                earlyPickOutcomes.add(won)
+                            }
+                        }
+                    }
+                } else {
+                    for (pick in game.draftState.bluePicks) {
+                        if (pick.championId.equals(champId, ignoreCase = true) &&
+                            pick.playerId.equals(playerId, ignoreCase = true)
+                        ) {
+                            val won = game.winner != null && game.winner == Side.BLUE
+                            earlyPickOutcomes.add(won)
+                        }
+                    }
+                    for (pick in game.draftState.redPicks) {
+                        if (pick.championId.equals(champId, ignoreCase = true) &&
+                            pick.playerId.equals(playerId, ignoreCase = true)
+                        ) {
+                            val won = game.winner != null && game.winner == Side.RED
                             earlyPickOutcomes.add(won)
                         }
                     }
