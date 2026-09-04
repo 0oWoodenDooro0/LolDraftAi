@@ -1,14 +1,20 @@
 package com.loldraft.server
 
 import com.loldraft.data.meta.ChampionTagRegistry
+import com.loldraft.data.meta.PatchMetaAnalyzer
+import com.loldraft.data.meta.PatchMetaMatrix
 import com.loldraft.data.models.Game
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.models.Team
+import com.loldraft.data.normalization.ChampionNormalizer
 import com.loldraft.data.normalization.PatchNormalizer
+import com.loldraft.data.player.PlayerIntelligenceService
+import com.loldraft.data.player.ProPlayerDetailedProfile
 import com.loldraft.data.sources.OraclesElixirCsvParser
 import com.loldraft.data.style.TeamStyleAnalyzer
 import com.loldraft.data.style.TeamTacticalProfile
+import com.loldraft.models.FlexPickAnalyzer
 import com.loldraft.platform.pro.api.ProChampionEntry
 import com.loldraft.platform.pro.api.ProPlayerRosterEntry
 import com.loldraft.platform.pro.api.ProTeamSummary
@@ -21,10 +27,14 @@ class ProMatchRepository(
     private val parser: OraclesElixirCsvParser = OraclesElixirCsvParser(),
     private val teamStyleAnalyzer: TeamStyleAnalyzer = TeamStyleAnalyzer(),
     private val tagRegistry: ChampionTagRegistry = ChampionTagRegistry.createDefault(),
+    private val patchMetaAnalyzer: PatchMetaAnalyzer = PatchMetaAnalyzer(),
+    private val flexAnalyzer: FlexPickAnalyzer = FlexPickAnalyzer(tagRegistry = tagRegistry),
 ) {
     private val games = mutableListOf<Game>()
     private val teamProfilesCache = ConcurrentHashMap<String, TeamTacticalProfile?>()
     private val teamRostersCache = ConcurrentHashMap<String, List<ProPlayerRosterEntry>>()
+    private val patchMetaCache = ConcurrentHashMap<String, PatchMetaMatrix>()
+    private val championRoleStats = ConcurrentHashMap<String, MutableMap<Role, Int>>()
     private var initialized = false
 
     val totalGamesCount: Int
@@ -40,6 +50,8 @@ class ProMatchRepository(
         games.clear()
         teamProfilesCache.clear()
         teamRostersCache.clear()
+        patchMetaCache.clear()
+        championRoleStats.clear()
 
         if (initialGames != null) {
             games.addAll(initialGames)
@@ -56,32 +68,38 @@ class ProMatchRepository(
                 }
             }
         }
+
+        // Aggregate empirical role statistics across all games
+        for (game in games) {
+            val allPicks = game.draftState.bluePicks + game.draftState.redPicks
+            for (pick in allPicks) {
+                val role = pick.role ?: continue
+                val slug = ChampionNormalizer.toSlug(pick.championId)
+                if (slug.isNotBlank()) {
+                    val roleMap = championRoleStats.computeIfAbsent(slug) { ConcurrentHashMap() }
+                    roleMap[role] = (roleMap[role] ?: 0) + 1
+                }
+            }
+        }
+
         initialized = true
     }
 
-    fun getPatches(): List<String> {
-        ensureInitialized()
-        return games
-            .mapNotNull { it.patch.takeIf { p -> p.isNotBlank() } }
-            .distinct()
-            .sortedWith(
-                Comparator { a, b ->
-                    val pa = PatchNormalizer.parse(a)
-                    val pb = PatchNormalizer.parse(b)
-                    when {
-                        pa != null && pb != null -> pa.compareTo(pb)
-                        pa != null -> 1
-                        pb != null -> -1
-                        else -> a.compareTo(b)
-                    }
-                },
-            )
+    val playerIntelligenceService: PlayerIntelligenceService by lazy {
+        PlayerIntelligenceService(proMatchRepository = this)
     }
 
-    fun getDefaultPatch(): String {
+    fun getAllGames(): List<Game> {
         ensureInitialized()
-        return getPatches().lastOrNull() ?: "16.17"
+        return games.toList()
     }
+
+    fun getTeamPlayerProfiles(teamId: String): List<ProPlayerDetailedProfile> {
+        ensureInitialized()
+        return playerIntelligenceService.getTeamPlayerProfiles(teamId)
+    }
+
+    fun getDefaultPatch(): String = getLatestPatch()
 
     fun getLeagues(): List<String> {
         ensureInitialized()
@@ -172,16 +190,94 @@ class ProMatchRepository(
         }
     }
 
+    fun getPatches(): List<String> {
+        ensureInitialized()
+        return games
+            .map { it.patch }
+            .filter { it.isNotBlank() && it != "unknown" }
+            .distinct()
+            .sortedWith { a, b ->
+                val vA = PatchNormalizer.parse(a)
+                val vB = PatchNormalizer.parse(b)
+                when {
+                    vA != null && vB != null -> vB.compareTo(vA)
+                    vA != null -> -1
+                    vB != null -> 1
+                    else -> b.compareTo(a)
+                }
+            }
+    }
+
+    fun getLatestPatch(): String {
+        ensureInitialized()
+        return getPatches().firstOrNull() ?: "16.17"
+    }
+
+    fun getPatchMeta(patch: String? = null): PatchMetaMatrix {
+        ensureInitialized()
+        val targetPatch =
+            if (patch.isNullOrBlank() || patch.equals("latest", ignoreCase = true)) {
+                getLatestPatch()
+            } else {
+                patch.trim()
+            }
+
+        return patchMetaCache.computeIfAbsent(targetPatch.lowercase()) {
+            val normTarget = PatchNormalizer.normalize(targetPatch)
+            val patchGames =
+                games.filter {
+                    it.patch.equals(targetPatch, ignoreCase = true) ||
+                        PatchNormalizer.normalize(it.patch) == normTarget
+                }
+            if (patchGames.isEmpty()) {
+                PatchMetaMatrix(
+                    patch = targetPatch,
+                    totalGames = 0,
+                    championStats = emptyMap(),
+                    synergies = emptyList(),
+                    matchupCounters = emptyList(),
+                )
+            } else {
+                patchMetaAnalyzer.analyzeGames(patchGames, patchLabel = targetPatch)
+            }
+        }
+    }
+
+    fun getChampionEmpiricalRoles(champion: String): Pair<Role?, List<Role>> {
+        ensureInitialized()
+        val slug = ChampionNormalizer.toSlug(champion)
+        val stats = championRoleStats[slug]
+        if (!stats.isNullOrEmpty()) {
+            val sorted = stats.entries.sortedByDescending { it.value }
+            val primary = sorted.first().key
+            val secondaries = sorted.drop(1).filter { it.value > 0 }.map { it.key }
+            return primary to secondaries
+        }
+
+        // Dynamic AI fallback using FlexPickAnalyzer
+        val analysis = flexAnalyzer.analyzeChampion(champion)
+        return analysis.primaryRole to analysis.secondaryRoles
+    }
+
     fun getChampions(): List<ProChampionEntry> {
         ensureInitialized()
         val championMap = mutableMapOf<String, ProChampionEntry>()
 
         for (profile in tagRegistry.getAllProfiles()) {
+            val (empiricalPrimary, empiricalSecondary) = getChampionEmpiricalRoles(profile.championId)
+            val primaryRole = empiricalPrimary ?: profile.primaryRole
+            val secondaryRoles =
+                if (empiricalSecondary.isNotEmpty()) {
+                    empiricalSecondary
+                } else {
+                    profile.secondaryRoles.toList()
+                }
             championMap[profile.championId.lowercase()] =
                 ProChampionEntry(
                     id = profile.championId,
                     name = profile.displayName,
-                    primaryRole = profile.primaryRole,
+                    primaryRole = primaryRole,
+                    secondaryRoles = secondaryRoles,
                     tags = profile.tags.map { it.name },
                 )
         }
@@ -209,20 +305,38 @@ class ProMatchRepository(
 
             for (champ in picksAndBans) {
                 if (champ.isBlank()) continue
+                val slug = ChampionNormalizer.toSlug(champ)
                 val key = champ.lowercase()
-                val existing = championMap[key]
+                val existing = championMap[slug] ?: championMap[key]
                 if (existing == null) {
-                    val empiricalRole = pickRoleCounts[key]?.maxByOrNull { it.value }?.key ?: Role.MID
-                    championMap[key] =
+                    val normalizedName = ChampionNormalizer.normalize(champ)
+                    val (empiricalPrimary, empiricalSecondary) = getChampionEmpiricalRoles(champ)
+                    val profile = tagRegistry.getProfile(champ)
+                    val pickEmpirical = pickRoleCounts[key]?.maxByOrNull { it.value }?.key
+                    val primaryRole = empiricalPrimary ?: pickEmpirical ?: profile?.primaryRole ?: Role.MID
+                    val secondaryRoles =
+                        if (empiricalSecondary.isNotEmpty()) {
+                            empiricalSecondary
+                        } else {
+                            profile?.secondaryRoles?.toList() ?: emptyList()
+                        }
+                    val entry =
                         ProChampionEntry(
-                            id = champ,
-                            name = champ,
-                            primaryRole = empiricalRole,
-                            tags = emptyList(),
+                            id = normalizedName,
+                            name = normalizedName,
+                            primaryRole = primaryRole,
+                            secondaryRoles = secondaryRoles,
+                            tags = profile?.tags?.map { it.name } ?: emptyList(),
                         )
+                    championMap[slug] = entry
+                    championMap[key] = entry
                 } else if (existing.primaryRole == null) {
-                    val empiricalRole = pickRoleCounts[key]?.maxByOrNull { it.value }?.key ?: Role.MID
-                    championMap[key] = existing.copy(primaryRole = empiricalRole)
+                    val pickEmpirical = pickRoleCounts[key]?.maxByOrNull { it.value }?.key
+                    val (empiricalPrimary, _) = getChampionEmpiricalRoles(champ)
+                    val primaryRole = empiricalPrimary ?: pickEmpirical ?: Role.MID
+                    val updated = existing.copy(primaryRole = primaryRole)
+                    championMap[slug] = updated
+                    championMap[key] = updated
                 }
             }
         }

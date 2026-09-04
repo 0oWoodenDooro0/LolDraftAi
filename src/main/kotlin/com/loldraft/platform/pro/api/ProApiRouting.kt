@@ -1,6 +1,7 @@
 package com.loldraft.platform.pro.api
 
 import com.loldraft.data.models.Role
+import com.loldraft.data.player.PlayerIntelligenceService
 import com.loldraft.server.ProMatchRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
@@ -34,10 +35,14 @@ data class ProChampionEntry(
     val id: String,
     val name: String,
     val primaryRole: Role? = null,
+    val secondaryRoles: List<Role> = emptyList(),
     val tags: List<String> = emptyList(),
 )
 
-fun Route.proApiRouting(repository: ProMatchRepository) {
+fun Route.proApiRouting(
+    repository: ProMatchRepository,
+    playerIntelligenceService: PlayerIntelligenceService = repository.playerIntelligenceService,
+) {
     route("/api/pro") {
         get("/health") {
             call.respond(
@@ -48,18 +53,20 @@ fun Route.proApiRouting(repository: ProMatchRepository) {
                     "gamesLoaded" to repository.totalGamesCount.toString(),
                     "leaguesCount" to repository.getLeagues().size.toString(),
                     "teamsCount" to repository.getTeams().size.toString(),
+                    "latestPatch" to repository.getLatestPatch(),
+                    "patchesCount" to repository.getPatches().size.toString(),
                 ),
             )
         }
 
         get("/patches") {
-            call.respond(
-                HttpStatusCode.OK,
-                mapOf(
-                    "patches" to repository.getPatches(),
-                    "defaultPatch" to repository.getDefaultPatch(),
-                ),
-            )
+            call.respond(HttpStatusCode.OK, repository.getPatches())
+        }
+
+        get("/patches/{patch}/meta") {
+            val patch = call.parameters["patch"] ?: "latest"
+            val meta = repository.getPatchMeta(patch)
+            call.respond(HttpStatusCode.OK, meta)
         }
 
         get("/leagues") {
@@ -93,6 +100,17 @@ fun Route.proApiRouting(repository: ProMatchRepository) {
             }
             val roster = repository.getTeamRoster(teamId)
             call.respond(HttpStatusCode.OK, roster)
+        }
+
+        get("/teams/{teamId}/players") {
+            val teamId = call.parameters["teamId"] ?: throw IllegalArgumentException("Missing teamId")
+            val profile = repository.getTeamProfile(teamId)
+            if (profile == null) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Team '$teamId' not found"))
+                return@get
+            }
+            val players = playerIntelligenceService.getTeamPlayerProfiles(teamId)
+            call.respond(HttpStatusCode.OK, players)
         }
 
         get("/champions") {

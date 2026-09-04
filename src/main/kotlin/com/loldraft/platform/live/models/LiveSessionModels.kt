@@ -9,6 +9,7 @@ import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.models.Team
 import com.loldraft.data.player.PlayerCareerStats
+import com.loldraft.data.player.ProPlayerDetailedProfile
 import com.loldraft.data.style.TeamTacticalProfile
 import com.loldraft.models.ChampionIntentCandidate
 import com.loldraft.models.CompositionFlaw
@@ -83,6 +84,8 @@ data class LiveMatchSession(
     val redTeamProfile: TeamTacticalProfile? = null,
     val playerStatsByRoleBlue: Map<Role, PlayerCareerStats>? = null,
     val playerStatsByRoleRed: Map<Role, PlayerCareerStats>? = null,
+    val playerProfilesByRoleBlue: Map<Role, ProPlayerDetailedProfile>? = null,
+    val playerProfilesByRoleRed: Map<Role, ProPlayerDetailedProfile>? = null,
     val currentState: DraftState = DraftState.empty(),
     val history: List<LiveTurnSnapshot> = emptyList(),
     val status: LiveSessionStatus = LiveSessionStatus.IN_PROGRESS,
@@ -100,6 +103,8 @@ data class CreateLiveSessionRequest(
     val redTeamProfile: TeamTacticalProfile? = null,
     val playerStatsByRoleBlue: Map<Role, PlayerCareerStats>? = null,
     val playerStatsByRoleRed: Map<Role, PlayerCareerStats>? = null,
+    val playerProfilesByRoleBlue: Map<Role, ProPlayerDetailedProfile>? = null,
+    val playerProfilesByRoleRed: Map<Role, ProPlayerDetailedProfile>? = null,
     val initialTurns: List<DraftTurn> = emptyList(),
 )
 

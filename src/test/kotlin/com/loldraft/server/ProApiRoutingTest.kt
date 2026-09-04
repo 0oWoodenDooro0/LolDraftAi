@@ -6,6 +6,7 @@ import com.loldraft.data.models.PickSelection
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.models.Team
+import com.loldraft.data.player.ProPlayerDetailedProfile
 import com.loldraft.platform.pro.api.ProChampionEntry
 import com.loldraft.platform.pro.api.ProPlayerRosterEntry
 import com.loldraft.platform.pro.api.ProTeamSummary
@@ -192,5 +193,42 @@ class ProApiRoutingTest {
             val champions = json.decodeFromString<List<ProChampionEntry>>(response.bodyAsText())
             assertTrue(champions.isNotEmpty())
             assertTrue(champions.any { it.name.equals("Orianna", ignoreCase = true) })
+        }
+
+    @Test
+    fun `test get team players endpoint returns starting five profiles with career and soloQ metrics`() =
+        testApplication {
+            val repository = createSampleRepository()
+            application {
+                install(ContentNegotiation) { json(json) }
+                routing { proApiRouting(repository) }
+            }
+
+            val response = client.get("/api/pro/teams/t1/players")
+            assertEquals(HttpStatusCode.OK, response.status)
+            val players = json.decodeFromString<List<ProPlayerDetailedProfile>>(response.bodyAsText())
+            assertEquals(5, players.size)
+
+            val roles = players.map { it.role }
+            assertEquals(listOf(Role.TOP, Role.JUNGLE, Role.MID, Role.BOT, Role.SUPPORT), roles)
+
+            val faker = players.find { it.role == Role.MID }
+            assertNotNull(faker)
+            assertEquals("Faker", faker?.playerId)
+            assertEquals(1, faker?.totalProGames)
+            assertEquals(1.0, faker?.proWinRate)
+        }
+
+    @Test
+    fun `test get team players returns 404 for unknown team`() =
+        testApplication {
+            val repository = createSampleRepository()
+            application {
+                install(ContentNegotiation) { json(json) }
+                routing { proApiRouting(repository) }
+            }
+
+            val notFoundRes = client.get("/api/pro/teams/unknown-team-404/players")
+            assertEquals(HttpStatusCode.NotFound, notFoundRes.status)
         }
 }

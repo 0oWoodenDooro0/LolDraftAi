@@ -1,5 +1,6 @@
 package com.loldraft.models
 
+import com.loldraft.data.meta.ChampionRoleDictionary
 import com.loldraft.data.meta.ChampionTagRegistry
 import com.loldraft.data.meta.PatchMetaMatrix
 import com.loldraft.data.models.DraftState
@@ -17,13 +18,14 @@ class FlexPickAnalyzer(
         private val DEFAULT_FLEX_PRIORS: Map<String, Map<Role, Double>> =
             mapOf(
                 "rumble" to mapOf(Role.TOP to 0.45, Role.MID to 0.45, Role.JUNGLE to 0.10),
-                "poppy" to mapOf(Role.TOP to 0.35, Role.JUNGLE to 0.45, Role.SUPPORT to 0.20),
-                "corki" to mapOf(Role.MID to 0.70, Role.BOT to 0.30),
+                "poppy" to mapOf(Role.SUPPORT to 0.45, Role.JUNGLE to 0.35, Role.TOP to 0.20),
+                "corki" to mapOf(Role.BOT to 0.60, Role.MID to 0.40),
+                "ambessa" to mapOf(Role.TOP to 0.75, Role.JUNGLE to 0.25),
                 "tristana" to mapOf(Role.MID to 0.55, Role.BOT to 0.45),
                 "maokai" to mapOf(Role.SUPPORT to 0.50, Role.JUNGLE to 0.35, Role.TOP to 0.15),
                 "gragas" to mapOf(Role.TOP to 0.45, Role.JUNGLE to 0.30, Role.MID to 0.25),
                 "nautilus" to mapOf(Role.SUPPORT to 0.85, Role.MID to 0.15),
-                "jayce" to mapOf(Role.TOP to 0.55, Role.MID to 0.45),
+                "jayce" to mapOf(Role.TOP to 0.65, Role.MID to 0.35),
                 "lucian" to mapOf(Role.BOT to 0.75, Role.MID to 0.25),
                 "k'sante" to mapOf(Role.TOP to 0.85, Role.MID to 0.15),
                 "karma" to mapOf(Role.SUPPORT to 0.70, Role.MID to 0.20, Role.TOP to 0.10),
@@ -88,6 +90,11 @@ class FlexPickAnalyzer(
                 "camille" to Role.TOP,
                 "malphite" to Role.TOP,
                 "gnar" to Role.TOP,
+                "ambessa" to Role.TOP,
+                "corki" to Role.BOT,
+                "smolder" to Role.BOT,
+                "jayce" to Role.TOP,
+                "poppy" to Role.SUPPORT,
             )
     }
 
@@ -109,7 +116,8 @@ class FlexPickAnalyzer(
     ): FlexAnalysisResult {
         val slug = ChampionNormalizer.toSlug(championId)
         val profile = tagRegistry.getProfile(championId)
-        val primaryRole = profile?.primaryRole ?: KNOWN_PRIMARY_ROLES[slug] ?: Role.MID
+        val baseline = ChampionRoleDictionary.getBaselineRole(championId)
+        val primaryRole = profile?.primaryRole ?: KNOWN_PRIMARY_ROLES[slug] ?: baseline.first
 
         // 1. Determine prior distribution
         val basePriors = mutableMapOf<Role, Double>()
@@ -125,6 +133,10 @@ class FlexPickAnalyzer(
             } else {
                 basePriors[profile.primaryRole] = 1.0
             }
+        } else if (baseline.second.isNotEmpty()) {
+            val secShare = 0.35 / baseline.second.size
+            basePriors[baseline.first] = 0.65
+            baseline.second.forEach { basePriors[it] = secShare }
         } else {
             basePriors[primaryRole] = 1.0
         }

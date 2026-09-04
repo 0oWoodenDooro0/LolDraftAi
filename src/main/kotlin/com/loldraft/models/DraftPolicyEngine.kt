@@ -6,6 +6,7 @@ import com.loldraft.data.models.DraftState
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.player.PlayerCareerStats
+import com.loldraft.data.player.ProPlayerDetailedProfile
 import com.loldraft.data.style.TeamTacticalProfile
 
 class DraftPolicyEngine(
@@ -21,6 +22,7 @@ class DraftPolicyEngine(
         patchMeta: PatchMetaMatrix? = null,
         teamProfile: TeamTacticalProfile? = null,
         playerStatsByRole: Map<Role, PlayerCareerStats>? = null,
+        playerProfilesByRole: Map<Role, ProPlayerDetailedProfile>? = null,
         topN: Int = 3,
     ): IntentPredictionResult =
         intentPredictor.predictNextAction(
@@ -28,6 +30,7 @@ class DraftPolicyEngine(
             patchMeta = patchMeta,
             teamProfile = teamProfile,
             playerStatsByRole = playerStatsByRole,
+            playerProfilesByRole = playerProfilesByRole,
             topN = topN,
         )
 
