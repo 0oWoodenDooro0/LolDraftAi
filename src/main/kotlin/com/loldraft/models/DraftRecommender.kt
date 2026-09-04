@@ -291,7 +291,13 @@ class DraftRecommender(
         val targetTeamPicks = if (targetSide == Side.BLUE) draftState.bluePicks else draftState.redPicks
         val enemyPicks = if (targetSide == Side.BLUE) draftState.redPicks else draftState.bluePicks
 
-        val lockedRoles = targetTeamPicks.mapNotNull { it.role }.toSet()
+        val lockedRoles = targetTeamPicks.mapNotNull { it.role }.toMutableSet()
+        for (p in targetTeamPicks) {
+            if (p.role == null) {
+                val pRole = tagRegistry.getProfile(p.championId)?.primaryRole
+                if (pRole != null) lockedRoles.add(pRole)
+            }
+        }
         val vacantRoles = Role.entries.filterNot { it in lockedRoles }
 
         // Filter by targetRole if specified
@@ -385,9 +391,15 @@ class DraftRecommender(
             val counterReasons = mutableListOf<String>()
             if (patchMeta != null && enemyPicks.isNotEmpty()) {
                 for (enemy in enemyPicks) {
+                    val enemyEffectiveRole = enemy.role ?: tagRegistry.getProfile(enemy.championId)?.primaryRole
+                    val isSameLane = enemyEffectiveRole == assignedRole
                     val counter =
-                        patchMeta.getMatchup(champ, enemy.championId, assignedRole)
-                            ?: patchMeta.getMatchup(champ, enemy.championId)
+                        if (isSameLane) {
+                            patchMeta.getMatchup(champ, enemy.championId, assignedRole)
+                                ?: patchMeta.getMatchup(champ, enemy.championId)
+                        } else {
+                            patchMeta.getMatchup(champ, enemy.championId)
+                        }
                     if (counter != null && counter.counterScore >= 60.0) {
                         counterScore += counter.counterScore
                         counterReasons.add("Hard counter against ${enemy.championId} (${(counter.winRate * 100).toInt()}% WR)")
@@ -427,11 +439,11 @@ class DraftRecommender(
             }
 
             // Specialized 2v2 Bot Duo Synergy and Matchup Counter calculation
-            val enemyBot = enemyPicks.find { it.role == Role.BOT } ?: enemyPicks.find { tagRegistry.getProfile(it.championId)?.primaryRole == Role.BOT }
-            val enemySup = enemyPicks.find { it.role == Role.SUPPORT } ?: enemyPicks.find { tagRegistry.getProfile(it.championId)?.primaryRole == Role.SUPPORT }
+            val enemyBot = enemyPicks.find { it.role == Role.BOT } ?: enemyPicks.find { it.role == null && tagRegistry.getProfile(it.championId)?.primaryRole == Role.BOT }
+            val enemySup = enemyPicks.find { it.role == Role.SUPPORT } ?: enemyPicks.find { it.role == null && tagRegistry.getProfile(it.championId)?.primaryRole == Role.SUPPORT }
 
             if (assignedRole == Role.SUPPORT) {
-                val allyBot = targetTeamPicks.find { it.role == Role.BOT } ?: targetTeamPicks.find { tagRegistry.getProfile(it.championId)?.primaryRole == Role.BOT }
+                val allyBot = targetTeamPicks.find { it.role == Role.BOT } ?: targetTeamPicks.find { it.role == null && tagRegistry.getProfile(it.championId)?.primaryRole == Role.BOT }
                 if (allyBot != null) {
                     val duo = patchMeta?.getDuoSynergy(allyBot.championId, champ)
                         ?: com.loldraft.data.meta.PatchMetaAnalyzer.CLASSIC_BOT_DUOS.find {
@@ -459,7 +471,7 @@ class DraftRecommender(
                     }
                 }
             } else if (assignedRole == Role.BOT) {
-                val allySup = targetTeamPicks.find { it.role == Role.SUPPORT } ?: targetTeamPicks.find { tagRegistry.getProfile(it.championId)?.primaryRole == Role.SUPPORT }
+                val allySup = targetTeamPicks.find { it.role == Role.SUPPORT } ?: targetTeamPicks.find { it.role == null && tagRegistry.getProfile(it.championId)?.primaryRole == Role.SUPPORT }
                 if (allySup != null) {
                     val duo = patchMeta?.getDuoSynergy(champ, allySup.championId)
                         ?: com.loldraft.data.meta.PatchMetaAnalyzer.CLASSIC_BOT_DUOS.find {

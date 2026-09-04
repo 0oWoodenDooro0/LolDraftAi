@@ -461,4 +461,54 @@ class DraftIntentPredictorTest {
             )
         }
 
+
+        @Test
+        @DisplayName("When champion pick role is manually overridden in UI, predictions must strictly follow assigned role and not default primaryRole")
+        fun `test manual role override in draftState respects assigned role over default primaryRole`() {
+            val patchMeta = PatchMetaMatrix(
+                patch = "14.15",
+                totalGames = 100,
+                championStats = mapOf(
+                    "renekton" to ChampionMetaStats("Renekton", "14.15", picks = 50, winRate = 0.55, tier = MetaTier.T1, roleDistribution = mapOf(Role.TOP to 45, Role.MID to 5)),
+                    "aatrox" to ChampionMetaStats("Aatrox", "14.15", picks = 50, winRate = 0.55, tier = MetaTier.T1, roleDistribution = mapOf(Role.TOP to 50)),
+                    "syndra" to ChampionMetaStats("Syndra", "14.15", picks = 50, winRate = 0.55, tier = MetaTier.T1, roleDistribution = mapOf(Role.MID to 50)),
+                ),
+                matchupCounters = listOf(
+                    com.loldraft.data.meta.MatchupCounter(champion = "Aatrox", opponent = "Renekton", role = Role.TOP, gamesFaced = 10, wins = 6, losses = 4, winRate = 0.58, winRateDelta = 0.08, counterScore = 65.0),
+                    com.loldraft.data.meta.MatchupCounter(champion = "Syndra", opponent = "Renekton", role = Role.MID, gamesFaced = 10, wins = 6, losses = 4, winRate = 0.60, winRateDelta = 0.10, counterScore = 70.0),
+                ),
+            )
+
+            // Turn 7: Blue picks Renekton (default primaryRole: TOP), but explicitly assigns role = Role.MID
+            val turns = (1..6).map { DraftTurn(it, if (it % 2 != 0) Side.BLUE else Side.RED, ActionType.BAN, "Ban$it") } +
+                listOf(
+                    DraftTurn(7, Side.BLUE, ActionType.PICK, "Renekton", role = Role.MID)
+                )
+            val draft = DraftState.fromTurns(turns)
+            assertEquals(8, draft.currentTurnNumber) // Red Turn 8
+
+            // Predict next action for Red (Turn 8 Pick)
+            val result = predictor.predictNextAction(draftState = draft, patchMeta = patchMeta, topN = 5)
+
+            // Red candidate for MID (e.g. Syndra) should recognize Renekton as enemy MID opponent
+            val syndraPred = result.predictions.find { it.championId == "Syndra" }
+            if (syndraPred != null) {
+                assertEquals(Role.MID, syndraPred.predictedRole)
+                assertTrue(
+                    syndraPred.rationale.contains("Renekton") || syndraPred.counterDenialScore > 0.0,
+                    "Syndra in MID should recognize Renekton as lane opponent"
+                )
+            }
+
+            // Red candidate for TOP (e.g. Aatrox) should NOT recognize Renekton as lane opponent because Renekton is MID, not TOP!
+            val aatroxPred = result.predictions.find { it.championId == "Aatrox" }
+            if (aatroxPred != null) {
+                assertEquals(Role.TOP, aatroxPred.predictedRole)
+                assertFalse(
+                    aatroxPred.rationale.contains("Lane counter vs Renekton"),
+                    "Aatrox in TOP must not claim lane counter vs Renekton when Renekton was assigned to MID"
+                )
+            }
+        }
+
 }

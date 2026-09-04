@@ -287,4 +287,34 @@ class DraftClientViewModelTest {
         assertEquals(Role.SUPPORT, slot7.role, "Turn 7 (Nautilus) should now be SUPPORT")
         assertEquals(Role.MID, slot10.role, "Turn 10 (Leona) should now be swapped to MID")
     }
+
+    @Test
+    fun `test updatePickRole recalculates predictions without retaining champion default role`() {
+        // Fast forward 6 bans to reach Turn 7
+        repeat(6) {
+            viewModel.lockInChampion("BanChamp$it")
+        }
+
+        // Turn 7: Blue Pick 1 -> Lock in Renekton (default primaryRole: TOP)
+        viewModel.lockInChampion("Renekton")
+        val slot7Before = viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }
+        assertEquals(Role.TOP, slot7Before.role)
+
+        // Change role of Renekton from TOP to MID
+        viewModel.updatePickRole(7, Role.MID)
+        val slot7After = viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }
+        assertEquals(Role.MID, slot7After.role)
+
+        // Recalculations were executed for Turn 8 (Red pick 1).
+        // Predictions for Red should not see Renekton as TOP opponent.
+        val predictions = viewModel.uiState.value.intentPredictions
+        val topPredictions = predictions.filter { it.predictedRole == Role.TOP }
+        for (pred in topPredictions) {
+            assertFalse(
+                pred.rationale.contains("Lane counter vs Renekton"),
+                "Red TOP candidate must not claim lane counter vs Renekton after Renekton moved to MID"
+            )
+        }
+    }
+
 }

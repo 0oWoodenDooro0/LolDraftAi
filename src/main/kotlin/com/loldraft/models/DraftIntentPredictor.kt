@@ -225,7 +225,7 @@ class DraftIntentPredictor(
 
         fun findPickForRole(picks: List<PickSelection>, role: Role): PickSelection? {
             return picks.find { it.role == role }
-                ?: picks.find { tagRegistry.getProfile(it.championId)?.primaryRole == role }
+                ?: picks.find { it.role == null && tagRegistry.getProfile(it.championId)?.primaryRole == role }
         }
 
         val enemyBot = findPickForRole(enemyPicks, Role.BOT)
