@@ -35,6 +35,7 @@ data class ProChampionEntry(
     val id: String,
     val name: String,
     val primaryRole: Role? = null,
+    val secondaryRoles: List<Role> = emptyList(),
     val tags: List<String> = emptyList(),
 )
 
@@ -52,8 +53,20 @@ fun Route.proApiRouting(
                     "gamesLoaded" to repository.totalGamesCount.toString(),
                     "leaguesCount" to repository.getLeagues().size.toString(),
                     "teamsCount" to repository.getTeams().size.toString(),
+                    "latestPatch" to repository.getLatestPatch(),
+                    "patchesCount" to repository.getPatches().size.toString(),
                 ),
             )
+        }
+
+        get("/patches") {
+            call.respond(HttpStatusCode.OK, repository.getPatches())
+        }
+
+        get("/patches/{patch}/meta") {
+            val patch = call.parameters["patch"] ?: "latest"
+            val meta = repository.getPatchMeta(patch)
+            call.respond(HttpStatusCode.OK, meta)
         }
 
         get("/leagues") {
