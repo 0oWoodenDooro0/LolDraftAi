@@ -9,6 +9,7 @@ import com.loldraft.data.models.DraftTurnSpec
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.normalization.ChampionNormalizer
+import com.loldraft.data.player.PlayerIntelligenceService
 import com.loldraft.models.AnalyticalDraftEvaluator
 import com.loldraft.models.CompositionFlawDetector
 import com.loldraft.models.DraftEvaluationResult
@@ -39,6 +40,7 @@ class LiveMatchCompanionEngine(
     val draftRecommender: DraftRecommender = DraftRecommender(evaluator = draftEvaluator, tagRegistry = tagRegistry),
     val intentPredictor: DraftIntentPredictor = DraftIntentPredictor(tagRegistry = tagRegistry),
     val flexAnalyzer: FlexPickAnalyzer = FlexPickAnalyzer(tagRegistry = tagRegistry),
+    val playerIntelligenceService: PlayerIntelligenceService = PlayerIntelligenceService(),
     val coachPickEvaluator: CoachPickEvaluator =
         CoachPickEvaluator(
             draftEvaluator = draftEvaluator,
@@ -61,6 +63,39 @@ class LiveMatchCompanionEngine(
             )
         eventFlows[sessionId] = initialFlow
 
+        val resolvedProfilesBlue =
+            request.playerProfilesByRoleBlue
+                ?: playerIntelligenceService
+                    .getTeamPlayerProfiles(request.blueTeam.id)
+                    .associateBy { it.role }
+                    .ifEmpty {
+                        playerIntelligenceService
+                            .getTeamPlayerProfiles(request.blueTeam.name)
+                            .associateBy { it.role }
+                    }.takeIf { it.isNotEmpty() }
+
+        val resolvedProfilesRed =
+            request.playerProfilesByRoleRed
+                ?: playerIntelligenceService
+                    .getTeamPlayerProfiles(request.redTeam.id)
+                    .associateBy { it.role }
+                    .ifEmpty {
+                        playerIntelligenceService
+                            .getTeamPlayerProfiles(request.redTeam.name)
+                            .associateBy { it.role }
+                    }.takeIf { it.isNotEmpty() }
+
+        val resolvedStatsBlue = request.playerStatsByRoleBlue ?: resolvedProfilesBlue?.mapValues { it.value.careerStats }
+        val resolvedStatsRed = request.playerStatsByRoleRed ?: resolvedProfilesRed?.mapValues { it.value.careerStats }
+
+        val enrichedRequest =
+            request.copy(
+                playerProfilesByRoleBlue = resolvedProfilesBlue,
+                playerProfilesByRoleRed = resolvedProfilesRed,
+                playerStatsByRoleBlue = resolvedStatsBlue,
+                playerStatsByRoleRed = resolvedStatsRed,
+            )
+
         // Generate Turn 0 initial snapshot
         val initialDraft = DraftState.empty()
         val initialSnapshot =
@@ -69,19 +104,21 @@ class LiveMatchCompanionEngine(
                 turnNumber = 0,
                 turn = null,
                 draftState = initialDraft,
-                request = request,
+                request = enrichedRequest,
             )
 
         var currentSession =
             LiveMatchSession(
                 sessionId = sessionId,
-                blueTeam = request.blueTeam,
-                redTeam = request.redTeam,
-                patchMeta = request.patchMeta,
-                blueTeamProfile = request.blueTeamProfile,
-                redTeamProfile = request.redTeamProfile,
-                playerStatsByRoleBlue = request.playerStatsByRoleBlue,
-                playerStatsByRoleRed = request.playerStatsByRoleRed,
+                blueTeam = enrichedRequest.blueTeam,
+                redTeam = enrichedRequest.redTeam,
+                patchMeta = enrichedRequest.patchMeta,
+                blueTeamProfile = enrichedRequest.blueTeamProfile,
+                redTeamProfile = enrichedRequest.redTeamProfile,
+                playerStatsByRoleBlue = enrichedRequest.playerStatsByRoleBlue,
+                playerStatsByRoleRed = enrichedRequest.playerStatsByRoleRed,
+                playerProfilesByRoleBlue = enrichedRequest.playerProfilesByRoleBlue,
+                playerProfilesByRoleRed = enrichedRequest.playerProfilesByRoleRed,
                 currentState = initialDraft,
                 history = listOf(initialSnapshot),
                 status = LiveSessionStatus.IN_PROGRESS,
@@ -231,6 +268,8 @@ class LiveMatchCompanionEngine(
                 redTeamProfile = session.redTeamProfile,
                 playerStatsByRoleBlue = session.playerStatsByRoleBlue,
                 playerStatsByRoleRed = session.playerStatsByRoleRed,
+                playerProfilesByRoleBlue = session.playerProfilesByRoleBlue,
+                playerProfilesByRoleRed = session.playerProfilesByRoleRed,
             )
 
         val snapshot =
@@ -313,6 +352,7 @@ class LiveMatchCompanionEngine(
 
         val nextSide = nextTurnSpec?.side
         val nextPlayerStats = if (nextSide == Side.BLUE) request.playerStatsByRoleBlue else request.playerStatsByRoleRed
+        val nextPlayerProfiles = if (nextSide == Side.BLUE) request.playerProfilesByRoleBlue else request.playerProfilesByRoleRed
         val nextTeamProfile = if (nextSide == Side.BLUE) request.blueTeamProfile else request.redTeamProfile
 
         val aiRecommendations =
@@ -340,6 +380,7 @@ class LiveMatchCompanionEngine(
                         patchMeta = request.patchMeta,
                         teamProfile = nextTeamProfile,
                         playerStatsByRole = nextPlayerStats,
+                        playerProfilesByRole = nextPlayerProfiles,
                         topN = 5,
                     ).predictions
             } else {

@@ -119,36 +119,95 @@ class PlayerIntelligenceService(
 
         // 2. Otherwise resolve from all available pro games
         val teamGames = getAllProGames().filter { matchesTeam(it.blueTeam, teamId) || matchesTeam(it.redTeam, teamId) }
-        if (teamGames.isEmpty()) return emptyList()
-
-        val statsByRolePlayer = mutableMapOf<Pair<Role, String>, Int>()
-        for (game in teamGames) {
-            val isBlue = matchesTeam(game.blueTeam, teamId)
-            val picks = if (isBlue) game.draftState.bluePicks else game.draftState.redPicks
-            for (pick in picks) {
-                val r = pick.role ?: continue
-                val p = pick.playerId?.takeIf { it.isNotBlank() } ?: continue
-                val key = r to p
-                statsByRolePlayer[key] = (statsByRolePlayer[key] ?: 0) + 1
+        if (teamGames.isNotEmpty()) {
+            val statsByRolePlayer = mutableMapOf<Pair<Role, String>, Int>()
+            for (game in teamGames) {
+                val isBlue = matchesTeam(game.blueTeam, teamId)
+                val picks = if (isBlue) game.draftState.bluePicks else game.draftState.redPicks
+                for (pick in picks) {
+                    val r = pick.role ?: continue
+                    val p = pick.playerId?.takeIf { it.isNotBlank() } ?: continue
+                    val key = r to p
+                    statsByRolePlayer[key] = (statsByRolePlayer[key] ?: 0) + 1
+                }
             }
+
+            val profiles = mutableListOf<ProPlayerDetailedProfile>()
+            for (role in standardRoles) {
+                val playersForRole = statsByRolePlayer.filterKeys { it.first == role }
+                val topPlayer = playersForRole.maxByOrNull { it.value }
+                if (topPlayer != null) {
+                    val playerName = topPlayer.key.second
+                    profiles.add(
+                        getPlayerProfile(
+                            playerId = playerName,
+                            role = role,
+                            referenceTimeMs = referenceTimeMs,
+                        ),
+                    )
+                }
+            }
+            return profiles
         }
 
-        val profiles = mutableListOf<ProPlayerDetailedProfile>()
-        for (role in standardRoles) {
-            val playersForRole = statsByRolePlayer.filterKeys { it.first == role }
-            val topPlayer = playersForRole.maxByOrNull { it.value }
-            if (topPlayer != null) {
-                val playerName = topPlayer.key.second
-                profiles.add(
-                    getPlayerProfile(
-                        playerId = playerName,
-                        role = role,
-                        referenceTimeMs = referenceTimeMs,
-                    ),
-                )
+        // 3. Otherwise check registered accounts in accountRegistry matching the team prefix
+        val registeredPlayers = accountRegistry.getAllMappings()
+        val matchingPlayers =
+            registeredPlayers.filter { (pId, accounts) ->
+                accounts.any {
+                    it.summonerName.contains(teamId, ignoreCase = true) ||
+                        it.accountId.contains(teamId, ignoreCase = true) ||
+                        isKnownTeamPlayer(teamId, pId)
+                } ||
+                    isKnownTeamPlayer(teamId, pId)
             }
+
+        if (matchingPlayers.isNotEmpty()) {
+            val profiles = mutableListOf<ProPlayerDetailedProfile>()
+            for ((pId, _) in matchingPlayers) {
+                val playerSoloQ = getSoloQGamesForPlayer(pId)
+                val role =
+                    playerSoloQ
+                        .groupingBy { it.role }
+                        .eachCount()
+                        .maxByOrNull { it.value }
+                        ?.key
+                        ?: getKnownPlayerRole(pId)
+                        ?: Role.TOP
+                profiles.add(getPlayerProfile(pId, role, referenceTimeMs))
+            }
+            return profiles
         }
-        return profiles
+
+        return emptyList()
+    }
+
+    private fun isKnownTeamPlayer(
+        teamId: String,
+        playerId: String,
+    ): Boolean {
+        val t = teamId.uppercase()
+        val p = playerId.uppercase()
+        return when {
+            t.contains("T1") -> p in setOf("ZEUS", "ONER", "FAKER", "GUMAYUSI", "KERIA", "DORAN")
+            t.contains("GEN") -> p in setOf("KIIN", "CANYON", "CHOVY", "PEYZ", "LEHENDS", "DURO", "RULER")
+            t.contains("BLG") -> p in setOf("BIN", "WEI", "XUN", "KNIGHT", "ELK", "ON")
+            t.contains("HLE") -> p in setOf("DORAN", "PEANUT", "ZEKA", "VIPER", "DELIGHT", "ZEUS")
+            t.contains("DK") -> p in setOf("KINGEN", "LUCID", "SHOWMAKER", "AIMING", "MOHAM", "KELLIN")
+            else -> false
+        }
+    }
+
+    private fun getKnownPlayerRole(playerId: String): Role? {
+        val p = playerId.uppercase()
+        return when (p) {
+            "ZEUS", "BIN", "KIIN", "KINGEN", "DORAN", "THESHY", "369", "BREATHE" -> Role.TOP
+            "ONER", "CANYON", "WEI", "XUN", "PEANUT", "LUCID", "TARZAN", "KANAVI" -> Role.JUNGLE
+            "FAKER", "CHOVY", "KNIGHT", "ZEKA", "SHOWMAKER", "ROOKIE", "SCOUT", "YAGAO", "BBD" -> Role.MID
+            "GUMAYUSI", "PEYZ", "ELK", "VIPER", "AIMING", "RULER", "JACKEYLOVE", "GALA", "DEFT" -> Role.BOT
+            "KERIA", "LEHENDS", "ON", "DELIGHT", "MOHAM", "KELLIN", "MEIKO", "CRISP", "MISSING" -> Role.SUPPORT
+            else -> null
+        }
     }
 
     private fun matchesTeam(
