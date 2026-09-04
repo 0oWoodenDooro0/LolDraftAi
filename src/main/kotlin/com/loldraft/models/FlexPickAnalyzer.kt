@@ -179,14 +179,8 @@ class FlexPickAnalyzer(
             if (remainingSum > 0.0001) {
                 conditionalMap.mapValues { roundToFourDecimals(it.value / remainingSum) }
             } else {
-                // If all probable roles are claimed, fallback to primary or first available
-                val availableRoles = Role.entries.filterNot { it in teamExistingRoles }
-                if (availableRoles.isNotEmpty()) {
-                    val equalP = roundToFourDecimals(1.0 / availableRoles.size)
-                    Role.entries.associateWith { if (it in availableRoles) equalP else 0.0 }
-                } else {
-                    mapOf(primaryRole to 1.0) + Role.entries.filterNot { it == primaryRole }.associateWith { 0.0 }
-                }
+                // If all probable roles are claimed, conditional probabilities for remaining roles are 0.0
+                Role.entries.associateWith { 0.0 }
             }
 
         // Fix tiny rounding error so sum is precisely 1.0

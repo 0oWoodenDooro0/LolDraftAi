@@ -252,8 +252,12 @@ class DraftRecommender(
                         val flex = flexAnalyzer.analyzeChampion(champ, patchMeta, lockedRoles)
                         val viableOpen = vacantRoles.filter { (flex.roleProbabilities[it] ?: 0.0) >= 0.15 }
                         viableOpen.maxByOrNull { flex.roleProbabilities[it] ?: 0.0 }
-                            ?: flex.primaryRole
+                            ?: if (flex.primaryRole in vacantRoles) flex.primaryRole else null
                     }
+
+            if (assignedRole == null || (vacantRoles.isNotEmpty() && assignedRole in lockedRoles)) {
+                continue
+            }
 
             // Simulate draft with candidate pick
             val simulatedPick =

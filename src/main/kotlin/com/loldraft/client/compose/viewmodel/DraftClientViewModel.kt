@@ -223,12 +223,16 @@ class DraftClientViewModel(
                         .toSet()
                 }
             val vacantRoles = Role.entries.filterNot { it in lockedRoles }
-            assignedRole =
-                if (champEntry?.primaryRole != null && champEntry.primaryRole in vacantRoles) {
-                    champEntry.primaryRole
-                } else {
-                    vacantRoles.firstOrNull() ?: Role.MID
+            val viableRole =
+                when {
+                    champEntry?.primaryRole != null && champEntry.primaryRole in vacantRoles ->
+                        champEntry.primaryRole
+                    champEntry?.secondaryRoles != null && champEntry.secondaryRoles.any { it in vacantRoles } ->
+                        champEntry.secondaryRoles.first { it in vacantRoles }
+                    else ->
+                        vacantRoles.firstOrNull() ?: Role.MID
                 }
+            assignedRole = viableRole
             assignedPlayer = rosterIntel[assignedRole]?.playerId
         }
 
