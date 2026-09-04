@@ -7,7 +7,11 @@ import com.loldraft.data.models.PickSelection
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.normalization.ChampionNormalizer
+import com.loldraft.data.normalization.PatchNormalizer
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import kotlin.math.log10
+import kotlin.math.roundToInt
 
 class PatchMetaAnalyzer(
     private val defaultConfig: PatchMetaConfig = PatchMetaConfig(),
@@ -35,18 +39,53 @@ class PatchMetaAnalyzer(
         games: List<Game>,
         patchLabel: String? = null,
         config: PatchMetaConfig = defaultConfig,
+    ): PatchMetaMatrix = analyzeWeightedGames(games.map { it to 1.0 }, patchLabel, config)
+
+    fun analyzeGamesForPrediction(
+        games: List<Game>,
+        targetPatch: String,
+        referenceDate: LocalDate? = null,
+        maxAgeDays: Long = 30,
+        config: PatchMetaConfig = defaultConfig,
     ): PatchMetaMatrix {
-        val totalGames = games.size
-        val effectivePatch = patchLabel ?: games.firstOrNull()?.patch ?: "unknown"
+        val refDate = referenceDate ?: games.mapNotNull { parseDate(it.date) }.maxOrNull()
+        val weightedGames = games.mapNotNull { game ->
+            val w = calculateGameWeight(game, targetPatch, refDate, maxAgeDays)
+            if (w != null && w > 0.0) {
+                game to w
+            } else {
+                null
+            }
+        }
+        if (weightedGames.isEmpty()) {
+            return PatchMetaMatrix(
+                patch = targetPatch,
+                totalGames = 0,
+                championStats = emptyMap(),
+                synergies = emptyList(),
+                matchupCounters = emptyList(),
+            )
+        }
+        return analyzeWeightedGames(weightedGames, patchLabel = targetPatch, config = config)
+    }
 
-        val champPicks = mutableMapOf<String, Int>()
-        val champBans = mutableMapOf<String, Int>()
-        val champWins = mutableMapOf<String, Int>()
-        val champLosses = mutableMapOf<String, Int>()
-        val champRoles = mutableMapOf<String, MutableMap<Role, Int>>()
+    fun analyzeWeightedGames(
+        weightedGames: List<Pair<Game, Double>>,
+        patchLabel: String? = null,
+        config: PatchMetaConfig = defaultConfig,
+    ): PatchMetaMatrix {
+        val effectivePatch = patchLabel ?: weightedGames.firstOrNull()?.first?.patch ?: "unknown"
+        val totalEffectiveGames = weightedGames.sumOf { it.second }
+        val totalGames = Math.round(totalEffectiveGames).toInt()
 
-        // Synergy tracking: (ChampA, ChampB) -> Pair<Games, Wins>
-        val synergyAcc = mutableMapOf<Pair<String, String>, Pair<Int, Int>>()
+        val champPicks = mutableMapOf<String, Double>()
+        val champBans = mutableMapOf<String, Double>()
+        val champWins = mutableMapOf<String, Double>()
+        val champLosses = mutableMapOf<String, Double>()
+        val champRoles = mutableMapOf<String, MutableMap<Role, Double>>()
+
+        // Synergy tracking: (ChampA, ChampB) -> Pair<WeightedGames, WeightedWins>
+        val synergyAcc = mutableMapOf<Pair<String, String>, Pair<Double, Double>>()
 
         // Matchup tracking: Triple(Champ, Opponent, Role?) -> MatchupAccumulator
         val matchupAcc = mutableMapOf<Triple<String, String, Role?>, MatchupAccumulator>()
@@ -57,7 +96,7 @@ class PatchMetaAnalyzer(
         // Bot Duo Matchup: Pair(BlueDuo, RedDuo) -> BotDuoMatchupAccumulator
         val botDuoMatchupAcc = mutableMapOf<Pair<Pair<String, String>, Pair<String, String>>, BotDuoMatchupAccumulator>()
 
-        for (game in games) {
+        for ((game, weight) in weightedGames) {
             val bluePicks = extractPicks(game, Side.BLUE)
             val redPicks = extractPicks(game, Side.RED)
             val blueBans = extractBans(game, Side.BLUE)
@@ -70,22 +109,22 @@ class PatchMetaAnalyzer(
             for (ban in (blueBans + redBans)) {
                 if (ChampionNormalizer.isNoneOrEmpty(ban)) continue
                 val slug = ChampionNormalizer.toSlug(ban)
-                champBans[slug] = (champBans[slug] ?: 0) + 1
+                champBans[slug] = (champBans[slug] ?: 0.0) + weight
             }
 
             // Process Blue Picks
             for (pick in bluePicks) {
                 if (ChampionNormalizer.isNoneOrEmpty(pick.championId)) continue
                 val slug = ChampionNormalizer.toSlug(pick.championId)
-                champPicks[slug] = (champPicks[slug] ?: 0) + 1
+                champPicks[slug] = (champPicks[slug] ?: 0.0) + weight
                 if (blueWon) {
-                    champWins[slug] = (champWins[slug] ?: 0) + 1
+                    champWins[slug] = (champWins[slug] ?: 0.0) + weight
                 } else if (redWon) {
-                    champLosses[slug] = (champLosses[slug] ?: 0) + 1
+                    champLosses[slug] = (champLosses[slug] ?: 0.0) + weight
                 }
                 pick.role?.let { role ->
                     val roleMap = champRoles.getOrPut(slug) { mutableMapOf() }
-                    roleMap[role] = (roleMap[role] ?: 0) + 1
+                    roleMap[role] = (roleMap[role] ?: 0.0) + weight
                 }
             }
 
@@ -93,21 +132,21 @@ class PatchMetaAnalyzer(
             for (pick in redPicks) {
                 if (ChampionNormalizer.isNoneOrEmpty(pick.championId)) continue
                 val slug = ChampionNormalizer.toSlug(pick.championId)
-                champPicks[slug] = (champPicks[slug] ?: 0) + 1
+                champPicks[slug] = (champPicks[slug] ?: 0.0) + weight
                 if (redWon) {
-                    champWins[slug] = (champWins[slug] ?: 0) + 1
+                    champWins[slug] = (champWins[slug] ?: 0.0) + weight
                 } else if (blueWon) {
-                    champLosses[slug] = (champLosses[slug] ?: 0) + 1
+                    champLosses[slug] = (champLosses[slug] ?: 0.0) + weight
                 }
                 pick.role?.let { role ->
                     val roleMap = champRoles.getOrPut(slug) { mutableMapOf() }
-                    roleMap[role] = (roleMap[role] ?: 0) + 1
+                    roleMap[role] = (roleMap[role] ?: 0.0) + weight
                 }
             }
 
             // Process Combos / Synergies
-            recordTeamSynergies(bluePicks, blueWon, synergyAcc)
-            recordTeamSynergies(redPicks, redWon, synergyAcc)
+            recordTeamSynergies(bluePicks, blueWon, synergyAcc, weight)
+            recordTeamSynergies(redPicks, redWon, synergyAcc, weight)
 
             // Process Lane Matchups (Role vs Role)
             val blueGd15 = game.blueStats?.goldDiffAt15
@@ -124,23 +163,23 @@ class PatchMetaAnalyzer(
                     if (bSlug.isNotBlank() && rSlug.isNotBlank()) {
                         // Blue vs Red
                         val acc1 = matchupAcc.getOrPut(Triple(bSlug, rSlug, role)) { MatchupAccumulator() }
-                        acc1.games++
+                        acc1.games += weight
                         if (blueWon) {
-                            acc1.wins++
+                            acc1.wins += weight
                         } else if (redWon) {
-                            acc1.losses++
+                            acc1.losses += weight
                         }
-                        blueGd15?.let { acc1.goldDiffs.add(it) }
+                        blueGd15?.let { acc1.goldDiffs.add(it to weight) }
 
                         // Red vs Blue
                         val acc2 = matchupAcc.getOrPut(Triple(rSlug, bSlug, role)) { MatchupAccumulator() }
-                        acc2.games++
+                        acc2.games += weight
                         if (redWon) {
-                            acc2.wins++
+                            acc2.wins += weight
                         } else if (blueWon) {
-                            acc2.losses++
+                            acc2.losses += weight
                         }
-                        redGd15?.let { acc2.goldDiffs.add(it) }
+                        redGd15?.let { acc2.goldDiffs.add(it to weight) }
                     }
                 }
             }
@@ -153,9 +192,9 @@ class PatchMetaAnalyzer(
                 val bSup = ChampionNormalizer.toSlug(blueSupPick.championId)
                 if (bBot.isNotBlank() && bSup.isNotBlank()) {
                     val acc = botDuoAcc.getOrPut(bBot to bSup) { BotDuoAccumulator() }
-                    acc.games++
-                    if (blueWon) acc.wins++
-                    blueGd15?.let { acc.goldDiffs.add(it) }
+                    acc.games += weight
+                    if (blueWon) acc.wins += weight
+                    blueGd15?.let { acc.goldDiffs.add(it to weight) }
                 }
             }
 
@@ -166,9 +205,9 @@ class PatchMetaAnalyzer(
                 val rSup = ChampionNormalizer.toSlug(redSupPick.championId)
                 if (rBot.isNotBlank() && rSup.isNotBlank()) {
                     val acc = botDuoAcc.getOrPut(rBot to rSup) { BotDuoAccumulator() }
-                    acc.games++
-                    if (redWon) acc.wins++
-                    redGd15?.let { acc.goldDiffs.add(it) }
+                    acc.games += weight
+                    if (redWon) acc.wins += weight
+                    redGd15?.let { acc.goldDiffs.add(it to weight) }
                 }
             }
 
@@ -179,9 +218,9 @@ class PatchMetaAnalyzer(
                 val rSup = ChampionNormalizer.toSlug(redSupPick.championId)
                 if (bBot.isNotBlank() && bSup.isNotBlank() && rBot.isNotBlank() && rSup.isNotBlank()) {
                     val mAcc = botDuoMatchupAcc.getOrPut((bBot to bSup) to (rBot to rSup)) { BotDuoMatchupAccumulator() }
-                    mAcc.games++
-                    if (blueWon) mAcc.blueWins++
-                    blueGd15?.let { mAcc.goldDiffs.add(it) }
+                    mAcc.games += weight
+                    if (blueWon) mAcc.blueWins += weight
+                    blueGd15?.let { mAcc.goldDiffs.add(it to weight) }
                 }
             }
         }
@@ -191,15 +230,15 @@ class PatchMetaAnalyzer(
         val statsMap = mutableMapOf<String, ChampionMetaStats>()
 
         for (slug in allChamps) {
-            val picks = champPicks[slug] ?: 0
-            val bans = champBans[slug] ?: 0
-            val presence = picks + bans
-            val presenceRate = if (totalGames > 0) presence.toDouble() / totalGames else 0.0
-            val pickRate = if (totalGames > 0) picks.toDouble() / totalGames else 0.0
-            val banRate = if (totalGames > 0) bans.toDouble() / totalGames else 0.0
-            val wins = champWins[slug] ?: 0
-            val losses = champLosses[slug] ?: 0
-            val winRate = if (picks > 0) wins.toDouble() / picks else 0.0
+            val effectivePicks = champPicks[slug] ?: 0.0
+            val effectiveBans = champBans[slug] ?: 0.0
+            val presence = effectivePicks + effectiveBans
+            val presenceRate = if (totalEffectiveGames > 0.0) (presence / totalEffectiveGames).coerceIn(0.0, 1.0) else 0.0
+            val pickRate = if (totalEffectiveGames > 0.0) (effectivePicks / totalEffectiveGames).coerceIn(0.0, 1.0) else 0.0
+            val banRate = if (totalEffectiveGames > 0.0) (effectiveBans / totalEffectiveGames).coerceIn(0.0, 1.0) else 0.0
+            val effectiveWins = champWins[slug] ?: 0.0
+            val effectiveLosses = champLosses[slug] ?: 0.0
+            val winRate = if (effectivePicks > 0.0) (effectiveWins / effectivePicks).coerceIn(0.0, 1.0) else 0.0
             val roles = champRoles[slug] ?: emptyMap()
 
             val tier =
@@ -216,16 +255,16 @@ class PatchMetaAnalyzer(
                 ChampionMetaStats(
                     championId = slug,
                     patch = effectivePatch,
-                    picks = picks,
-                    bans = bans,
-                    presenceCount = presence,
+                    picks = Math.round(effectivePicks).toInt(),
+                    bans = Math.round(effectiveBans).toInt(),
+                    presenceCount = Math.round(presence).toInt(),
                     presenceRate = presenceRate,
                     pickRate = pickRate,
                     banRate = banRate,
-                    wins = wins,
-                    losses = losses,
+                    wins = Math.round(effectiveWins).toInt(),
+                    losses = Math.round(effectiveLosses).toInt(),
                     winRate = winRate,
-                    roleDistribution = roles,
+                    roleDistribution = roles.mapValues { Math.round(it.value).toInt() },
                     tier = tier,
                 )
         }
@@ -235,21 +274,21 @@ class PatchMetaAnalyzer(
         for ((pair, record) in synergyAcc) {
             val (cA, cB) = pair
             val (gamesTogether, winsTogether) = record
-            if (gamesTogether <= 0) continue
+            if (gamesTogether <= 0.0) continue
 
-            val synergyWinRate = winsTogether.toDouble() / gamesTogether
+            val synergyWinRate = winsTogether / gamesTogether
             val winRateA = statsMap[cA]?.winRate ?: 0.50
             val winRateB = statsMap[cB]?.winRate ?: 0.50
             val expectedWinRate = (winRateA + winRateB) / 2.0
             val winRateDelta = synergyWinRate - expectedWinRate
-            val synergyScore = winRateDelta * (1.0 + log10(gamesTogether.toDouble()))
+            val synergyScore = winRateDelta * (1.0 + log10(maxOf(1.0, gamesTogether)))
 
             synergies.add(
                 ChampionSynergy(
                     championA = cA,
                     championB = cB,
-                    gamesTogether = gamesTogether,
-                    winsTogether = winsTogether,
+                    gamesTogether = Math.round(gamesTogether).toInt(),
+                    winsTogether = Math.round(winsTogether).toInt(),
                     synergyWinRate = synergyWinRate,
                     expectedWinRate = expectedWinRate,
                     winRateDelta = winRateDelta,
@@ -262,12 +301,12 @@ class PatchMetaAnalyzer(
         val matchups = mutableListOf<MatchupCounter>()
         for ((key, acc) in matchupAcc) {
             val (champ, opp, role) = key
-            if (acc.games <= 0) continue
+            if (acc.games <= 0.0) continue
 
-            val winRate = acc.wins.toDouble() / acc.games
+            val winRate = acc.wins / acc.games
             val champBaseline = statsMap[champ]?.winRate ?: 0.50
             val winRateDelta = winRate - champBaseline
-            val avgGd = if (acc.goldDiffs.isNotEmpty()) acc.goldDiffs.average() else null
+            val avgGd = if (acc.goldDiffs.isNotEmpty()) acc.goldDiffs.sumOf { it.first * it.second } / acc.goldDiffs.sumOf { it.second } else null
             val counterScore =
                 (winRate - 0.5) * 40.0 +
                     (winRateDelta * 30.0) +
@@ -278,9 +317,9 @@ class PatchMetaAnalyzer(
                     champion = champ,
                     opponent = opp,
                     role = role,
-                    gamesFaced = acc.games,
-                    wins = acc.wins,
-                    losses = acc.losses,
+                    gamesFaced = Math.round(acc.games).toInt(),
+                    wins = Math.round(acc.wins).toInt(),
+                    losses = Math.round(acc.losses).toInt(),
                     winRate = winRate,
                     winRateDelta = winRateDelta,
                     avgGoldDiffAt15 = avgGd,
@@ -292,18 +331,18 @@ class PatchMetaAnalyzer(
         // Build Bot Duo Synergies
         val duoMap = mutableMapOf<Pair<String, String>, BotDuoSynergy>()
         for ((pair, acc) in botDuoAcc) {
-            if (acc.games <= 0) continue
+            if (acc.games <= 0.0) continue
             val (bot, sup) = pair
-            val winRate = acc.wins.toDouble() / acc.games
-            val avgGd = if (acc.goldDiffs.isNotEmpty()) acc.goldDiffs.average() else 0.0
+            val winRate = acc.wins / acc.games
+            val avgGd = if (acc.goldDiffs.isNotEmpty()) acc.goldDiffs.sumOf { it.first * it.second } / acc.goldDiffs.sumOf { it.second } else 0.0
             val synergyScore = (winRate - 0.50) * 50.0 + (avgGd / 50.0).coerceIn(-25.0, 25.0) + 50.0
             val tags = resolveDuoStyleTags(bot, sup)
             duoMap[pair] =
                 BotDuoSynergy(
                     botChampion = bot,
                     supportChampion = sup,
-                    gamesTogether = acc.games,
-                    winsTogether = acc.wins,
+                    gamesTogether = Math.round(acc.games).toInt(),
+                    winsTogether = Math.round(acc.wins).toInt(),
                     synergyWinRate = winRate,
                     avgGoldDiffAt15 = avgGd,
                     synergyScore = synergyScore,
@@ -321,17 +360,17 @@ class PatchMetaAnalyzer(
         // Build Bot Duo Matchups
         val duoMatchupMap = mutableMapOf<Pair<Pair<String, String>, Pair<String, String>>, BotDuoMatchup>()
         for ((duoPair, acc) in botDuoMatchupAcc) {
-            if (acc.games <= 0) continue
+            if (acc.games <= 0.0) continue
             val (blueDuo, redDuo) = duoPair
-            val blueWinRate = acc.blueWins.toDouble() / acc.games
-            val avgGd = if (acc.goldDiffs.isNotEmpty()) acc.goldDiffs.average() else 0.0
+            val blueWinRate = acc.blueWins / acc.games
+            val avgGd = if (acc.goldDiffs.isNotEmpty()) acc.goldDiffs.sumOf { it.first * it.second } / acc.goldDiffs.sumOf { it.second } else 0.0
             val counterScore = (blueWinRate - 0.50) * 50.0 + (avgGd / 50.0).coerceIn(-25.0, 25.0) + 50.0
             duoMatchupMap[duoPair] =
                 BotDuoMatchup(
                     blueDuo = blueDuo,
                     redDuo = redDuo,
-                    gamesFaced = acc.games,
-                    blueWins = acc.blueWins,
+                    gamesFaced = Math.round(acc.games).toInt(),
+                    blueWins = Math.round(acc.blueWins).toInt(),
                     blueWinRate = blueWinRate,
                     avgGoldDiffAt15 = avgGd,
                     counterScore = counterScore,
@@ -395,7 +434,8 @@ class PatchMetaAnalyzer(
     private fun recordTeamSynergies(
         picks: List<PickSelection>,
         won: Boolean,
-        acc: MutableMap<Pair<String, String>, Pair<Int, Int>>,
+        acc: MutableMap<Pair<String, String>, Pair<Double, Double>>,
+        weight: Double = 1.0,
     ) {
         val validSlugs =
             picks
@@ -407,34 +447,91 @@ class PatchMetaAnalyzer(
                 val c1 = validSlugs[i]
                 val c2 = validSlugs[j]
                 val pair = if (c1 <= c2) c1 to c2 else c2 to c1
-                val current = acc.getOrPut(pair) { 0 to 0 }
-                val newGames = current.first + 1
-                val newWins = current.second + (if (won) 1 else 0)
+                val current = acc.getOrPut(pair) { 0.0 to 0.0 }
+                val newGames = current.first + weight
+                val newWins = current.second + (if (won) weight else 0.0)
                 acc[pair] = newGames to newWins
             }
         }
     }
 
     private class MatchupAccumulator {
-        var games: Int = 0
-        var wins: Int = 0
-        var losses: Int = 0
-        val goldDiffs = mutableListOf<Double>()
+        var games: Double = 0.0
+        var wins: Double = 0.0
+        var losses: Double = 0.0
+        val goldDiffs = mutableListOf<Pair<Double, Double>>()
     }
 
     private class BotDuoAccumulator {
-        var games: Int = 0
-        var wins: Int = 0
-        val goldDiffs = mutableListOf<Double>()
+        var games: Double = 0.0
+        var wins: Double = 0.0
+        val goldDiffs = mutableListOf<Pair<Double, Double>>()
     }
 
     private class BotDuoMatchupAccumulator {
-        var games: Int = 0
-        var blueWins: Int = 0
-        val goldDiffs = mutableListOf<Double>()
+        var games: Double = 0.0
+        var blueWins: Double = 0.0
+        val goldDiffs = mutableListOf<Pair<Double, Double>>()
     }
 
     companion object {
+        fun parseDate(dateStr: String?): LocalDate? {
+            if (dateStr.isNullOrBlank()) return null
+            val trimmed = dateStr.trim()
+            if (trimmed.length >= 10) {
+                val prefix = trimmed.substring(0, 10)
+                try {
+                    return LocalDate.parse(prefix)
+                } catch (_: Exception) {}
+            }
+            return null
+        }
+
+        fun calculateGameWeight(
+            game: Game,
+            targetPatch: String,
+            referenceDate: LocalDate? = null,
+            maxAgeDays: Long = 30,
+        ): Double? {
+            val gameDate = parseDate(game.date)
+            if (gameDate != null && referenceDate != null) {
+                val daysAgo = ChronoUnit.DAYS.between(gameDate, referenceDate)
+                if (daysAgo > maxAgeDays) {
+                    return null // Exclude matches older than 1 month
+                }
+            }
+
+            // Patch distance calculation
+            val targetVer = PatchNormalizer.parse(targetPatch)
+            val gameVer = PatchNormalizer.parse(game.patch)
+
+            val patchWeight =
+                if (targetVer != null && gameVer != null) {
+                    val patchDiff = (targetVer.major - gameVer.major) * 24 + (targetVer.minor - gameVer.minor)
+                    when {
+                        patchDiff == 0 -> 1.0 // Same patch has highest weight!
+                        patchDiff > 0 -> Math.pow(0.6, patchDiff.toDouble()) // Prior patches decay
+                        else -> 0.4 // Future patch relative to target
+                    }
+                } else if (game.patch.equals(targetPatch, ignoreCase = true) ||
+                    PatchNormalizer.normalize(game.patch).equals(PatchNormalizer.normalize(targetPatch), ignoreCase = true)
+                ) {
+                    1.0
+                } else {
+                    0.5
+                }
+
+            val timeWeight =
+                if (gameDate != null && referenceDate != null) {
+                    val days = ChronoUnit.DAYS.between(gameDate, referenceDate).coerceAtLeast(0)
+                    1.0 - (days.toDouble() / maxAgeDays) * 0.4
+                } else {
+                    1.0
+                }
+
+            return (patchWeight * timeWeight).coerceIn(0.01, 1.0)
+        }
+
         fun resolveDuoStyleTags(bot: String, sup: String): List<BotDuoStyleTag> {
             val b = ChampionNormalizer.toSlug(bot)
             val s = ChampionNormalizer.toSlug(sup)

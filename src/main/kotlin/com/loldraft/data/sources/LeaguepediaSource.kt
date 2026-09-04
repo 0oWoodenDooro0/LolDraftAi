@@ -64,6 +64,7 @@ class LeaguepediaSource(
                 }
 
             val durationSeconds = sb?.gamelengthNumber?.let { (it * 60).toInt() }
+            val date = pb.dateTimeUtc ?: sb?.dateTimeUtc
 
             val rawTurns =
                 listOf(
@@ -117,6 +118,7 @@ class LeaguepediaSource(
                 draftState = draftState,
                 winner = winner,
                 durationSeconds = durationSeconds,
+                date = date,
             )
         }
     }

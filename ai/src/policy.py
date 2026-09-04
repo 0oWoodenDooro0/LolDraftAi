@@ -71,6 +71,15 @@ class RecommendationReport:
 
 
 class DraftPolicyEngine:
+    CLASSIC_DUOS = {
+        ("lucian", "nami"): 0.85,
+        ("xayah", "rakan"): 0.85,
+        ("kalista", "renata glasc"): 0.85,
+        ("caitlyn", "lux"): 0.80,
+        ("draven", "nautilus"): 0.85,
+        ("samira", "rell"): 0.80,
+    }
+
     def __init__(self):
         self.flex_analyzer = FlexPickAnalyzer()
 
@@ -83,6 +92,7 @@ class DraftPolicyEngine:
         patch_meta: Optional[Dict[str, Dict]] = None,
         player_signatures: Optional[Dict[Role, List[str]]] = None,
         team_locked_roles: Optional[Set[Role]] = None,
+        team_picks: Optional[List[str]] = None,
         top_n: int = 3,
     ) -> IntentPredictionResult:
         if team_locked_roles is None:
@@ -95,6 +105,7 @@ class DraftPolicyEngine:
 
         scored: List[ChampionIntentCandidate] = []
         is_ban = action_type == ActionType.BAN
+        team_pick_slugs = {p.strip().lower() for p in (team_picks or [])}
 
         for champ in candidates:
             slug = champ.strip().lower()
@@ -120,11 +131,34 @@ class DraftPolicyEngine:
                 elif flex.primary_role in team_locked_roles:
                     fit_score -= 0.30
 
-            total_score = (
-                (meta_score * 0.50 + mastery_score * 0.35 + fit_score * 0.15)
-                if is_ban
-                else (meta_score * 0.35 + mastery_score * 0.30 + fit_score * 0.25)
-            )
+            duo_score = 0.0
+            matched_partner = None
+            if not is_ban and team_pick_slugs:
+                for ally in team_pick_slugs:
+                    pair1 = (ally, slug)
+                    pair2 = (slug, ally)
+                    if pair1 in self.CLASSIC_DUOS:
+                        duo_score = self.CLASSIC_DUOS[pair1]
+                        matched_partner = ally.title()
+                        break
+                    elif pair2 in self.CLASSIC_DUOS:
+                        duo_score = self.CLASSIC_DUOS[pair2]
+                        matched_partner = ally.title()
+                        break
+
+            if is_ban:
+                total_score = meta_score * 0.50 + mastery_score * 0.35 + fit_score * 0.15
+            elif duo_score > 0:
+                total_score = duo_score * 0.55 + meta_score * 0.20 + mastery_score * 0.15 + fit_score * 0.10
+            else:
+                total_score = meta_score * 0.35 + mastery_score * 0.30 + fit_score * 0.25
+
+            rationale_parts = []
+            if matched_partner:
+                rationale_parts.append(f"Bot Duo Synergy with {matched_partner}")
+            rationale_parts.append(f"Meta: {tier}")
+            if mastery_score > 0:
+                rationale_parts.append(f"Mastery: {mastery_score:.1f}")
 
             scored.append(
                 ChampionIntentCandidate(
@@ -135,7 +169,7 @@ class DraftPolicyEngine:
                     meta_score=round(meta_score, 4),
                     player_mastery_score=round(mastery_score, 4),
                     composition_fit_score=round(fit_score, 4),
-                    rationale=f"Meta: {tier}, Mastery: {mastery_score:.1f}",
+                    rationale="; ".join(rationale_parts),
                 )
             )
 

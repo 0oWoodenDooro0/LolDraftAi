@@ -55,6 +55,8 @@ fun AiDecisionPanelView(
     compositionFlaws: List<CompositionFlaw>,
     selectedChampionId: String? = null,
     onChampionSelected: ((championId: String, preferredRole: Role?) -> Unit)? = null,
+    maxIntentDisplay: Int = 5,
+    maxRecommendationsDisplay: Int = 5,
     modifier: Modifier = Modifier,
 ) {
     val isBan = currentTurnSpec.actionType == ActionType.BAN
@@ -118,7 +120,7 @@ fun AiDecisionPanelView(
                         modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        intentPredictions.take(3).forEachIndexed { index, candidate ->
+                        intentPredictions.take(maxIntentDisplay).forEachIndexed { index, candidate ->
                             IntentPredictionCard(
                                 rank = index + 1,
                                 candidate = candidate,
@@ -178,7 +180,7 @@ fun AiDecisionPanelView(
                         modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        recommendations.take(3).forEach { rec ->
+                        recommendations.take(maxRecommendationsDisplay).forEach { rec ->
                             TacticalRecommendationCard(
                                 rec = rec,
                                 isBan = isBan,

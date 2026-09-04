@@ -52,12 +52,37 @@ class DraftRecommender(
         }
         val available = candidateMap.filterKeys { it !in unavailable }.values.toList()
 
+        val enemyPicks = if (targetSide == Side.BLUE) draftState.redPicks else draftState.bluePicks
+        val enemyLockedRoles = enemyPicks.mapNotNull { it.role }.toMutableSet()
+        for (p in enemyPicks) {
+            if (p.role == null) {
+                val pRole = tagRegistry.getProfile(p.championId)?.primaryRole
+                if (pRole != null) enemyLockedRoles.add(pRole)
+            }
+        }
+        val isPhase2Ban = (draftState.bluePicks.size + draftState.redPicks.size) >= 6
+        val enemyVacantRoles = Role.entries.filterNot { it in enemyLockedRoles }.toSet()
+
         val banRecommendations = mutableListOf<PickRecommendation>()
 
         for (champ in available) {
             val profile = tagRegistry.getProfile(champ)
             val metaStats = patchMeta?.getStats(champ)
-            val primaryRole = profile?.primaryRole ?: Role.MID
+            // 優先以職業賽實際出現次數最多的路線為準，避免使用系統預設未在職業賽出現過的選路
+            val primaryRole =
+                if (metaStats != null && metaStats.roleDistribution.isNotEmpty()) {
+                    metaStats.roleDistribution.maxByOrNull { it.value }?.key ?: profile?.primaryRole ?: Role.MID
+                } else {
+                    profile?.primaryRole ?: Role.MID
+                }
+
+            // 職業賽實際出現過的次要/搖擺路線 (場次 > 0)
+            val proSecondaryRoles =
+                if (metaStats != null && metaStats.roleDistribution.isNotEmpty()) {
+                    metaStats.roleDistribution.filter { it.key != primaryRole && it.value > 0 }.keys
+                } else {
+                    profile?.secondaryRoles ?: emptySet()
+                }
 
             val oppBan =
                 opponentBansAgainstTargetTeam?.firstOrNull {
@@ -68,8 +93,10 @@ class DraftRecommender(
             var oppMasteryScore = 0.0
             var matchedOppPlayer: String? = null
             var matchedTierName: String? = null
+            var matchedOppRole: Role? = null
             if (opponentPlayerProfilesByRole != null) {
                 for ((r, oProfile) in opponentPlayerProfilesByRole) {
+                    if (isPhase2Ban && r in enemyLockedRoles) continue
                     val sig = oProfile.careerStats.signaturePicks.firstOrNull { it.championId.equals(champ, ignoreCase = true) }
                     if (sig != null) {
                         val b =
@@ -82,6 +109,7 @@ class DraftRecommender(
                             oppMasteryScore = b
                             matchedOppPlayer = "${oProfile.playerId} ($r)"
                             matchedTierName = sig.tier.name
+                            matchedOppRole = r
                         }
                     }
                 }
@@ -105,8 +133,27 @@ class DraftRecommender(
                     0.5
                 }
 
+            val effectiveBanRole =
+                when {
+                    matchedOppRole != null -> matchedOppRole
+                    isPhase2Ban && primaryRole in enemyLockedRoles -> {
+                        proSecondaryRoles.firstOrNull { it in enemyVacantRoles } ?: primaryRole
+                    }
+                    else -> primaryRole
+                }
+
             val oppBanRate = oppBan?.banRate ?: 0.0
-            val banImpact = (oppBanRate * 0.45) + (oppMasteryScore * 0.35) + (metaScore * 0.20)
+            var banImpact = (oppBanRate * 0.45) + (oppMasteryScore * 0.35) + (metaScore * 0.20)
+            if (isPhase2Ban) {
+                if (effectiveBanRole in enemyLockedRoles) {
+                    banImpact *= 0.20
+                } else if (primaryRole in enemyLockedRoles) {
+                    val canFlexToVacant = proSecondaryRoles.any { it in enemyVacantRoles }
+                    if (!canFlexToVacant) {
+                        banImpact *= 0.20 // Enemy already locked this role and champion cannot flex, deprioritize
+                    }
+                }
+            }
             val winRateGain = roundToFourDecimals((banImpact * 0.05).coerceIn(0.01, 0.08))
 
             val reasons = mutableListOf<String>()
@@ -132,7 +179,7 @@ class DraftRecommender(
             banRecommendations.add(
                 PickRecommendation(
                     championId = profile?.displayName ?: champ,
-                    recommendedRole = primaryRole,
+                    recommendedRole = effectiveBanRole,
                     winRateGain = winRateGain,
                     predictedWinRate = 0.50 + winRateGain,
                     baseWinRate = 0.50,
@@ -141,13 +188,42 @@ class DraftRecommender(
             )
         }
 
-        return banRecommendations
-            .sortedWith(
-                compareByDescending<PickRecommendation> { it.winRateGain }
-                    .thenBy { it.championId },
-            )
-            .distinctBy { ChampionNormalizer.toSlug(it.championId) }
-            .take(limit)
+        val sortedList =
+            banRecommendations
+                .sortedWith(
+                    compareByDescending<PickRecommendation> { it.winRateGain }
+                        .thenBy { it.championId },
+                )
+                .distinctBy { ChampionNormalizer.toSlug(it.championId) }
+
+        // 多樣性選取：避免同一條路線超過 3 個推薦 Ban
+        val selected = mutableListOf<PickRecommendation>()
+        val roleCounts = mutableMapOf<Role, Int>()
+
+        for (rec in sortedList) {
+            if (selected.size >= limit) break
+            val role = rec.recommendedRole
+            val count = roleCounts[role] ?: 0
+            if (count < 3) {
+                selected.add(rec)
+                roleCounts[role] = count + 1
+            }
+        }
+
+        if (selected.size < limit) {
+            for (rec in sortedList) {
+                if (selected.size >= limit) break
+                if (selected.any { ChampionNormalizer.toSlug(it.championId) == ChampionNormalizer.toSlug(rec.championId) }) continue
+                val role = rec.recommendedRole
+                val count = roleCounts[role] ?: 0
+                if (count < 3) {
+                    selected.add(rec)
+                    roleCounts[role] = count + 1
+                }
+            }
+        }
+
+        return selected
     }
 
 
@@ -223,10 +299,16 @@ class DraftRecommender(
             if (targetRole != null) {
                 availableChampions.filter { champ ->
                     val profile = tagRegistry.getProfile(champ)
+                    val metaStats = patchMeta?.getStats(champ)
                     val flex = flexAnalyzer.analyzeChampion(champ, patchMeta)
-                    profile?.primaryRole == targetRole ||
-                        targetRole in (profile?.secondaryRoles ?: emptySet()) ||
-                        (flex.roleProbabilities[targetRole] ?: 0.0) >= 0.15
+                    if (metaStats != null && metaStats.roleDistribution.isNotEmpty()) {
+                        // 以職業賽實際有出現過為準 (場次 > 0 或 flex 機率充足)
+                        (metaStats.roleDistribution[targetRole] ?: 0) > 0 || (flex.roleProbabilities[targetRole] ?: 0.0) >= 0.15
+                    } else {
+                        profile?.primaryRole == targetRole ||
+                            targetRole in (profile?.secondaryRoles ?: emptySet()) ||
+                            (flex.roleProbabilities[targetRole] ?: 0.0) >= 0.15
+                    }
                 }
             } else {
                 availableChampions
@@ -251,10 +333,18 @@ class DraftRecommender(
             val assignedRole =
                 targetRole
                     ?: run {
+                        val metaStats = patchMeta?.getStats(champ)
                         val flex = flexAnalyzer.analyzeChampion(champ, patchMeta, lockedRoles)
-                        val viableOpen = vacantRoles.filter { (flex.roleProbabilities[it] ?: 0.0) >= 0.15 }
-                        viableOpen.maxByOrNull { flex.roleProbabilities[it] ?: 0.0 }
-                            ?: if (flex.primaryRole in vacantRoles) flex.primaryRole else null
+                        if (metaStats != null && metaStats.roleDistribution.isNotEmpty()) {
+                            val viableOpen = vacantRoles.filter { (metaStats.roleDistribution[it] ?: 0) > 0 }
+                            viableOpen.maxByOrNull { metaStats.roleDistribution[it] ?: 0 }
+                                ?: vacantRoles.maxByOrNull { flex.roleProbabilities[it] ?: 0.0 }
+                                ?: if (flex.primaryRole in vacantRoles) flex.primaryRole else null
+                        } else {
+                            val viableOpen = vacantRoles.filter { (flex.roleProbabilities[it] ?: 0.0) >= 0.15 }
+                            viableOpen.maxByOrNull { flex.roleProbabilities[it] ?: 0.0 }
+                                ?: if (flex.primaryRole in vacantRoles) flex.primaryRole else null
+                        }
                     }
 
             if (assignedRole == null || (vacantRoles.isNotEmpty() && assignedRole in lockedRoles)) {

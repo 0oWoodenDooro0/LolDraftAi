@@ -546,7 +546,7 @@ class DraftClientViewModel(
     private fun recalculateDraftCalculations() {
         val current = _uiState.value
         val draftState = DraftState.fromTurns(appliedDraftTurns).withFearlessSpent(current.fearlessExcludedChampionIds)
-        val patchMeta = repository.getPatchMeta(current.selectedPatch)
+        val patchMeta = repository.getPatchMetaForPrediction(current.selectedPatch)
 
         // 1. Eval Bar
         val evalResult = evaluator.evaluate(draftState, patchMeta = patchMeta)
@@ -596,7 +596,7 @@ class DraftClientViewModel(
                     opponentBansAgainstTargetTeam = opponentBans,
                     targetTeamName = opponentTeam?.name,
                     firstPickSide = current.firstPickSide,
-                    topN = 3,
+                    topN = 5,
                 ).predictions
             } else {
                 intentPredictor.predictNextAction(
@@ -604,7 +604,7 @@ class DraftClientViewModel(
                     patchMeta = patchMeta,
                     playerProfilesByRole = actingProfiles,
                     firstPickSide = current.firstPickSide,
-                    topN = 3,
+                    topN = 5,
                 ).predictions
             }
 
@@ -618,14 +618,14 @@ class DraftClientViewModel(
                     opponentBansAgainstTargetTeam = opponentBans,
                     opponentPlayerProfilesByRole = oppProfiles,
                     opponentTeamName = opponentTeam?.name,
-                    limit = 3,
+                    limit = 5,
                 )
             } else {
                 recommender.recommendBestPicks(
                     draftState = draftState,
                     targetSide = actingSide,
                     patchMeta = patchMeta,
-                    limit = 3,
+                    limit = 5,
                 )
             }
 

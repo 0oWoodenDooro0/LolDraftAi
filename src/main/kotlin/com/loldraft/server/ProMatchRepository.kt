@@ -19,6 +19,7 @@ import com.loldraft.platform.pro.api.ProChampionEntry
 import com.loldraft.platform.pro.api.ProPlayerRosterEntry
 import com.loldraft.platform.pro.api.ProTeamSummary
 import java.io.File
+import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
 
 class ProMatchRepository(
@@ -34,6 +35,7 @@ class ProMatchRepository(
     private val teamProfilesCache = ConcurrentHashMap<String, TeamTacticalProfile?>()
     private val teamRostersCache = ConcurrentHashMap<String, List<ProPlayerRosterEntry>>()
     private val patchMetaCache = ConcurrentHashMap<String, PatchMetaMatrix>()
+    private val predictionPatchMetaCache = ConcurrentHashMap<String, PatchMetaMatrix>()
     private val championRoleStats = ConcurrentHashMap<String, MutableMap<Role, Int>>()
     private var initialized = false
 
@@ -51,6 +53,7 @@ class ProMatchRepository(
         teamProfilesCache.clear()
         teamRostersCache.clear()
         patchMetaCache.clear()
+        predictionPatchMetaCache.clear()
         championRoleStats.clear()
 
         if (initialGames != null) {
@@ -270,6 +273,30 @@ class ProMatchRepository(
             } else {
                 patchMetaAnalyzer.analyzeGames(patchGames, patchLabel = targetPatch)
             }
+        }
+    }
+
+    fun getPatchMetaForPrediction(
+        patch: String? = null,
+        referenceDate: LocalDate? = null,
+        maxAgeDays: Long = 30,
+    ): PatchMetaMatrix {
+        ensureInitialized()
+        val targetPatch =
+            if (patch.isNullOrBlank() || patch.equals("latest", ignoreCase = true)) {
+                getLatestPatch()
+            } else {
+                patch.trim()
+            }
+
+        val cacheKey = "${targetPatch.lowercase()}_${referenceDate?.toString() ?: "latest"}_$maxAgeDays"
+        return predictionPatchMetaCache.computeIfAbsent(cacheKey) {
+            patchMetaAnalyzer.analyzeGamesForPrediction(
+                games = games,
+                targetPatch = targetPatch,
+                referenceDate = referenceDate,
+                maxAgeDays = maxAgeDays,
+            )
         }
     }
 

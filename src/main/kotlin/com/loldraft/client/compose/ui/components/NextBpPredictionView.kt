@@ -51,6 +51,7 @@ fun NextBpPredictionView(
     bannedChampionIds: Set<String> = emptySet(),
     pickedChampionIds: Set<String> = emptySet(),
     fearlessExcludedChampionIds: Set<String> = emptySet(),
+    maxDisplay: Int = 5,
     modifier: Modifier = Modifier,
 ) {
     val isBan = currentTurnSpec.actionType == ActionType.BAN
@@ -137,7 +138,7 @@ fun NextBpPredictionView(
                         .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                intentPredictions.take(3).forEachIndexed { index, candidate ->
+                intentPredictions.take(maxDisplay).forEachIndexed { index, candidate ->
                     val probPercent = String.format(Locale.US, "%.1f%%", candidate.probability * 100)
                     val isBanned = bannedChampionIds.any { it.equals(candidate.championId, ignoreCase = true) }
                     val isPicked = pickedChampionIds.any { it.equals(candidate.championId, ignoreCase = true) }

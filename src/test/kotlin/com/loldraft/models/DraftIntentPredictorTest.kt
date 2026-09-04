@@ -402,4 +402,63 @@ class DraftIntentPredictorTest {
             }
         }
     }
+
+        @Test
+        @DisplayName("不要用系統預設的選路，以職業賽實際出現過的路線為準：職業賽 0 場次路線不可被預測為該路")
+        fun `test champion not predicted for role if pro match roleDistribution has zero games`() {
+            // Suppose draft is at Turn 7 (Blue First Pick), and we want to see TOP candidates.
+            // But let us set up a draft state where only TOP is vacant for Blue.
+            val turns = listOf(
+                DraftTurn(1, Side.BLUE, ActionType.BAN, "Ban1"),
+                DraftTurn(2, Side.RED, ActionType.BAN, "Ban2"),
+                DraftTurn(3, Side.BLUE, ActionType.BAN, "Ban3"),
+                DraftTurn(4, Side.RED, ActionType.BAN, "Ban4"),
+                DraftTurn(5, Side.BLUE, ActionType.BAN, "Ban5"),
+                DraftTurn(6, Side.RED, ActionType.BAN, "Ban6"),
+                DraftTurn(7, Side.BLUE, ActionType.PICK, "Jinx", role = Role.BOT),
+                DraftTurn(8, Side.RED, ActionType.PICK, "Lucian", role = Role.BOT),
+                DraftTurn(9, Side.RED, ActionType.PICK, "Nami", role = Role.SUPPORT),
+                DraftTurn(10, Side.BLUE, ActionType.PICK, "Lulu", role = Role.SUPPORT),
+                DraftTurn(11, Side.BLUE, ActionType.PICK, "Ahri", role = Role.MID),
+                DraftTurn(12, Side.RED, ActionType.PICK, "Azir", role = Role.MID),
+                DraftTurn(13, Side.RED, ActionType.BAN, "Ban7"),
+                DraftTurn(14, Side.BLUE, ActionType.BAN, "Ban8"),
+                DraftTurn(15, Side.RED, ActionType.BAN, "Ban9"),
+                DraftTurn(16, Side.BLUE, ActionType.BAN, "Ban10"),
+                DraftTurn(17, Side.RED, ActionType.PICK, "Sejuani", role = Role.JUNGLE),
+                DraftTurn(18, Side.BLUE, ActionType.PICK, "Vi", role = Role.JUNGLE),
+            )
+            // Blue has locked: BOT, SUPPORT, MID, JUNGLE. Only TOP is vacant!
+            // Turn 19 is RED pick. Turn 20 is BLUE pick (TOP).
+            val state = DraftState.fromTurns(turns)
+
+            // Vayne has 0 games in TOP in pro meta
+            val proMeta = PatchMetaMatrix(
+                patch = "14.15",
+                totalGames = 100,
+                championStats = mapOf(
+                    "vayne" to ChampionMetaStats(
+                        championId = "Vayne",
+                        patch = "14.15",
+                        picks = 50,
+                        roleDistribution = mapOf(Role.BOT to 50), // 0 in TOP
+                        tier = MetaTier.T0, // Give high tier to make it attractive if not filtered
+                    ),
+                ),
+            )
+
+            // Predict for Blue Turn 20
+            val result = predictor.predictNextAction(
+                draftState = state,
+                patchMeta = proMeta,
+                topN = 5,
+            )
+
+            val vaynePred = result.predictions.any { it.championId == "Vayne" }
+            assertFalse(
+                vaynePred,
+                "Vayne should NEVER be predicted for vacant TOP lane when pro match data has 0 games in TOP!"
+            )
+        }
+
 }

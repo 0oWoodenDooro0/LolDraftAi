@@ -47,6 +47,7 @@ class OraclesElixirCsvParser(
         val leagueIdx = colIndex["league"]
         val yearIdx = colIndex["year"]
         val splitIdx = colIndex["split"]
+        val dateIdx = colIndex["date"]
         val fbIdx = colIndex["firstblood"]
         val fdIdx = colIndex["firstdragon"]
         val gd15Idx = colIndex["golddiffat15"]
@@ -58,6 +59,7 @@ class OraclesElixirCsvParser(
             listOfNotNull(
                 gameIdIdx,
                 patchIdx,
+                dateIdx,
                 sideIdx,
                 posIdx,
                 playerIdx,
@@ -107,6 +109,7 @@ class OraclesElixirCsvParser(
             var tournament: String? = null
             var season: String? = null
             var year: Int? = null
+            var date: String? = null
 
             var blueFb: Boolean? = null
             var redFb: Boolean? = null
@@ -157,6 +160,13 @@ class OraclesElixirCsvParser(
                         ?.trim()
                         ?.toIntOrNull()
                         ?.let { year = it }
+                }
+                if (date == null && dateIdx != null) {
+                    row
+                        .getOrNull(dateIdx)
+                        ?.trim()
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { date = it }
                 }
 
                 val fbVal = fbIdx?.let { row.getOrNull(it)?.trim() }?.let { it == "1" || it.equals("true", ignoreCase = true) }
@@ -324,6 +334,7 @@ class OraclesElixirCsvParser(
                 tournament = tournament,
                 season = season,
                 year = year,
+                date = date,
             )
         }
     }

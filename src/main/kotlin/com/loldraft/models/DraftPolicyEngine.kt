@@ -23,7 +23,7 @@ class DraftPolicyEngine(
         teamProfile: TeamTacticalProfile? = null,
         playerStatsByRole: Map<Role, PlayerCareerStats>? = null,
         playerProfilesByRole: Map<Role, ProPlayerDetailedProfile>? = null,
-        topN: Int = 3,
+        topN: Int = 5,
     ): IntentPredictionResult =
         intentPredictor.predictNextAction(
             draftState = draftState,

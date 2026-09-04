@@ -142,24 +142,22 @@ class FlexPickAnalyzer(
         }
 
         // 2. Blend with empirical PatchMetaMatrix if available
+        // 不要用系統預設的選路，以職業賽實際有出現過的路線為準
         val metaStats = patchMeta?.getStats(championId)
+        var empiricalPrimaryRole: Role? = null
         if (metaStats != null && metaStats.roleDistribution.isNotEmpty()) {
             val totalCount = metaStats.roleDistribution.values.sum()
             val totalGames = totalCount.toDouble()
             if (totalGames > 0) {
-                val empiricalDist = metaStats.roleDistribution.mapValues { it.value / totalGames }
-                val allRoles = (basePriors.keys + empiricalDist.keys).toSet()
-                val blended = mutableMapOf<Role, Double>()
-                val empiricalWeight = (totalGames / (totalGames + 20.0)).coerceIn(0.5, 0.9)
-                val priorWeight = 1.0 - empiricalWeight
+                // 只採納職業賽中實際有登場過 (次數 > 0) 的路線
+                val empiricalPlayed = metaStats.roleDistribution.filter { it.value > 0 }
+                if (empiricalPlayed.isNotEmpty()) {
+                    val empiricalDist = empiricalPlayed.mapValues { it.value / totalGames }
+                    empiricalPrimaryRole = empiricalPlayed.maxByOrNull { it.value }?.key
 
-                for (role in allRoles) {
-                    val pEmp = empiricalDist[role] ?: 0.0
-                    val pPrior = basePriors[role] ?: 0.0
-                    blended[role] = (pEmp * empiricalWeight) + (pPrior * priorWeight)
+                    basePriors.clear()
+                    basePriors.putAll(empiricalDist)
                 }
-                basePriors.clear()
-                basePriors.putAll(blended)
             }
         }
 
@@ -200,9 +198,10 @@ class FlexPickAnalyzer(
         val maxEntropy = ln(5.0)
         val normalizedEntropy = roundToFourDecimals((entropy / maxEntropy).coerceIn(0.0, 1.0))
 
+        val effectivePrimaryRole = empiricalPrimaryRole ?: primaryRole
         val secondaryRoles =
             finalProbabilities
-                .filter { it.key != primaryRole && it.value >= flexProbabilityThreshold }
+                .filter { it.key != effectivePrimaryRole && it.value >= flexProbabilityThreshold }
                 .keys
                 .toList()
 
@@ -210,7 +209,7 @@ class FlexPickAnalyzer(
             championId = profile?.displayName ?: championId,
             isFlex = isFlex,
             roleProbabilities = finalProbabilities,
-            primaryRole = primaryRole,
+            primaryRole = effectivePrimaryRole,
             secondaryRoles = secondaryRoles,
             flexEntropy = normalizedEntropy,
             confidence = if (profile != null) 1.0 else 0.5,

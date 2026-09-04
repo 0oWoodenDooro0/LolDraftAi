@@ -17,4 +17,5 @@ data class Game(
     val tournament: String? = null,
     val season: String? = null,
     val year: Int? = null,
+    val date: String? = null,
 )
