@@ -286,8 +286,64 @@ class DraftClientViewModel(
             )
     }
 
-    fun selectChampion(championId: String?) {
-        _uiState.value = _uiState.value.copy(selectedChampionId = championId)
+    fun selectChampion(championId: String?, preferredRole: Role? = null) {
+        _uiState.value =
+            _uiState.value.copy(
+                selectedChampionId = championId,
+                preferredRoleForSelection = preferredRole,
+            )
+    }
+
+    fun updatePickRole(turnNumber: Int, newRole: Role) {
+        val current = _uiState.value
+        val targetIndex = appliedDraftTurns.indexOfFirst { it.turnNumber == turnNumber && it.actionType == ActionType.PICK }
+        if (targetIndex == -1) return
+
+        val targetTurn = appliedDraftTurns[targetIndex]
+        val oldRole = targetTurn.role
+        if (oldRole == newRole) return
+
+        val side = targetTurn.side
+        val rosterIntel = if (side == Side.BLUE) current.blueRosterIntelligence else current.redRosterIntelligence
+
+        // Check if another pick on the same side already has newRole
+        val otherIndex = appliedDraftTurns.indexOfFirst {
+            it.side == side && it.actionType == ActionType.PICK && it.role == newRole && it.turnNumber != turnNumber
+        }
+
+        if (otherIndex != -1) {
+            // Swap scenario: other pick gets oldRole, target gets newRole
+            val otherTurn = appliedDraftTurns[otherIndex]
+            val otherNewPlayer = if (oldRole != null) rosterIntel[oldRole]?.playerId else otherTurn.player
+            val targetNewPlayer = rosterIntel[newRole]?.playerId
+
+            appliedDraftTurns[otherIndex] = otherTurn.copy(role = oldRole, player = otherNewPlayer)
+            appliedDraftTurns[targetIndex] = targetTurn.copy(role = newRole, player = targetNewPlayer)
+
+            val updatedSlots = current.boardSlots.map { slot ->
+                when (slot.turnNumber) {
+                    targetTurn.turnNumber -> slot.copy(role = newRole, playerName = targetNewPlayer)
+                    otherTurn.turnNumber -> slot.copy(role = oldRole, playerName = otherNewPlayer)
+                    else -> slot
+                }
+            }
+            _uiState.value = current.copy(boardSlots = updatedSlots)
+        } else {
+            // Single update scenario: assign newRole directly
+            val targetNewPlayer = rosterIntel[newRole]?.playerId
+            appliedDraftTurns[targetIndex] = targetTurn.copy(role = newRole, player = targetNewPlayer)
+
+            val updatedSlots = current.boardSlots.map { slot ->
+                if (slot.turnNumber == targetTurn.turnNumber) {
+                    slot.copy(role = newRole, playerName = targetNewPlayer)
+                } else {
+                    slot
+                }
+            }
+            _uiState.value = current.copy(boardSlots = updatedSlots)
+        }
+
+        recalculateDraftCalculations()
     }
 
     fun lockInChampion(championId: String) {
@@ -327,8 +383,11 @@ class DraftClientViewModel(
                         .toSet()
                 }
             val vacantRoles = Role.entries.filterNot { it in lockedRoles }
+            val preferredRole = current.preferredRoleForSelection
             val viableRole =
                 when {
+                    preferredRole != null && preferredRole in vacantRoles ->
+                        preferredRole
                     champEntry?.primaryRole != null && champEntry.primaryRole in vacantRoles ->
                         champEntry.primaryRole
                     champEntry?.secondaryRoles != null && champEntry.secondaryRoles.any { it in vacantRoles } ->
@@ -382,6 +441,7 @@ class DraftClientViewModel(
                 bannedChampionIds = updatedBanned,
                 pickedChampionIds = updatedPicked,
                 selectedChampionId = null,
+                preferredRoleForSelection = null,
                 isDraftComplete = isComplete,
             )
 
@@ -463,6 +523,7 @@ class DraftClientViewModel(
                 bannedChampionIds = emptySet(),
                 pickedChampionIds = emptySet(),
                 selectedChampionId = null,
+                preferredRoleForSelection = null,
                 isDraftComplete = false,
                 evalBar = EvalBarState(),
             )

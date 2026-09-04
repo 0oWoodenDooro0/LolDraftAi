@@ -90,6 +90,7 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
                             side = Side.BLUE,
                             teamName = state.blueTeam?.name ?: "Blue Team",
                             slots = state.boardSlots,
+                            onUpdateRole = viewModel::updatePickRole,
                         )
 
                         RosterPlayerPoolView(
@@ -127,6 +128,11 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
                             currentTurnNumber = state.currentTurnNumber,
                             currentTurnSpec = state.currentTurnSpec,
                             intentPredictions = state.intentPredictions,
+                            selectedChampionId = state.selectedChampionId,
+                            onChampionSelected = { champId, role -> viewModel.selectChampion(champId, role) },
+                            bannedChampionIds = state.bannedChampionIds,
+                            pickedChampionIds = state.pickedChampionIds,
+                            fearlessExcludedChampionIds = state.fearlessExcludedChampionIds,
                             modifier = Modifier.fillMaxWidth().weight(0.95f),
                         )
                     }
@@ -144,6 +150,7 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
                             side = Side.RED,
                             teamName = state.redTeam?.name ?: "Red Team",
                             slots = state.boardSlots,
+                            onUpdateRole = viewModel::updatePickRole,
                         )
 
                         RosterPlayerPoolView(

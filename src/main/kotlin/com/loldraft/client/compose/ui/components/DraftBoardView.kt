@@ -2,6 +2,7 @@ package com.loldraft.client.compose.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,8 +14,14 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,6 +39,7 @@ import com.loldraft.client.compose.ui.theme.TextMuted
 import com.loldraft.client.compose.ui.theme.TextPrimary
 import com.loldraft.client.compose.ui.theme.TextSecondary
 import com.loldraft.data.models.ActionType
+import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 
 @Composable
@@ -39,6 +47,7 @@ fun DraftBoardSideView(
     side: Side,
     teamName: String,
     slots: List<BoardSlot>,
+    onUpdateRole: ((turnNumber: Int, newRole: Role) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val sideColor = if (side == Side.BLUE) BlueSideColor else RedSideColor
@@ -77,7 +86,12 @@ fun DraftBoardSideView(
         Spacer(modifier = Modifier.height(4.dp))
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             sidePicks.forEach { slot ->
-                DraftSlotRow(slot = slot, sideColor = sideColor)
+                DraftSlotRow(
+                    slot = slot,
+                    sideColor = sideColor,
+                    teamPickSlots = sidePicks,
+                    onUpdateRole = onUpdateRole,
+                )
             }
         }
 
@@ -101,9 +115,13 @@ fun DraftBoardSideView(
 fun DraftSlotRow(
     slot: BoardSlot,
     sideColor: Color,
+    teamPickSlots: List<BoardSlot> = emptyList(),
+    onUpdateRole: ((turnNumber: Int, newRole: Role) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val isLocked = slot.championId != null
+    var menuExpanded by remember { mutableStateOf(false) }
+
     val borderModifier =
         if (slot.isCurrentTurn) {
             Modifier.border(2.dp, GoldAccent, RoundedCornerShape(6.dp))
@@ -164,19 +182,87 @@ fun DraftSlotRow(
             }
         }
 
-        if (slot.role != null) {
-            Box(
-                modifier =
-                    Modifier
-                        .background(CardDark, RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-            ) {
-                Text(
-                    text = slot.role.name,
-                    color = sideColor,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
+        if (isLocked) {
+            Box {
+                Row(
+                    modifier =
+                        Modifier
+                            .background(CardDark, RoundedCornerShape(4.dp))
+                            .border(1.dp, if (menuExpanded) GoldAccent else BorderDark, RoundedCornerShape(4.dp))
+                            .clickable(enabled = onUpdateRole != null) { menuExpanded = true }
+                            .padding(horizontal = 6.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = slot.role?.name ?: "選擇位置",
+                        color = if (slot.role != null) sideColor else GoldAccent,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "▾",
+                        color = TextSecondary,
+                        fontSize = 9.sp,
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                    modifier =
+                        Modifier
+                            .background(SurfaceDark)
+                            .border(1.dp, BorderDark, RoundedCornerShape(6.dp)),
+                ) {
+                    Role.entries.forEach { roleOption ->
+                        val otherSlot = teamPickSlots.find { it.role == roleOption && it.turnNumber != slot.turnNumber && it.championId != null }
+                        val isCurrentRole = slot.role == roleOption
+                        val roleLabel =
+                            when (roleOption) {
+                                Role.TOP -> "TOP 上路"
+                                Role.JUNGLE -> "JGL 打野"
+                                Role.MID -> "MID 中路"
+                                Role.BOT -> "BOT 下路"
+                                Role.SUPPORT -> "SUP 輔助"
+                            }
+                        val subText =
+                            when {
+                                isCurrentRole -> "(目前位置)"
+                                otherSlot != null -> "(⇄ 與 ${otherSlot.championName ?: otherSlot.championId} 交換)"
+                                else -> "(空缺)"
+                            }
+
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = roleLabel,
+                                        color = if (isCurrentRole) GoldAccent else TextPrimary,
+                                        fontWeight = if (isCurrentRole) FontWeight.Bold else FontWeight.Medium,
+                                        fontSize = 12.sp,
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = subText,
+                                        color = if (isCurrentRole) GoldAccent else TextSecondary,
+                                        fontSize = 10.sp,
+                                    )
+                                }
+                            },
+                            onClick = {
+                                menuExpanded = false
+                                if (!isCurrentRole) {
+                                    onUpdateRole?.invoke(slot.turnNumber, roleOption)
+                                }
+                            },
+                        )
+                    }
+                }
             }
         }
     }

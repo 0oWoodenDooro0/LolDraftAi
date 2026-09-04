@@ -210,4 +210,81 @@ class DraftClientViewModelTest {
         viewModel.clearFearlessExcludedChampions()
         assertTrue(viewModel.uiState.value.fearlessExcludedChampionIds.isEmpty())
     }
+
+    @Test
+    fun `test selectChampion with preferredRole from prediction locks into intended role`() {
+        // Fast forward 6 bans to reach Blue Pick 1 (Turn 7)
+        repeat(6) {
+            viewModel.lockInChampion("BanChamp$it")
+        }
+        assertEquals(7, viewModel.uiState.value.currentTurnNumber)
+        assertEquals(ActionType.PICK, viewModel.uiState.value.currentTurnSpec.actionType)
+        assertEquals(Side.BLUE, viewModel.uiState.value.currentTurnSpec.side)
+
+        // Select a champion (e.g. Nautilus which is primary SUP) but with preferredRole = Role.MID
+        viewModel.selectChampion("Nautilus", preferredRole = Role.MID)
+        assertEquals("Nautilus", viewModel.uiState.value.selectedChampionId)
+        assertEquals(Role.MID, viewModel.uiState.value.preferredRoleForSelection)
+
+        // Lock in Nautilus
+        viewModel.lockInChampion("Nautilus")
+
+        // Turn 7 slot should be locked with Nautilus assigned to MID
+        val slot7 = viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }
+        assertEquals("Nautilus", slot7.championId)
+        assertEquals(Role.MID, slot7.role)
+        assertEquals(null, viewModel.uiState.value.selectedChampionId)
+        assertEquals(null, viewModel.uiState.value.preferredRoleForSelection)
+    }
+
+    @Test
+    fun `test updatePickRole changes role and updates board slot`() {
+        // Fast forward 6 bans
+        repeat(6) {
+            viewModel.lockInChampion("BanChamp$it")
+        }
+
+        // Turn 7: Blue Pick 1 -> Nautilus (default role assigned, e.g. SUP)
+        viewModel.lockInChampion("Nautilus")
+        val slot7Before = viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }
+        assertNotNull(slot7Before.role)
+
+        // Change role of Turn 7 to TOP
+        viewModel.updatePickRole(7, Role.TOP)
+        val slot7After = viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }
+        assertEquals(Role.TOP, slot7After.role)
+    }
+
+    @Test
+    fun `test updatePickRole swaps roles when new role is already occupied by a teammate`() {
+        // Fast forward 6 bans to reach Turn 7
+        repeat(6) {
+            viewModel.lockInChampion("BanChamp$it")
+        }
+
+        // Turn 7: Blue Pick 1 -> Lock Nautilus in as MID
+        viewModel.selectChampion("Nautilus", preferredRole = Role.MID)
+        viewModel.lockInChampion("Nautilus")
+        assertEquals(Role.MID, viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }.role)
+
+        // Turn 8: Red Pick 1
+        viewModel.lockInChampion("Aatrox")
+        // Turn 9: Red Pick 2
+        viewModel.lockInChampion("Sejuani")
+
+        // Turn 10: Blue Pick 2 -> Lock Leona in as SUP
+        viewModel.selectChampion("Leona", preferredRole = Role.SUPPORT)
+        viewModel.lockInChampion("Leona")
+        assertEquals(Role.SUPPORT, viewModel.uiState.value.boardSlots.first { it.turnNumber == 10 }.role)
+
+        // Now adjust Nautilus (Turn 7) to Role.SUPPORT
+        // Since Leona (Turn 10) currently has Role.SUPPORT, they should swap!
+        viewModel.updatePickRole(7, Role.SUPPORT)
+
+        val slot7 = viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }
+        val slot10 = viewModel.uiState.value.boardSlots.first { it.turnNumber == 10 }
+
+        assertEquals(Role.SUPPORT, slot7.role, "Turn 7 (Nautilus) should now be SUPPORT")
+        assertEquals(Role.MID, slot10.role, "Turn 10 (Leona) should now be swapped to MID")
+    }
 }

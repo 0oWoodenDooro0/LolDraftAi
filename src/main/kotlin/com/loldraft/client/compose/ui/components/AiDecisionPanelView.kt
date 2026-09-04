@@ -2,6 +2,7 @@ package com.loldraft.client.compose.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,7 @@ import com.loldraft.client.compose.ui.theme.TextPrimary
 import com.loldraft.client.compose.ui.theme.TextSecondary
 import com.loldraft.data.models.ActionType
 import com.loldraft.data.models.DraftTurnSpec
+import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.models.ChampionIntentCandidate
 import com.loldraft.models.CompositionFlaw
@@ -51,6 +53,8 @@ fun AiDecisionPanelView(
     intentPredictions: List<ChampionIntentCandidate>,
     recommendations: List<PickRecommendation>,
     compositionFlaws: List<CompositionFlaw>,
+    selectedChampionId: String? = null,
+    onChampionSelected: ((championId: String, preferredRole: Role?) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val isBan = currentTurnSpec.actionType == ActionType.BAN
@@ -115,7 +119,12 @@ fun AiDecisionPanelView(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         intentPredictions.take(3).forEachIndexed { index, candidate ->
-                            IntentPredictionCard(rank = index + 1, candidate = candidate)
+                            IntentPredictionCard(
+                                rank = index + 1,
+                                candidate = candidate,
+                                isSelected = selectedChampionId?.equals(candidate.championId, ignoreCase = true) == true,
+                                onClick = onChampionSelected?.let { { it(candidate.championId, candidate.predictedRole) } },
+                            )
                         }
                     }
                 }
@@ -170,7 +179,13 @@ fun AiDecisionPanelView(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         recommendations.take(3).forEach { rec ->
-                            TacticalRecommendationCard(rec = rec, isBan = isBan, sideColor = actingSideColor)
+                            TacticalRecommendationCard(
+                                rec = rec,
+                                isBan = isBan,
+                                sideColor = actingSideColor,
+                                isSelected = selectedChampionId?.equals(rec.championId, ignoreCase = true) == true,
+                                onClick = onChampionSelected?.let { { it(rec.championId, rec.recommendedRole) } },
+                            )
                         }
                     }
                 }
@@ -252,16 +267,22 @@ fun AiDecisionPanelView(
 fun IntentPredictionCard(
     rank: Int,
     candidate: ChampionIntentCandidate,
+    isSelected: Boolean = false,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val probPercent = String.format(Locale.US, "%.1f%%", candidate.probability * 100)
+
+    val cardBorderColor = if (isSelected) GoldAccent else BorderDark
+    val cardBg = if (isSelected) GoldAccent.copy(alpha = 0.12f) else SurfaceDark
 
     Column(
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(SurfaceDark, RoundedCornerShape(4.dp))
-                .border(1.dp, BorderDark, RoundedCornerShape(4.dp))
+                .background(cardBg, RoundedCornerShape(4.dp))
+                .border(if (isSelected) 2.dp else 1.dp, cardBorderColor, RoundedCornerShape(4.dp))
+                .clickable(enabled = onClick != null) { onClick?.invoke() }
                 .padding(horizontal = 6.dp, vertical = 4.dp),
     ) {
         Row(
@@ -272,14 +293,20 @@ fun IntentPredictionCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("#$rank", color = GoldAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.width(5.dp))
-                Text(candidate.championId, color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(candidate.championId, color = if (isSelected) GoldAccent else TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 if (candidate.predictedRole != null) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("(${candidate.predictedRole.name})", color = TextSecondary, fontSize = 9.sp)
                 }
             }
 
-            Text(probPercent, color = GoldAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (isSelected) {
+                    Text("已選中", color = GoldAccent, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(4.dp))
+                }
+                Text(probPercent, color = GoldAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
         }
 
         Spacer(modifier = Modifier.height(2.dp))
@@ -320,6 +347,8 @@ fun TacticalRecommendationCard(
     rec: PickRecommendation,
     isBan: Boolean,
     sideColor: Color,
+    isSelected: Boolean = false,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val scoreText =
@@ -333,12 +362,16 @@ fun TacticalRecommendationCard(
             }
         }
 
+    val cardBorderColor = if (isSelected) GoldAccent else BorderDark
+    val cardBg = if (isSelected) GoldAccent.copy(alpha = 0.12f) else SurfaceDark
+
     Column(
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(SurfaceDark, RoundedCornerShape(4.dp))
-                .border(1.dp, BorderDark, RoundedCornerShape(4.dp))
+                .background(cardBg, RoundedCornerShape(4.dp))
+                .border(if (isSelected) 2.dp else 1.dp, cardBorderColor, RoundedCornerShape(4.dp))
+                .clickable(enabled = onClick != null) { onClick?.invoke() }
                 .padding(horizontal = 6.dp, vertical = 4.dp),
     ) {
         Row(
@@ -347,12 +380,18 @@ fun TacticalRecommendationCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(rec.championId, color = sideColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(rec.championId, color = if (isSelected) GoldAccent else sideColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.width(5.dp))
                 Text("(${rec.recommendedRole.name})", color = TextSecondary, fontSize = 9.sp)
             }
 
-            Text(scoreText, color = GreenAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (isSelected) {
+                    Text("已選中", color = GoldAccent, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(4.dp))
+                }
+                Text(scoreText, color = GreenAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            }
         }
 
         if (rec.reasons.isNotEmpty()) {

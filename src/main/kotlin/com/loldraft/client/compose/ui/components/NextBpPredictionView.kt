@@ -1,7 +1,9 @@
 package com.loldraft.client.compose.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,6 +36,7 @@ import com.loldraft.client.compose.ui.theme.TextPrimary
 import com.loldraft.client.compose.ui.theme.TextSecondary
 import com.loldraft.data.models.ActionType
 import com.loldraft.data.models.DraftTurnSpec
+import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.models.ChampionIntentCandidate
 import java.util.Locale
@@ -42,6 +46,11 @@ fun NextBpPredictionView(
     currentTurnNumber: Int,
     currentTurnSpec: DraftTurnSpec,
     intentPredictions: List<ChampionIntentCandidate>,
+    selectedChampionId: String? = null,
+    onChampionSelected: ((championId: String, preferredRole: Role?) -> Unit)? = null,
+    bannedChampionIds: Set<String> = emptySet(),
+    pickedChampionIds: Set<String> = emptySet(),
+    fearlessExcludedChampionIds: Set<String> = emptySet(),
     modifier: Modifier = Modifier,
 ) {
     val isBan = currentTurnSpec.actionType == ActionType.BAN
@@ -130,19 +139,37 @@ fun NextBpPredictionView(
             ) {
                 intentPredictions.take(3).forEachIndexed { index, candidate ->
                     val probPercent = String.format(Locale.US, "%.1f%%", candidate.probability * 100)
+                    val isBanned = bannedChampionIds.any { it.equals(candidate.championId, ignoreCase = true) }
+                    val isPicked = pickedChampionIds.any { it.equals(candidate.championId, ignoreCase = true) }
+                    val isFearless = fearlessExcludedChampionIds.any { it.equals(candidate.championId, ignoreCase = true) }
+                    val isUnavailable = isBanned || isPicked || isFearless
+                    val isSelected = selectedChampionId?.equals(candidate.championId, ignoreCase = true) == true
+
+                    val cardBorder =
+                        when {
+                            isSelected -> BorderStroke(2.dp, GoldAccent)
+                            index == 0 -> BorderStroke(1.dp, GoldAccent.copy(alpha = 0.6f))
+                            else -> BorderStroke(1.dp, BorderDark)
+                        }
+                    val cardBg =
+                        when {
+                            isSelected -> GoldAccent.copy(alpha = 0.12f)
+                            else -> CardDark
+                        }
+
                     Column(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .background(CardDark, RoundedCornerShape(6.dp))
-                                .border(
-                                    1.dp,
-                                    if (index == 0) GoldAccent.copy(alpha = 0.6f) else BorderDark,
-                                    RoundedCornerShape(6.dp),
-                                )
+                                .alpha(if (isUnavailable) 0.45f else 1.0f)
+                                .background(cardBg, RoundedCornerShape(6.dp))
+                                .border(cardBorder.width, cardBorder.brush, RoundedCornerShape(6.dp))
+                                .clickable(enabled = !isUnavailable && onChampionSelected != null) {
+                                    onChampionSelected?.invoke(candidate.championId, candidate.predictedRole)
+                                }
                                 .padding(horizontal = 10.dp, vertical = 8.dp),
                     ) {
-                        // Top row: Rank, Champ Name, Role badge, and Probability
+                        // Top row: Rank, Champ Name, Role badge, Status and Probability
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -153,14 +180,14 @@ fun NextBpPredictionView(
                                     modifier =
                                         Modifier
                                             .background(
-                                                if (index == 0) GoldAccent else BorderDark,
+                                                if (isSelected || index == 0) GoldAccent else BorderDark,
                                                 RoundedCornerShape(4.dp),
                                             )
                                             .padding(horizontal = 6.dp, vertical = 2.dp),
                                 ) {
                                     Text(
                                         text = "#${index + 1}",
-                                        color = if (index == 0) Color.Black else TextPrimary,
+                                        color = if (isSelected || index == 0) Color.Black else TextPrimary,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
                                     )
@@ -168,7 +195,7 @@ fun NextBpPredictionView(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = candidate.championId,
-                                    color = TextPrimary,
+                                    color = if (isSelected) GoldAccent else TextPrimary,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                 )
@@ -190,12 +217,47 @@ fun NextBpPredictionView(
                                 }
                             }
 
-                            Text(
-                                text = probPercent,
-                                color = if (index == 0) GoldAccent else TextPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (isSelected) {
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .background(GoldAccent, RoundedCornerShape(4.dp))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                                    ) {
+                                        Text(
+                                            text = "已選定 (按中間鎖定)",
+                                            color = Color.Black,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                } else if (!isUnavailable && onChampionSelected != null) {
+                                    Text(
+                                        text = "點擊選取",
+                                        color = TextMuted,
+                                        fontSize = 10.sp,
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                } else if (isUnavailable) {
+                                    val unavailableText = if (isBanned) "已禁用" else if (isPicked) "已選定" else "全局BP"
+                                    Text(
+                                        text = unavailableText,
+                                        color = RedSideColor,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                }
+
+                                Text(
+                                    text = probPercent,
+                                    color = if (isSelected || index == 0) GoldAccent else TextPrimary,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(6.dp))
