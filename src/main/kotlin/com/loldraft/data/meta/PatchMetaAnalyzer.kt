@@ -51,6 +51,12 @@ class PatchMetaAnalyzer(
         // Matchup tracking: Triple(Champ, Opponent, Role?) -> MatchupAccumulator
         val matchupAcc = mutableMapOf<Triple<String, String, Role?>, MatchupAccumulator>()
 
+        // Bot Duo Synergy: Pair(Bot, Sup) -> BotDuoAccumulator
+        val botDuoAcc = mutableMapOf<Pair<String, String>, BotDuoAccumulator>()
+
+        // Bot Duo Matchup: Pair(BlueDuo, RedDuo) -> BotDuoMatchupAccumulator
+        val botDuoMatchupAcc = mutableMapOf<Pair<Pair<String, String>, Pair<String, String>>, BotDuoMatchupAccumulator>()
+
         for (game in games) {
             val bluePicks = extractPicks(game, Side.BLUE)
             val redPicks = extractPicks(game, Side.RED)
@@ -136,6 +142,46 @@ class PatchMetaAnalyzer(
                         }
                         redGd15?.let { acc2.goldDiffs.add(it) }
                     }
+                }
+            }
+
+            // Process Bot 2v2 Duos (Bot + Support)
+            val blueBotPick = bluePicks.find { it.role == Role.BOT }
+            val blueSupPick = bluePicks.find { it.role == Role.SUPPORT }
+            if (blueBotPick != null && blueSupPick != null) {
+                val bBot = ChampionNormalizer.toSlug(blueBotPick.championId)
+                val bSup = ChampionNormalizer.toSlug(blueSupPick.championId)
+                if (bBot.isNotBlank() && bSup.isNotBlank()) {
+                    val acc = botDuoAcc.getOrPut(bBot to bSup) { BotDuoAccumulator() }
+                    acc.games++
+                    if (blueWon) acc.wins++
+                    blueGd15?.let { acc.goldDiffs.add(it) }
+                }
+            }
+
+            val redBotPick = redPicks.find { it.role == Role.BOT }
+            val redSupPick = redPicks.find { it.role == Role.SUPPORT }
+            if (redBotPick != null && redSupPick != null) {
+                val rBot = ChampionNormalizer.toSlug(redBotPick.championId)
+                val rSup = ChampionNormalizer.toSlug(redSupPick.championId)
+                if (rBot.isNotBlank() && rSup.isNotBlank()) {
+                    val acc = botDuoAcc.getOrPut(rBot to rSup) { BotDuoAccumulator() }
+                    acc.games++
+                    if (redWon) acc.wins++
+                    redGd15?.let { acc.goldDiffs.add(it) }
+                }
+            }
+
+            if (blueBotPick != null && blueSupPick != null && redBotPick != null && redSupPick != null) {
+                val bBot = ChampionNormalizer.toSlug(blueBotPick.championId)
+                val bSup = ChampionNormalizer.toSlug(blueSupPick.championId)
+                val rBot = ChampionNormalizer.toSlug(redBotPick.championId)
+                val rSup = ChampionNormalizer.toSlug(redSupPick.championId)
+                if (bBot.isNotBlank() && bSup.isNotBlank() && rBot.isNotBlank() && rSup.isNotBlank()) {
+                    val mAcc = botDuoMatchupAcc.getOrPut((bBot to bSup) to (rBot to rSup)) { BotDuoMatchupAccumulator() }
+                    mAcc.games++
+                    if (blueWon) mAcc.blueWins++
+                    blueGd15?.let { mAcc.goldDiffs.add(it) }
                 }
             }
         }
@@ -243,12 +289,72 @@ class PatchMetaAnalyzer(
             )
         }
 
+        // Build Bot Duo Synergies
+        val duoMap = mutableMapOf<Pair<String, String>, BotDuoSynergy>()
+        for ((pair, acc) in botDuoAcc) {
+            if (acc.games <= 0) continue
+            val (bot, sup) = pair
+            val winRate = acc.wins.toDouble() / acc.games
+            val avgGd = if (acc.goldDiffs.isNotEmpty()) acc.goldDiffs.average() else 0.0
+            val synergyScore = (winRate - 0.50) * 50.0 + (avgGd / 50.0).coerceIn(-25.0, 25.0) + 50.0
+            val tags = resolveDuoStyleTags(bot, sup)
+            duoMap[pair] =
+                BotDuoSynergy(
+                    botChampion = bot,
+                    supportChampion = sup,
+                    gamesTogether = acc.games,
+                    winsTogether = acc.wins,
+                    synergyWinRate = winRate,
+                    avgGoldDiffAt15 = avgGd,
+                    synergyScore = synergyScore,
+                    styleTags = tags,
+                )
+        }
+        for (classic in CLASSIC_BOT_DUOS) {
+            val key = ChampionNormalizer.toSlug(classic.botChampion) to ChampionNormalizer.toSlug(classic.supportChampion)
+            if (!duoMap.containsKey(key)) {
+                duoMap[key] = classic
+            }
+        }
+        val botDuoSynergies = duoMap.values.toList()
+
+        // Build Bot Duo Matchups
+        val duoMatchupMap = mutableMapOf<Pair<Pair<String, String>, Pair<String, String>>, BotDuoMatchup>()
+        for ((duoPair, acc) in botDuoMatchupAcc) {
+            if (acc.games <= 0) continue
+            val (blueDuo, redDuo) = duoPair
+            val blueWinRate = acc.blueWins.toDouble() / acc.games
+            val avgGd = if (acc.goldDiffs.isNotEmpty()) acc.goldDiffs.average() else 0.0
+            val counterScore = (blueWinRate - 0.50) * 50.0 + (avgGd / 50.0).coerceIn(-25.0, 25.0) + 50.0
+            duoMatchupMap[duoPair] =
+                BotDuoMatchup(
+                    blueDuo = blueDuo,
+                    redDuo = redDuo,
+                    gamesFaced = acc.games,
+                    blueWins = acc.blueWins,
+                    blueWinRate = blueWinRate,
+                    avgGoldDiffAt15 = avgGd,
+                    counterScore = counterScore,
+                )
+        }
+        for (classicMatchup in CLASSIC_DUO_MATCHUPS) {
+            val bKey = ChampionNormalizer.toSlug(classicMatchup.blueDuo.first) to ChampionNormalizer.toSlug(classicMatchup.blueDuo.second)
+            val rKey = ChampionNormalizer.toSlug(classicMatchup.redDuo.first) to ChampionNormalizer.toSlug(classicMatchup.redDuo.second)
+            val fullKey = bKey to rKey
+            if (!duoMatchupMap.containsKey(fullKey)) {
+                duoMatchupMap[fullKey] = classicMatchup
+            }
+        }
+        val botDuoMatchups = duoMatchupMap.values.toList()
+
         return PatchMetaMatrix(
             patch = effectivePatch,
             totalGames = totalGames,
             championStats = statsMap,
             synergies = synergies,
             matchupCounters = matchups,
+            botDuoSynergies = botDuoSynergies,
+            botDuoMatchups = botDuoMatchups,
         )
     }
 
@@ -314,5 +420,85 @@ class PatchMetaAnalyzer(
         var wins: Int = 0
         var losses: Int = 0
         val goldDiffs = mutableListOf<Double>()
+    }
+
+    private class BotDuoAccumulator {
+        var games: Int = 0
+        var wins: Int = 0
+        val goldDiffs = mutableListOf<Double>()
+    }
+
+    private class BotDuoMatchupAccumulator {
+        var games: Int = 0
+        var blueWins: Int = 0
+        val goldDiffs = mutableListOf<Double>()
+    }
+
+    companion object {
+        fun resolveDuoStyleTags(bot: String, sup: String): List<BotDuoStyleTag> {
+            val b = ChampionNormalizer.toSlug(bot)
+            val s = ChampionNormalizer.toSlug(sup)
+            val tags = mutableListOf<BotDuoStyleTag>()
+            if (s in setOf("nautilus", "leona", "rell", "alistar", "blitzcrank", "pyke", "thresh")) {
+                tags.add(BotDuoStyleTag.ALL_IN_KILL)
+                tags.add(BotDuoStyleTag.CROWD_CONTROL_CHAIN)
+            }
+            if (s in setOf("lux", "karma", "morgana", "zyra", "ashe", "xerath", "velkoz", "nami") || b in setOf("caitlyn", "varus", "ezreal", "lucian")) {
+                tags.add(BotDuoStyleTag.POKE_SIEGE)
+            }
+            if (s in setOf("lulu", "yuumi", "janna", "soraka", "milio", "sona") || b in setOf("zeri", "jinx", "kogmaw", "vayne", "smolder")) {
+                tags.add(BotDuoStyleTag.HYPER_CARRY_PEEL)
+            }
+            if (tags.isEmpty()) tags.add(BotDuoStyleTag.STANDARD)
+            return tags.distinct()
+        }
+
+        val CLASSIC_BOT_DUOS =
+            listOf(
+                BotDuoSynergy("Lucian", "Nami", gamesTogether = 25, winsTogether = 15, synergyWinRate = 0.60, avgGoldDiffAt15 = 380.0, synergyScore = 78.0, styleTags = listOf(BotDuoStyleTag.ALL_IN_KILL, BotDuoStyleTag.POKE_SIEGE)),
+                BotDuoSynergy("Xayah", "Rakan", gamesTogether = 30, winsTogether = 18, synergyWinRate = 0.60, avgGoldDiffAt15 = 250.0, synergyScore = 75.0, styleTags = listOf(BotDuoStyleTag.CROWD_CONTROL_CHAIN, BotDuoStyleTag.ALL_IN_KILL)),
+                BotDuoSynergy("Kalista", "Renata Glasc", gamesTogether = 20, winsTogether = 12, synergyWinRate = 0.60, avgGoldDiffAt15 = 400.0, synergyScore = 77.0, styleTags = listOf(BotDuoStyleTag.ALL_IN_KILL, BotDuoStyleTag.CROWD_CONTROL_CHAIN)),
+                BotDuoSynergy("Caitlyn", "Lux", gamesTogether = 18, winsTogether = 10, synergyWinRate = 0.556, avgGoldDiffAt15 = 420.0, synergyScore = 72.0, styleTags = listOf(BotDuoStyleTag.POKE_SIEGE)),
+                BotDuoSynergy("Draven", "Nautilus", gamesTogether = 16, winsTogether = 10, synergyWinRate = 0.625, avgGoldDiffAt15 = 510.0, synergyScore = 80.0, styleTags = listOf(BotDuoStyleTag.ALL_IN_KILL, BotDuoStyleTag.CROWD_CONTROL_CHAIN)),
+                BotDuoSynergy("Samira", "Rell", gamesTogether = 15, winsTogether = 9, synergyWinRate = 0.60, avgGoldDiffAt15 = 320.0, synergyScore = 74.0, styleTags = listOf(BotDuoStyleTag.ALL_IN_KILL, BotDuoStyleTag.CROWD_CONTROL_CHAIN)),
+                BotDuoSynergy("Varus", "Ashe", gamesTogether = 22, winsTogether = 13, synergyWinRate = 0.59, avgGoldDiffAt15 = 350.0, synergyScore = 73.0, styleTags = listOf(BotDuoStyleTag.POKE_SIEGE, BotDuoStyleTag.CROWD_CONTROL_CHAIN)),
+                BotDuoSynergy("Kai'Sa", "Nautilus", gamesTogether = 28, winsTogether = 16, synergyWinRate = 0.571, avgGoldDiffAt15 = 200.0, synergyScore = 70.0, styleTags = listOf(BotDuoStyleTag.ALL_IN_KILL, BotDuoStyleTag.CROWD_CONTROL_CHAIN)),
+                BotDuoSynergy("Zeri", "Lulu", gamesTogether = 24, winsTogether = 14, synergyWinRate = 0.583, avgGoldDiffAt15 = -50.0, synergyScore = 69.0, styleTags = listOf(BotDuoStyleTag.HYPER_CARRY_PEEL)),
+                BotDuoSynergy("Jinx", "Thresh", gamesTogether = 20, winsTogether = 11, synergyWinRate = 0.55, avgGoldDiffAt15 = 80.0, synergyScore = 67.0, styleTags = listOf(BotDuoStyleTag.HYPER_CARRY_PEEL, BotDuoStyleTag.CROWD_CONTROL_CHAIN)),
+                BotDuoSynergy("Sivir", "Yuumi", gamesTogether = 14, winsTogether = 8, synergyWinRate = 0.571, avgGoldDiffAt15 = -120.0, synergyScore = 65.0, styleTags = listOf(BotDuoStyleTag.HYPER_CARRY_PEEL)),
+                BotDuoSynergy("Aphelios", "Thresh", gamesTogether = 18, winsTogether = 10, synergyWinRate = 0.556, avgGoldDiffAt15 = 110.0, synergyScore = 68.0, styleTags = listOf(BotDuoStyleTag.HYPER_CARRY_PEEL, BotDuoStyleTag.CROWD_CONTROL_CHAIN)),
+                BotDuoSynergy("Lucian", "Milio", gamesTogether = 15, winsTogether = 9, synergyWinRate = 0.60, avgGoldDiffAt15 = 280.0, synergyScore = 73.0, styleTags = listOf(BotDuoStyleTag.POKE_SIEGE, BotDuoStyleTag.ALL_IN_KILL)),
+            )
+
+        val CLASSIC_DUO_MATCHUPS =
+            listOf(
+                BotDuoMatchup(
+                    blueDuo = "Draven" to "Nautilus",
+                    redDuo = "Varus" to "Nami",
+                    gamesFaced = 10,
+                    blueWins = 7,
+                    blueWinRate = 0.70,
+                    avgGoldDiffAt15 = 450.0,
+                    counterScore = 78.0,
+                ),
+                BotDuoMatchup(
+                    blueDuo = "Caitlyn" to "Lux",
+                    redDuo = "Kai'Sa" to "Nautilus",
+                    gamesFaced = 12,
+                    blueWins = 8,
+                    blueWinRate = 0.667,
+                    avgGoldDiffAt15 = 390.0,
+                    counterScore = 74.0,
+                ),
+                BotDuoMatchup(
+                    blueDuo = "Lucian" to "Nami",
+                    redDuo = "Zeri" to "Lulu",
+                    gamesFaced = 15,
+                    blueWins = 10,
+                    blueWinRate = 0.667,
+                    avgGoldDiffAt15 = 420.0,
+                    counterScore = 75.0,
+                ),
+            )
     }
 }

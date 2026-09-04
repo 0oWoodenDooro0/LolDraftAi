@@ -1,5 +1,6 @@
 package com.loldraft.data.models
 
+import com.loldraft.data.meta.SeriesDraftContext
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -16,6 +17,7 @@ data class DraftState(
     val bluePicks: List<PickSelection> = emptyList(),
     val redPicks: List<PickSelection> = emptyList(),
     val turns: List<DraftTurn> = emptyList(),
+    val seriesContext: SeriesDraftContext? = null,
 ) {
     val currentTurnNumber: Int
         get() = turns.size + 1
@@ -29,8 +31,15 @@ data class DraftState(
     val allPickedChampions: Set<String>
         get() = (bluePicks.map { it.championId } + redPicks.map { it.championId }).toSet()
 
+    val fearlessSpentChampions: Set<String>
+        get() = seriesContext?.spentChampions ?: emptySet()
+
     val allSelectedChampions: Set<String>
-        get() = allBannedChampions + allPickedChampions
+        get() = allBannedChampions + allPickedChampions + fearlessSpentChampions
+
+    fun withFearlessSpent(spent: Set<String>): DraftState =
+        copy(seriesContext = (seriesContext ?: SeriesDraftContext()).copy(spentChampions = spent))
+
 
     fun applyTurn(turn: DraftTurn): DraftState {
         val updatedTurns = turns + turn

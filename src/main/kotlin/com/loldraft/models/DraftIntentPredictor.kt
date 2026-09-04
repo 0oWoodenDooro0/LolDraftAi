@@ -385,6 +385,44 @@ class DraftIntentPredictor(
             }
             compositionFitScore = compositionFitScore.coerceIn(-1.0, 1.0)
 
+            // 5.5 Bot Duo Synergy gravity bonus
+            var botDuoScore = 0.0
+            var matchedDuoPartner: String? = null
+            var matchedDuoStats: com.loldraft.data.meta.BotDuoSynergy? = null
+            if (!isBan) {
+                if (targetRole == Role.SUPPORT) {
+                    val allyAdc = teamPicks.find { it.role == Role.BOT }
+                        ?: teamPicks.find { tagRegistry.getProfile(it.championId)?.primaryRole == Role.BOT }
+                    if (allyAdc != null) {
+                        val duo = patchMeta?.getDuoSynergy(allyAdc.championId, champ)
+                            ?: com.loldraft.data.meta.PatchMetaAnalyzer.CLASSIC_BOT_DUOS.find {
+                                ChampionNormalizer.toSlug(it.botChampion) == ChampionNormalizer.toSlug(allyAdc.championId) &&
+                                    ChampionNormalizer.toSlug(it.supportChampion) == ChampionNormalizer.toSlug(champ)
+                            }
+                        if (duo != null) {
+                            botDuoScore = (duo.synergyScore / 100.0).coerceIn(0.2, 1.0)
+                            matchedDuoPartner = allyAdc.championId
+                            matchedDuoStats = duo
+                        }
+                    }
+                } else if (targetRole == Role.BOT) {
+                    val allySup = teamPicks.find { it.role == Role.SUPPORT }
+                        ?: teamPicks.find { tagRegistry.getProfile(it.championId)?.primaryRole == Role.SUPPORT }
+                    if (allySup != null) {
+                        val duo = patchMeta?.getDuoSynergy(champ, allySup.championId)
+                            ?: com.loldraft.data.meta.PatchMetaAnalyzer.CLASSIC_BOT_DUOS.find {
+                                ChampionNormalizer.toSlug(it.botChampion) == ChampionNormalizer.toSlug(champ) &&
+                                    ChampionNormalizer.toSlug(it.supportChampion) == ChampionNormalizer.toSlug(allySup.championId)
+                            }
+                        if (duo != null) {
+                            botDuoScore = (duo.synergyScore / 100.0).coerceIn(0.2, 1.0)
+                            matchedDuoPartner = allySup.championId
+                            matchedDuoStats = duo
+                        }
+                    }
+                }
+            }
+
             // 6. Counter / denial score
             var counterDenialScore = 0.0
             if (patchMeta != null && enemyPicks.isNotEmpty()) {
@@ -433,6 +471,9 @@ class DraftIntentPredictor(
                     }
                 } else {
                     val rawScore = when {
+                        matchedDuoStats != null ->
+                            (botDuoScore * 0.40) + (playerMasteryScore * 0.25) + (metaScore * 0.20) +
+                                (soloQScore * 0.10) + (compositionFitScore * 0.05)
                         hasDetailedProfiles && hasTargetSoloQData ->
                             (metaScore * 0.25) + (playerMasteryScore * 0.30) + (soloQScore * 0.30) +
                                 (compositionFitScore * 0.10) + (counterDenialScore * 0.05)
@@ -527,6 +568,20 @@ class DraftIntentPredictor(
                 if (needsAp && (profile?.damageProfile?.magicRatio ?: 0.0) >= 0.65) reasons.add("Fills critical AP damage deficit")
                 if (vacantRoles.isNotEmpty() && targetRole in vacantRoles) reasons.add("Fills vacant $targetRole lane")
                 if (counterDenialScore > 0.3) reasons.add("Counters enemy composition")
+
+                if (matchedDuoStats != null && matchedDuoPartner != null) {
+                    val wrPct = String.format(Locale.US, "%.0f", matchedDuoStats.synergyWinRate * 100.0)
+                    val gdStr = if (matchedDuoStats.avgGoldDiffAt15 > 0) "+${matchedDuoStats.avgGoldDiffAt15.toInt()}" else "${matchedDuoStats.avgGoldDiffAt15.toInt()}"
+                    reasons.add(0, "Bot Duo Synergy with $matchedDuoPartner ($wrPct% WR, $gdStr GD15)")
+                }
+
+                val spentChamps = draftState.seriesContext?.spentChampions ?: emptySet()
+                if (spentChamps.isNotEmpty() && targetCareerStats != null) {
+                    val spentSignatures = targetCareerStats.signaturePicks.filter { it.championId in spentChamps }
+                    if (spentSignatures.isNotEmpty() && isProUnplayed) {
+                        reasons.add("Fearless fallback: ${spentSignatures.joinToString { it.championId }} spent in earlier games")
+                    }
+                }
             }
 
             val rationale = if (reasons.isNotEmpty()) reasons.joinToString("; ") else if (isBan) "Strategic ban candidate" else "Standard draft candidate"

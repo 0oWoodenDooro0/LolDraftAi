@@ -334,6 +334,68 @@ class DraftRecommender(
                 }
             }
 
+            // Specialized 2v2 Bot Duo Synergy and Matchup Counter calculation
+            val enemyBot = enemyPicks.find { it.role == Role.BOT } ?: enemyPicks.find { tagRegistry.getProfile(it.championId)?.primaryRole == Role.BOT }
+            val enemySup = enemyPicks.find { it.role == Role.SUPPORT } ?: enemyPicks.find { tagRegistry.getProfile(it.championId)?.primaryRole == Role.SUPPORT }
+
+            if (assignedRole == Role.SUPPORT) {
+                val allyBot = targetTeamPicks.find { it.role == Role.BOT } ?: targetTeamPicks.find { tagRegistry.getProfile(it.championId)?.primaryRole == Role.BOT }
+                if (allyBot != null) {
+                    val duo = patchMeta?.getDuoSynergy(allyBot.championId, champ)
+                        ?: com.loldraft.data.meta.PatchMetaAnalyzer.CLASSIC_BOT_DUOS.find {
+                            ChampionNormalizer.toSlug(it.botChampion) == ChampionNormalizer.toSlug(allyBot.championId) &&
+                                ChampionNormalizer.toSlug(it.supportChampion) == ChampionNormalizer.toSlug(champ)
+                        }
+                    if (duo != null) {
+                        synergyScore += duo.synergyScore * 1.5
+                        val gdStr = if (duo.avgGoldDiffAt15 > 0) "+${duo.avgGoldDiffAt15.toInt()}" else "${duo.avgGoldDiffAt15.toInt()}"
+                        synergyReasons.add(0, "Elite 2v2 Bot Duo Synergy with ${allyBot.championId} (${(duo.synergyWinRate * 100).toInt()}% WR, GD15: $gdStr)")
+                    }
+
+                    if (enemyBot != null && enemySup != null) {
+                        val duoMatchup = patchMeta?.getDuoMatchup(allyBot.championId, champ, enemyBot.championId, enemySup.championId)
+                            ?: com.loldraft.data.meta.PatchMetaAnalyzer.CLASSIC_DUO_MATCHUPS.find {
+                                ChampionNormalizer.toSlug(it.blueDuo.first) == ChampionNormalizer.toSlug(allyBot.championId) &&
+                                    ChampionNormalizer.toSlug(it.blueDuo.second) == ChampionNormalizer.toSlug(champ) &&
+                                    ChampionNormalizer.toSlug(it.redDuo.first) == ChampionNormalizer.toSlug(enemyBot.championId) &&
+                                    ChampionNormalizer.toSlug(it.redDuo.second) == ChampionNormalizer.toSlug(enemySup.championId)
+                            }
+                        if (duoMatchup != null) {
+                            counterScore += duoMatchup.counterScore * 1.2
+                            counterReasons.add(0, "2v2 Bot Duo Counter vs ${enemyBot.championId}+${enemySup.championId} (${(duoMatchup.blueWinRate * 100).toInt()}% WR)")
+                        }
+                    }
+                }
+            } else if (assignedRole == Role.BOT) {
+                val allySup = targetTeamPicks.find { it.role == Role.SUPPORT } ?: targetTeamPicks.find { tagRegistry.getProfile(it.championId)?.primaryRole == Role.SUPPORT }
+                if (allySup != null) {
+                    val duo = patchMeta?.getDuoSynergy(champ, allySup.championId)
+                        ?: com.loldraft.data.meta.PatchMetaAnalyzer.CLASSIC_BOT_DUOS.find {
+                            ChampionNormalizer.toSlug(it.botChampion) == ChampionNormalizer.toSlug(champ) &&
+                                ChampionNormalizer.toSlug(it.supportChampion) == ChampionNormalizer.toSlug(allySup.championId)
+                        }
+                    if (duo != null) {
+                        synergyScore += duo.synergyScore * 1.5
+                        val gdStr = if (duo.avgGoldDiffAt15 > 0) "+${duo.avgGoldDiffAt15.toInt()}" else "${duo.avgGoldDiffAt15.toInt()}"
+                        synergyReasons.add(0, "Elite 2v2 Bot Duo Synergy with ${allySup.championId} (${(duo.synergyWinRate * 100).toInt()}% WR, GD15: $gdStr)")
+                    }
+
+                    if (enemyBot != null && enemySup != null) {
+                        val duoMatchup = patchMeta?.getDuoMatchup(champ, allySup.championId, enemyBot.championId, enemySup.championId)
+                            ?: com.loldraft.data.meta.PatchMetaAnalyzer.CLASSIC_DUO_MATCHUPS.find {
+                                ChampionNormalizer.toSlug(it.blueDuo.first) == ChampionNormalizer.toSlug(champ) &&
+                                    ChampionNormalizer.toSlug(it.blueDuo.second) == ChampionNormalizer.toSlug(allySup.championId) &&
+                                    ChampionNormalizer.toSlug(it.redDuo.first) == ChampionNormalizer.toSlug(enemyBot.championId) &&
+                                    ChampionNormalizer.toSlug(it.redDuo.second) == ChampionNormalizer.toSlug(enemySup.championId)
+                            }
+                        if (duoMatchup != null) {
+                            counterScore += duoMatchup.counterScore * 1.2
+                            counterReasons.add(0, "2v2 Bot Duo Counter vs ${enemyBot.championId}+${enemySup.championId} (${(duoMatchup.blueWinRate * 100).toInt()}% WR)")
+                        }
+                    }
+                }
+            }
+
             // Composite gain adjustment
             val flawBonus = (resolvedFlaws.size * 0.015) - (introducedFlaws.size * 0.010)
             val counterBonus = (counterScore / 2500.0)

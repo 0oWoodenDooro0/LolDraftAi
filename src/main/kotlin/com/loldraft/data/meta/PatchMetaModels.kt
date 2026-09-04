@@ -76,7 +76,55 @@ data class PatchMetaMatrix(
     val championStats: Map<String, ChampionMetaStats>,
     val synergies: List<ChampionSynergy> = emptyList(),
     val matchupCounters: List<MatchupCounter> = emptyList(),
+    val botDuoSynergies: List<BotDuoSynergy> = emptyList(),
+    val botDuoMatchups: List<BotDuoMatchup> = emptyList(),
 ) {
+    fun getDuoSynergy(botChampion: String, supportChampion: String): BotDuoSynergy? {
+        val botSlug = ChampionNormalizer.toSlug(botChampion)
+        val supSlug = ChampionNormalizer.toSlug(supportChampion)
+        return botDuoSynergies.find {
+            ChampionNormalizer.toSlug(it.botChampion) == botSlug &&
+                ChampionNormalizer.toSlug(it.supportChampion) == supSlug
+        }
+    }
+
+    fun getTopSupportersFor(botChampion: String, limit: Int = 5): List<BotDuoSynergy> {
+        val botSlug = ChampionNormalizer.toSlug(botChampion)
+        return botDuoSynergies
+            .filter { ChampionNormalizer.toSlug(it.botChampion) == botSlug }
+            .sortedWith(
+                compareByDescending<BotDuoSynergy> { it.synergyScore }
+                    .thenByDescending { it.synergyWinRate }
+                    .thenByDescending { it.gamesTogether },
+            )
+            .take(limit)
+    }
+
+    fun getTopAdcsFor(supportChampion: String, limit: Int = 5): List<BotDuoSynergy> {
+        val supSlug = ChampionNormalizer.toSlug(supportChampion)
+        return botDuoSynergies
+            .filter { ChampionNormalizer.toSlug(it.supportChampion) == supSlug }
+            .sortedWith(
+                compareByDescending<BotDuoSynergy> { it.synergyScore }
+                    .thenByDescending { it.synergyWinRate }
+                    .thenByDescending { it.gamesTogether },
+            )
+            .take(limit)
+    }
+
+    fun getDuoMatchup(blueBot: String, blueSup: String, redBot: String, redSup: String): BotDuoMatchup? {
+        val bbSlug = ChampionNormalizer.toSlug(blueBot)
+        val bsSlug = ChampionNormalizer.toSlug(blueSup)
+        val rbSlug = ChampionNormalizer.toSlug(redBot)
+        val rsSlug = ChampionNormalizer.toSlug(redSup)
+        return botDuoMatchups.find {
+            ChampionNormalizer.toSlug(it.blueDuo.first) == bbSlug &&
+                ChampionNormalizer.toSlug(it.blueDuo.second) == bsSlug &&
+                ChampionNormalizer.toSlug(it.redDuo.first) == rbSlug &&
+                ChampionNormalizer.toSlug(it.redDuo.second) == rsSlug
+        }
+    }
+
     fun getStats(championNameOrSlug: String?): ChampionMetaStats? {
         if (championNameOrSlug.isNullOrBlank()) return null
         val slug = ChampionNormalizer.toSlug(championNameOrSlug)
