@@ -100,3 +100,4 @@ data/cache/
 *~
 .DS_Store
 
+.kotlin/

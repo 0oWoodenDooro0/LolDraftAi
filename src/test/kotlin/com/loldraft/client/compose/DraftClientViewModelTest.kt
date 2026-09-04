@@ -4,6 +4,7 @@ import com.loldraft.client.compose.viewmodel.DraftClientViewModel
 import com.loldraft.data.models.ActionType
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
+import com.loldraft.models.BpPredictionAlgorithm
 import com.loldraft.server.ProMatchRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -411,5 +412,22 @@ class DraftClientViewModelTest {
         assertEquals(0.50, evalBarAfterUndo.blueWinRate, 0.001)
         assertEquals(0.50, evalBarAfterUndo.redWinRate, 0.001)
         assertTrue(evalBarAfterUndo.phaseDescription.contains("(9/10)"))
+    }
+
+    @Test
+    fun `test selectPredictionAlgorithm switches between heuristic and deep learning`() {
+        assertEquals(BpPredictionAlgorithm.HEURISTIC_EXPERT, viewModel.uiState.value.selectedAlgorithm)
+        viewModel.awaitCalculations()
+        val heuristicPredictions = viewModel.uiState.value.intentPredictions
+        assertTrue(heuristicPredictions.isNotEmpty())
+
+        // Switch to Deep Learning
+        viewModel.selectPredictionAlgorithm(BpPredictionAlgorithm.DEEP_LEARNING_POLICY)
+        assertEquals(BpPredictionAlgorithm.DEEP_LEARNING_POLICY, viewModel.uiState.value.selectedAlgorithm)
+        viewModel.awaitCalculations()
+
+        val dlPredictions = viewModel.uiState.value.intentPredictions
+        assertTrue(dlPredictions.isNotEmpty())
+        assertTrue(dlPredictions.first().rationale.contains("[DL Policy]"))
     }
 }

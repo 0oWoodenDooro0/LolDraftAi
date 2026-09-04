@@ -1,10 +1,12 @@
 package com.loldraft.client.compose.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -26,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,10 +42,9 @@ import com.loldraft.client.compose.ui.theme.GoldAccent
 import com.loldraft.client.compose.ui.theme.RedSideColor
 import com.loldraft.client.compose.ui.theme.SurfaceDark
 import com.loldraft.client.compose.ui.theme.TextPrimary
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.PaddingValues
 import com.loldraft.client.compose.ui.theme.TextSecondary
 import com.loldraft.data.models.Side
+import com.loldraft.models.BpPredictionAlgorithm
 
 @Composable
 fun TopBarView(
@@ -49,12 +53,13 @@ fun TopBarView(
     onSelectRedLeague: (String?) -> Unit,
     onSelectBlueTeam: (String) -> Unit,
     onSelectRedTeam: (String) -> Unit,
+    onSwapTeams: () -> Unit,
     onSelectPatch: (String) -> Unit,
     onSetFirstPickSide: (Side) -> Unit,
-    onSwapTeams: () -> Unit,
     onUndo: () -> Unit,
     onReset: () -> Unit,
-    onOpenFearlessDialog: () -> Unit,
+    onOpenFearlessDialog: () -> Unit = {},
+    onSelectAlgorithm: (BpPredictionAlgorithm) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -90,18 +95,16 @@ fun TopBarView(
             )
         }
 
-        // Middle Selectors: Patch, First Pick Side, Blue Region, Blue Team, Swap, Red Region, Red Team, Fearless
+        // Middle Selectors: Patch, First Pick Side, Blue Region, Blue Team, Swap, Red Region, Red Team, Fearless, Algorithm Switcher
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Patch Dropdown (defaults to 16.17)
-            DropdownSelector(
-                label = "Patch",
-                selectedItem = "v${state.selectedPatch}",
-                items = state.availablePatches.map { "v$it" },
-                accentColor = GoldAccent,
-                onItemSelected = { onSelectPatch(it.removePrefix("v")) },
+            // Patch Input & Selector (支援自由輸入版本與下拉快捷選取)
+            PatchInputSelector(
+                selectedPatch = state.selectedPatch,
+                availablePatches = state.availablePatches,
+                onSelectPatch = onSelectPatch,
             )
 
             // First Pick Side Selector
@@ -214,6 +217,52 @@ fun TopBarView(
                     fontWeight = FontWeight.Bold,
                 )
             }
+
+            // Algorithm Switcher (啟發式 vs 深度學習)
+            Row(
+                modifier =
+                    Modifier
+                        .background(CardDark, RoundedCornerShape(6.dp))
+                        .border(1.dp, BorderDark, RoundedCornerShape(6.dp))
+                        .padding(2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val isHeuristic = state.selectedAlgorithm == BpPredictionAlgorithm.HEURISTIC_EXPERT
+                Box(
+                    modifier =
+                        Modifier
+                            .background(
+                                if (isHeuristic) GoldAccent.copy(alpha = 0.2f) else Color.Transparent,
+                                RoundedCornerShape(4.dp),
+                            )
+                            .clickable { onSelectAlgorithm(BpPredictionAlgorithm.HEURISTIC_EXPERT) }
+                            .padding(horizontal = 8.dp, vertical = 5.dp),
+                ) {
+                    Text(
+                        text = "啟發式",
+                        color = if (isHeuristic) GoldAccent else TextSecondary,
+                        fontWeight = if (isHeuristic) FontWeight.Bold else FontWeight.Normal,
+                        fontSize = 11.sp,
+                    )
+                }
+                Box(
+                    modifier =
+                        Modifier
+                            .background(
+                                if (!isHeuristic) GoldAccent.copy(alpha = 0.2f) else Color.Transparent,
+                                RoundedCornerShape(4.dp),
+                            )
+                            .clickable { onSelectAlgorithm(BpPredictionAlgorithm.DEEP_LEARNING_POLICY) }
+                            .padding(horizontal = 8.dp, vertical = 5.dp),
+                ) {
+                    Text(
+                        text = "⚡ 深度學習",
+                        color = if (!isHeuristic) GoldAccent else TextSecondary,
+                        fontWeight = if (!isHeuristic) FontWeight.Bold else FontWeight.Normal,
+                        fontSize = 11.sp,
+                    )
+                }
+            }
         }
 
         // Action Buttons: Undo & Reset
@@ -251,12 +300,122 @@ fun TopBarView(
 }
 
 @Composable
+fun PatchInputSelector(
+    selectedPatch: String,
+    availablePatches: List<String>,
+    onSelectPatch: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var inputVal by remember(selectedPatch) { mutableStateOf(selectedPatch) }
+
+    Row(
+        modifier =
+            modifier
+                .background(CardDark, RoundedCornerShape(6.dp))
+                .border(1.dp, BorderDark, RoundedCornerShape(6.dp))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = "Patch: v",
+            color = TextSecondary,
+            fontSize = 11.sp,
+        )
+
+        BasicTextField(
+            value = inputVal,
+            onValueChange = { inputVal = it },
+            singleLine = true,
+            textStyle =
+                TextStyle(
+                    color = GoldAccent,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                ),
+            keyboardActions =
+                KeyboardActions(
+                    onDone = {
+                        val clean = inputVal.trim().removePrefix("v").removePrefix("V")
+                        if (clean.isNotBlank()) {
+                            onSelectPatch(clean)
+                        }
+                    },
+                ),
+            modifier = Modifier.width(42.dp),
+        )
+
+        val cleanCurrent = inputVal.trim().removePrefix("v").removePrefix("V")
+        if (cleanCurrent != selectedPatch && cleanCurrent.isNotBlank()) {
+            Box(
+                modifier =
+                    Modifier
+                        .background(GoldAccent.copy(alpha = 0.25f), RoundedCornerShape(4.dp))
+                        .clickable { onSelectPatch(cleanCurrent) }
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "套用",
+                    color = GoldAccent,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+        }
+
+        Box(
+            modifier =
+                Modifier
+                    .clickable { expanded = !expanded }
+                    .padding(horizontal = 2.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "▾",
+                color = TextSecondary,
+                fontSize = 11.sp,
+            )
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(CardDark),
+            ) {
+                val patchList =
+                    (availablePatches + listOf("16.17", "16.16", "16.15", "16.14", "16.10", "16.05", "16.01"))
+                        .map { it.removePrefix("v") }
+                        .distinct()
+                patchList.forEach { patch ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = "v$patch",
+                                color = if (patch == selectedPatch) GoldAccent else TextPrimary,
+                                fontWeight = if (patch == selectedPatch) FontWeight.Bold else FontWeight.Normal,
+                                fontSize = 12.sp,
+                            )
+                        },
+                        onClick = {
+                            inputVal = patch
+                            onSelectPatch(patch)
+                            expanded = false
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun DropdownSelector(
     label: String,
     selectedItem: String,
     items: List<String>,
+    accentColor: Color = GoldAccent,
     onItemSelected: (String) -> Unit,
-    accentColor: Color = TextPrimary,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -279,21 +438,32 @@ fun DropdownSelector(
             Text(
                 text = selectedItem,
                 color = accentColor,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
             )
             Spacer(modifier = Modifier.width(4.dp))
-            Text("▼", color = TextSecondary, fontSize = 9.sp)
+            Text(
+                text = "▾",
+                color = TextSecondary,
+                fontSize = 10.sp,
+            )
         }
 
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.background(SurfaceDark),
+            modifier = Modifier.background(CardDark),
         ) {
             items.forEach { item ->
                 DropdownMenuItem(
-                    text = { Text(item, color = TextPrimary, fontSize = 12.sp) },
+                    text = {
+                        Text(
+                            text = item,
+                            color = if (item == selectedItem) accentColor else TextPrimary,
+                            fontWeight = if (item == selectedItem) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 12.sp,
+                        )
+                    },
                     onClick = {
                         onItemSelected(item)
                         expanded = false

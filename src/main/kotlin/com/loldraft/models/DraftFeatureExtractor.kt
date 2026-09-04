@@ -3,6 +3,7 @@ package com.loldraft.models
 import com.loldraft.data.meta.ChampionProfile
 import com.loldraft.data.meta.ChampionTag
 import com.loldraft.data.meta.ChampionTagRegistry
+import com.loldraft.data.meta.ChampionRoleDictionary
 import com.loldraft.data.meta.FiveDimensionRadar
 import com.loldraft.data.meta.MetaTier
 import com.loldraft.data.meta.PatchMetaMatrix
@@ -27,13 +28,75 @@ data class RolePrior(
     val trueDmg: Double = 0.0,
 )
 
+data class ResolvedChampionProfile(
+    val championId: String,
+    val radar: FiveDimensionRadar,
+    val damageProfile: DamageProfile,
+    val durabilityScore: Double,
+    val ccScore: Double,
+    val archetype: String,
+)
+
 class DraftFeatureExtractor(
     val tagRegistry: ChampionTagRegistry = ChampionTagRegistry.createDefault(),
     val blueSideAdvantageBias: Double = 0.03,
     val empiricalRegistry: ChampionEmpiricalRegistry = ChampionEmpiricalRegistry.createDefault(),
+    val useEmpiricalProfiles: Boolean = false,
 ) {
     companion object {
         const val TEAM_SIZE = 5
+
+        // Champion Kit Sets (單純根據角色本身定位與技能組特性，無任何局內數據)
+        val TANK_CHAMPIONS = setOf(
+            "ornn", "sion", "malphite", "ksante", "maokai", "sejuani", "zac", "nautilus", "leona",
+            "alistar", "braum", "rell", "rakan", "poppy", "shen", "tahmkench", "chogath", "amumu",
+            "drmundo", "rammus", "volibear", "skarner", "taric",
+        )
+
+        val MARKSMAN_CHAMPIONS = setOf(
+            "jinx", "kaisa", "varus", "ashe", "caitlyn", "lucian", "ezreal", "jhin", "kalista",
+            "sivir", "zeri", "aphelios", "tristana", "missfortune", "kogmaw", "draven", "vayne",
+            "samira", "smolder", "twitch", "xayah", "corki", "senna",
+        )
+
+        val MAGE_CHAMPIONS = setOf(
+            "ahri", "anivia", "annie", "aurelionsol", "aurora", "azir", "brand", "cassiopeia",
+            "hwei", "karthus", "lissandra", "lux", "malzahar", "mel", "neeko", "orianna",
+            "ryze", "swain", "syndra", "taliyah", "twistedfate", "veigar", "velkoz", "viktor",
+            "vladimir", "xerath", "ziggs", "zoe", "kassadin",
+        )
+
+        val ENCHANTER_CHAMPIONS = setOf(
+            "bard", "janna", "karma", "lulu", "milio", "nami", "renataglasc", "sona", "soraka", "yuumi", "morgana", "seraphine", "ivern",
+        )
+
+        val ASSASSIN_CHAMPIONS = setOf(
+            "akali", "diana", "ekko", "evelynn", "fizz", "katarina", "khazix", "leblanc", "naafiri",
+            "nocturne", "pyke", "qiyana", "rengar", "shaco", "talon", "zed", "sylas", "yone", "yasuo",
+        )
+
+        val BULLY_LANERS = setOf(
+            "renekton", "jayce", "draven", "caitlyn", "lucian", "kalista", "syndra", "darius",
+            "olaf", "rumble", "leblanc", "pantheon", "sett", "gnar", "karma", "varus",
+        )
+
+        val LATE_SCALERS = setOf(
+            "kayle", "smolder", "kassadin", "jinx", "azir", "senna", "kogmaw", "vayne",
+            "aurelionsol", "vladimir", "veigar", "ryze", "gangplank", "zeri",
+        )
+
+        val HEAVY_ENGAGE = setOf(
+            "malphite", "nautilus", "leona", "rell", "jarvaniv", "sejuani", "vi", "amumu", "zac",
+            "alistar", "hecarim", "kennen", "rakan", "skarner", "nocturne", "ashe",
+        )
+
+        val HEAVY_DISENGAGE = setOf(
+            "janna", "braum", "gragas", "poppy", "milio", "lulu", "renataglasc", "tahmkench", "tristana", "azir",
+        )
+
+        val HEAVY_WAVECLEAR = setOf(
+            "sivir", "viktor", "anivia", "ziggs", "orianna", "hwei", "ryze", "taliyah", "aurelionsol", "xayah",
+        )
 
         val ROLE_PRIORS: Map<Role, RolePrior> =
             mapOf(
@@ -71,6 +134,147 @@ class DraftFeatureExtractor(
             }
         }
         return priors
+    }
+
+    fun resolveProfile(championId: String, patchMeta: PatchMetaMatrix? = null): ResolvedChampionProfile {
+        if (!useEmpiricalProfiles) {
+            val legacy = tagRegistry.getProfile(championId)
+            if (legacy != null) {
+                return ResolvedChampionProfile(
+                    championId = championId,
+                    radar = legacy.radar,
+                    damageProfile = legacy.damageProfile,
+                    durabilityScore = legacy.durability.durabilityScore,
+                    ccScore = legacy.ccRating.hardCcDurationSeconds + if (legacy.ccRating.hasReliableHardCc) 1.0 else 0.0,
+                    archetype = when {
+                        legacy.tags.contains(ChampionTag.VANGUARD_TANK) || legacy.tags.contains(ChampionTag.WARDEN_TANK) || legacy.durability.tankinessTier == TankinessTier.FRONTLINE_TANK -> "tank"
+                        legacy.tags.contains(ChampionTag.MARKSMAN) || legacy.tags.contains(ChampionTag.HYPER_CARRY) -> "marksman"
+                        legacy.tags.contains(ChampionTag.BURST_MAGE) || legacy.tags.contains(ChampionTag.BATTLEMAGE) -> "mage"
+                        legacy.tags.contains(ChampionTag.ASSASSIN) || legacy.tags.contains(ChampionTag.SKIRMISHER) -> "assassin"
+                        else -> "enchanter"
+                    },
+                )
+            }
+        }
+
+        // Pure Champion-Based Resolution (單純根據角色本身機制定位與屬性，無任何局內對局數據)
+        val slug = ChampionNormalizer.toSlug(championId)
+        val (baselinePrimary, _) = ChampionRoleDictionary.getBaselineRole(slug)
+
+        var durability = 6.0
+        var ccScore = 2.0
+        var archetype = "bruiser"
+        var laning = 7.0
+        var engage = 6.5
+        var disengage = 6.0
+        var waveclear = 6.5
+        var scaling = 7.0
+        var physRatio = 0.50
+        var magicRatio = 0.50
+        var trueRatio = 0.0
+
+        when {
+            slug in TANK_CHAMPIONS -> {
+                durability = 8.5
+                ccScore = 3.5
+                archetype = "tank"
+                laning = 6.0
+                engage = 8.5
+                disengage = 6.0
+                waveclear = 5.0
+                scaling = 6.5
+                physRatio = 0.35
+                magicRatio = 0.60
+                trueRatio = 0.05
+            }
+            slug in MARKSMAN_CHAMPIONS -> {
+                durability = 3.5
+                ccScore = 0.8
+                archetype = "marksman"
+                laning = 7.2
+                engage = 4.0
+                disengage = 5.0
+                waveclear = 7.8
+                scaling = 9.2
+                physRatio = 0.85
+                magicRatio = 0.15
+                trueRatio = 0.0
+            }
+            slug in MAGE_CHAMPIONS -> {
+                durability = 4.5
+                ccScore = 2.2
+                archetype = "mage"
+                laning = 7.2
+                engage = 6.5
+                disengage = 6.5
+                waveclear = 8.5
+                scaling = 8.5
+                physRatio = 0.15
+                magicRatio = 0.85
+                trueRatio = 0.0
+            }
+            slug in ENCHANTER_CHAMPIONS -> {
+                durability = 4.0
+                ccScore = 3.0
+                archetype = "enchanter"
+                laning = 6.5
+                engage = 5.0
+                disengage = 8.8
+                waveclear = 4.0
+                scaling = 7.5
+                physRatio = 0.10
+                magicRatio = 0.90
+                trueRatio = 0.0
+            }
+            slug in ASSASSIN_CHAMPIONS -> {
+                durability = 5.0
+                ccScore = 1.2
+                archetype = "assassin"
+                laning = 7.5
+                engage = 7.0
+                disengage = 5.5
+                waveclear = 6.0
+                scaling = 7.5
+                physRatio = 0.60
+                magicRatio = 0.40
+                trueRatio = 0.0
+            }
+            else -> {
+                durability = 7.2
+                ccScore = 2.0
+                archetype = "bruiser"
+                laning = 8.0
+                engage = 7.5
+                disengage = 5.0
+                waveclear = 6.8
+                scaling = 7.2
+                physRatio = 0.75
+                magicRatio = 0.20
+                trueRatio = 0.05
+            }
+        }
+
+        // Champion Inherent Kit Adjustments (純角色技能特點微調)
+        if (slug in BULLY_LANERS) laning = 9.0
+        if (slug in LATE_SCALERS) {
+            laning = 4.0
+            scaling = 9.8
+        }
+        if (slug in HEAVY_ENGAGE) engage = 9.5
+        if (slug in HEAVY_DISENGAGE) disengage = 9.5
+        if (slug in HEAVY_WAVECLEAR) waveclear = 9.5
+
+        val radar = FiveDimensionRadar(laning, engage, disengage, waveclear, scaling)
+        val damageProfile = DamageProfile(physRatio, magicRatio, trueRatio, DamageType.MIXED)
+
+        return ResolvedChampionProfile(
+            championId = slug,
+            radar = radar,
+            damageProfile = damageProfile,
+            durabilityScore = durability,
+            ccScore = ccScore,
+            archetype = archetype,
+        )
     }
 
     fun extract(
@@ -112,8 +316,8 @@ class DraftFeatureExtractor(
         val blueChamps = blueSelections.map { it.championId }
         val redChamps = redSelections.map { it.championId }
 
-        val blueProfiles = blueChamps.mapNotNull { tagRegistry.getProfile(it) }
-        val redProfiles = redChamps.mapNotNull { tagRegistry.getProfile(it) }
+        val blueProfiles = blueChamps.map { resolveProfile(it, patchMeta) }
+        val redProfiles = redChamps.map { resolveProfile(it, patchMeta) }
 
         val bluePriors = getMissingPriors(blueSelections)
         val redPriors = getMissingPriors(redSelections)
@@ -146,19 +350,13 @@ class DraftFeatureExtractor(
         val redDamage = DamageProfile(redPhys, redMagic, redTrue, DamageType.MIXED)
 
         // 3. Durability (21..23)
-        val blueDurability = (blueProfiles.sumOf { it.durability.durabilityScore } + bluePriors.sumOf { it.durability }) / blueSlots
-        val redDurability = (redProfiles.sumOf { it.durability.durabilityScore } + redPriors.sumOf { it.durability }) / redSlots
+        val blueDurability = (blueProfiles.sumOf { it.durabilityScore } + bluePriors.sumOf { it.durability }) / blueSlots
+        val redDurability = (redProfiles.sumOf { it.durabilityScore } + redPriors.sumOf { it.durability }) / redSlots
         val deltaDurability = blueDurability - redDurability
 
         // 4. CC Score (24..26)
-        val blueCcScore =
-            blueProfiles.sumOf {
-                it.ccRating.hardCcDurationSeconds + if (it.ccRating.hasReliableHardCc) 1.0 else 0.0
-            } + bluePriors.sumOf { it.cc }
-        val redCcScore =
-            redProfiles.sumOf {
-                it.ccRating.hardCcDurationSeconds + if (it.ccRating.hasReliableHardCc) 1.0 else 0.0
-            } + redPriors.sumOf { it.cc }
+        val blueCcScore = blueProfiles.sumOf { it.ccScore } + bluePriors.sumOf { it.cc }
+        val redCcScore = redProfiles.sumOf { it.ccScore } + redPriors.sumOf { it.cc }
         val deltaCcScore = blueCcScore - redCcScore
 
         // 5. Patch Meta Tiers & Win Rates (27..29, 30..32)
@@ -451,44 +649,11 @@ class DraftFeatureExtractor(
         return delta
     }
 
-    private fun countArchetypes(profiles: List<ChampionProfile>): Map<String, Int> {
-        var tanks = 0
-        var marksmen = 0
-        var mages = 0
-        var assassins = 0
-        var enchanters = 0
-
+    private fun countArchetypes(profiles: List<ResolvedChampionProfile>): Map<String, Int> {
+        val counts = mutableMapOf("tank" to 0, "marksman" to 0, "mage" to 0, "assassin" to 0, "enchanter" to 0)
         for (p in profiles) {
-            if (p.tags.contains(ChampionTag.VANGUARD_TANK) ||
-                p.tags.contains(ChampionTag.WARDEN_TANK) ||
-                p.tags.contains(ChampionTag.JUGGERNAUT) ||
-                p.durability.tankinessTier == TankinessTier.FRONTLINE_TANK
-            ) {
-                tanks++
-            }
-            if (p.tags.contains(ChampionTag.MARKSMAN) || p.tags.contains(ChampionTag.HYPER_CARRY)) {
-                marksmen++
-            }
-            if (p.tags.contains(ChampionTag.BURST_MAGE) ||
-                p.tags.contains(ChampionTag.BATTLEMAGE) ||
-                p.tags.contains(ChampionTag.ARTILLERY_MAGE)
-            ) {
-                mages++
-            }
-            if (p.tags.contains(ChampionTag.ASSASSIN) || p.tags.contains(ChampionTag.SKIRMISHER)) {
-                assassins++
-            }
-            if (p.tags.contains(ChampionTag.ENCHANTER) || p.tags.contains(ChampionTag.DISENGAGE_PEEL)) {
-                enchanters++
-            }
+            counts[p.archetype] = (counts[p.archetype] ?: 0) + 1
         }
-
-        return mapOf(
-            "tank" to tanks,
-            "marksman" to marksmen,
-            "mage" to mages,
-            "assassin" to assassins,
-            "enchanter" to enchanters,
-        )
+        return counts
     }
 }

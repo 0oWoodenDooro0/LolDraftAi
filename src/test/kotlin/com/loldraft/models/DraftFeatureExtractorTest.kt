@@ -368,5 +368,18 @@ class DraftFeatureExtractorTest {
             "Delta durability for 1 tank should be moderated by remaining slots, was: ${features.values[23]}"
         )
     }
+
+    @Test
+    fun `empirical profile resolution should extract objective features without champion tags`() {
+        val empiricalExtractor = DraftFeatureExtractor(useEmpiricalProfiles = true)
+        val draft = createStandardDraft()
+        val features = empiricalExtractor.extract(draft)
+
+        assertEquals(52, features.values.size)
+        assertTrue(features.blueDamageProfile.physicalRatio > 0.1)
+        assertTrue(features.blueDamageProfile.magicRatio > 0.1)
+        assertTrue(features.blueDurability > 0.0)
+        assertTrue(features.blueCcScore > 0.0)
+    }
 }
 

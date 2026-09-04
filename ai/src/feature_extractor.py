@@ -106,6 +106,40 @@ def _load_champion_profiles():
             except Exception:
                 pass
 
+    # If champion_tags.json is deleted, load from champion_empirical_stats.json
+    if len(CHAMPION_PROFILES) < 50:
+        emp_candidates = [
+            os.path.join(os.path.dirname(__file__), "../../data/champion_empirical_stats.json"),
+            os.path.join(os.getcwd(), "data/champion_empirical_stats.json"),
+            "/workspace/data/champion_empirical_stats.json",
+        ]
+        for ep in emp_candidates:
+            if os.path.exists(ep):
+                try:
+                    with open(ep, "r", encoding="utf-8") as f:
+                        emp_data = json.load(f)
+                    c_map = emp_data.get("champ_to_id", {})
+                    for c_name in c_map.keys():
+                        c_slug = _slugify(c_name)
+                        if c_slug not in CHAMPION_PROFILES:
+                            CHAMPION_PROFILES[c_slug] = {
+                                "laning": 7.0,
+                                "engage": 6.5,
+                                "disengage": 6.0,
+                                "waveclear": 6.5,
+                                "late": 7.0,
+                                "phys": 0.5,
+                                "magic": 0.5,
+                                "true": 0.0,
+                                "durability": 6.0,
+                                "tankiness_tier": "BRUISER",
+                                "cc": 2.0,
+                                "tags": [],
+                            }
+                    break
+                except Exception:
+                    pass
+
 _load_champion_profiles()
 
 DEFAULT_CHAMP = {"laning": 6.5, "engage": 6.0, "disengage": 5.5, "waveclear": 6.5, "late": 7.0, "phys": 0.5, "magic": 0.5, "true": 0.0, "durability": 6.0, "tankiness_tier": "BRUISER", "cc": 1.0, "tags": []}

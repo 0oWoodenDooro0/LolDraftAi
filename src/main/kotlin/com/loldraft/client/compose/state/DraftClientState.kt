@@ -5,6 +5,7 @@ import com.loldraft.data.models.DraftTurnSpec
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.player.PlayerRosterIntelligence
+import com.loldraft.models.BpPredictionAlgorithm
 import com.loldraft.models.ChampionIntentCandidate
 import com.loldraft.models.CompositionFlaw
 import com.loldraft.models.PickRecommendation
@@ -65,4 +66,5 @@ data class DraftClientState(
     val fearlessExcludedChampionIds: Set<String> = emptySet(),
     val isFearlessDialogOpen: Boolean = false,
     val isDraftComplete: Boolean = false,
+    val selectedAlgorithm: BpPredictionAlgorithm = BpPredictionAlgorithm.HEURISTIC_EXPERT,
 )

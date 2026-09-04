@@ -83,18 +83,12 @@ class ChampionTagRegistryFullCoverageTest {
     }
 
     @Test
-    fun `export champion tags json to data directories`() {
+    fun `verify exportToJson serialization in memory without disk file dependency`() {
         val registry = ChampionTagRegistry.createDefault()
         val json = registry.exportToJson()
-        val targets = listOf(
-            java.io.File("data/champion_tags.json"),
-            java.io.File("src/main/resources/data/champion_tags.json")
-        )
-        for (target in targets) {
-            target.parentFile?.mkdirs()
-            target.writeText(json)
-            assertTrue(target.exists())
-            assertTrue(target.length() > 1000)
-        }
+        assertTrue(json.isNotBlank())
+        assertTrue(json.length > 1000)
+        val restored = ChampionTagRegistry.fromJson(json)
+        assertEquals(registry.getAllProfiles().size, restored.getAllProfiles().size)
     }
 }

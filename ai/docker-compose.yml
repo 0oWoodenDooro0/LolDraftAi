@@ -15,6 +15,15 @@ services:
               capabilities: [gpu]
     command: python src/train_draft_value.py
 
+  policy_trainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspace/ai
+    volumes:
+      - ..:/workspace
+    command: python src/train_bp_policy.py
+
   exporter:
     build:
       context: .

@@ -10,14 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.loldraft.client.compose.ui.components.ChampionGridView
@@ -63,6 +61,7 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
                     onUndo = viewModel::undoLastTurn,
                     onReset = viewModel::resetDraft,
                     onOpenFearlessDialog = { viewModel.setFearlessDialogOpen(true) },
+                    onSelectAlgorithm = viewModel::selectPredictionAlgorithm,
                 )
 
                 // Dynamic Win-Rate Eval Bar
@@ -100,7 +99,7 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
                         )
                     }
 
-                    // Middle Column: Increased width by 1.5x (720.dp), Champion Grid + Next BP Prediction
+                    // Middle Column: Champion Grid + Next BP Prediction
                     Column(
                         modifier =
                             Modifier
@@ -123,7 +122,7 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
                             modifier = Modifier.fillMaxWidth().weight(1.05f),
                         )
 
-                        // Bottom Center: Next BP Intent Prediction (taller, prominent, vertical layout)
+                        // Bottom Center: Next BP Intent Prediction
                         NextBpPredictionView(
                             currentTurnNumber = state.currentTurnNumber,
                             currentTurnSpec = state.currentTurnSpec,
