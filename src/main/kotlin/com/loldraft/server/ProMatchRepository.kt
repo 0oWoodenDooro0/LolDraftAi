@@ -341,7 +341,7 @@ class ProMatchRepository(
             }
         }
 
-        return championMap.values.sortedBy { it.name }
+        return championMap.values.distinctBy { it.id.lowercase() }.sortedBy { it.name }
     }
 
     private fun computeTeamRoster(teamId: String): List<ProPlayerRosterEntry> {

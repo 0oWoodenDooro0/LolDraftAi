@@ -41,6 +41,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.14.4")
+    testImplementation(compose.desktop.uiTestJUnit4)
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("io.ktor:ktor-client-websockets:$ktorVersion")
 }
