@@ -11,8 +11,13 @@ import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.normalization.ChampionNormalizer
 import com.loldraft.data.player.PlayerCareerStats
+import com.loldraft.data.player.ProPlayerDetailedProfile
 import com.loldraft.data.player.SignatureTier
+import com.loldraft.data.player.SoloQChampionStats
+import com.loldraft.data.player.SpikeAlert
+import com.loldraft.data.player.SpikeAlertSeverity
 import com.loldraft.data.style.TeamTacticalProfile
+import java.util.Locale
 import kotlin.math.exp
 import kotlin.math.round
 
@@ -26,6 +31,7 @@ class DraftIntentPredictor(
         patchMeta: PatchMetaMatrix? = null,
         teamProfile: TeamTacticalProfile? = null,
         playerStatsByRole: Map<Role, PlayerCareerStats>? = null,
+        playerProfilesByRole: Map<Role, ProPlayerDetailedProfile>? = null,
         topN: Int = 3,
     ): IntentPredictionResult {
         val turnNumber = draftState.currentTurnNumber.coerceIn(1, 20)
@@ -36,6 +42,7 @@ class DraftIntentPredictor(
             patchMeta = patchMeta,
             teamProfile = teamProfile,
             playerStatsByRole = playerStatsByRole,
+            playerProfilesByRole = playerProfilesByRole,
             topN = topN,
         )
     }
@@ -46,6 +53,7 @@ class DraftIntentPredictor(
         patchMeta: PatchMetaMatrix? = null,
         teamProfile: TeamTacticalProfile? = null,
         playerStatsByRole: Map<Role, PlayerCareerStats>? = null,
+        playerProfilesByRole: Map<Role, ProPlayerDetailedProfile>? = null,
         topN: Int = 3,
     ): IntentPredictionResult {
         val turnNumber = draftState.currentTurnNumber.coerceIn(1, 20)
@@ -67,6 +75,7 @@ class DraftIntentPredictor(
             patchMeta = patchMeta,
             teamProfile = teamProfile,
             playerStatsByRole = playerStatsByRole,
+            playerProfilesByRole = playerProfilesByRole,
             topN = topN,
         )
     }
@@ -77,6 +86,7 @@ class DraftIntentPredictor(
         patchMeta: PatchMetaMatrix?,
         teamProfile: TeamTacticalProfile?,
         playerStatsByRole: Map<Role, PlayerCareerStats>?,
+        playerProfilesByRole: Map<Role, ProPlayerDetailedProfile>?,
         topN: Int,
     ): IntentPredictionResult {
         val unavailable = draftState.allSelectedChampions.map { ChampionNormalizer.toSlug(it) }.toSet()
@@ -103,11 +113,35 @@ class DraftIntentPredictor(
         val needsAp = teamPicks.size >= 2 && damageSplit.physicalRatio >= 0.75
         val needsAd = teamPicks.size >= 2 && damageSplit.magicRatio >= 0.75
 
+        val effectiveCareerStats = playerStatsByRole ?: playerProfilesByRole?.mapValues { it.value.careerStats }
+        val hasDetailedProfiles = playerProfilesByRole != null && playerProfilesByRole.isNotEmpty()
+
         val scoredList = mutableListOf<ChampionIntentCandidate>()
 
         for (champ in candidates) {
             val profile = tagRegistry.getProfile(champ)
             val metaStats = patchMeta?.getStats(champ)
+
+            val flexAnalysis = flexAnalyzer.analyzeChampion(champ, patchMeta, lockedRoles)
+            val primaryRole = flexAnalysis.primaryRole
+
+            // Target role & player resolution
+            val targetRole =
+                if (!isBan) {
+                    val candidateVacantRoles = vacantRoles.filter { role -> (flexAnalysis.roleProbabilities[role] ?: 0.0) >= 0.15 }
+                    when {
+                        primaryRole in candidateVacantRoles -> primaryRole
+                        candidateVacantRoles.isNotEmpty() ->
+                            candidateVacantRoles.maxByOrNull { flexAnalysis.roleProbabilities[it] ?: 0.0 } ?: primaryRole
+                        else -> primaryRole
+                    }
+                } else {
+                    primaryRole
+                }
+
+            val targetProfile = playerProfilesByRole?.get(targetRole)
+            val targetPlayerName = targetProfile?.playerId
+            val targetCareerStats = targetProfile?.careerStats ?: effectiveCareerStats?.get(targetRole)
 
             // 1. Meta score
             var metaScore = 0.3
@@ -127,11 +161,32 @@ class DraftIntentPredictor(
                 metaScore = 0.5
             }
 
-            // 2. Player mastery score
+            // 2. Player career mastery score
             var playerMasteryScore = 0.0
             var matchedSignature: String? = null
-            if (playerStatsByRole != null) {
-                for ((role, pStats) in playerStatsByRole) {
+            if (targetCareerStats != null) {
+                val sig = targetCareerStats.signaturePicks.firstOrNull { it.championId.equals(champ, ignoreCase = true) }
+                if (sig != null) {
+                    val tierBonus =
+                        when (sig.tier) {
+                            SignatureTier.SIGNATURE -> 0.95
+                            SignatureTier.COMFORT -> 0.80
+                            SignatureTier.POCKET -> 0.70
+                        }
+                    playerMasteryScore = tierBonus
+                    matchedSignature = sig.tier.name
+                } else {
+                    val record = targetCareerStats.championRecords.values.firstOrNull { it.championId.equals(champ, ignoreCase = true) }
+                    if (record != null && record.gamesPlayed > 0) {
+                        playerMasteryScore =
+                            (record.winRate * 0.40 + (record.gamesPlayed / 20.0).coerceAtMost(1.0) * 0.30).coerceIn(0.20, 0.65)
+                    }
+                }
+            }
+
+            // Fallback: search all roles if not matched to target role
+            if (playerMasteryScore == 0.0 && effectiveCareerStats != null) {
+                for ((_, pStats) in effectiveCareerStats) {
                     val sig = pStats.signaturePicks.firstOrNull { it.championId.equals(champ, ignoreCase = true) }
                     if (sig != null) {
                         val tierBonus =
@@ -148,21 +203,48 @@ class DraftIntentPredictor(
                 }
             }
 
-            // 3. Composition fit & role gap score
-            var compositionFitScore = 0.0
-            val flexAnalysis = flexAnalyzer.analyzeChampion(champ, patchMeta, lockedRoles)
-            val bestRole = flexAnalysis.primaryRole
+            // 3. SoloQ practice & spike alert score
+            var soloQScore = 0.0
+            var matchedSpikeAlert: SpikeAlert? = null
+            var matchedSoloQ3d: SoloQChampionStats? = null
+            var matchedSoloQ7d: SoloQChampionStats? = null
 
+            if (targetProfile != null) {
+                matchedSpikeAlert = targetProfile.activeSpikeAlerts.firstOrNull { it.championId.equals(champ, ignoreCase = true) }
+                matchedSoloQ3d = targetProfile.recentSoloQ3Days.firstOrNull { it.championId.equals(champ, ignoreCase = true) }
+                matchedSoloQ7d = targetProfile.recentSoloQ7Days.firstOrNull { it.championId.equals(champ, ignoreCase = true) }
+
+                if (matchedSpikeAlert != null) {
+                    soloQScore =
+                        when (matchedSpikeAlert.severity) {
+                            SpikeAlertSeverity.HIGH -> (0.90 + (matchedSpikeAlert.recentWinRate * 0.10)).coerceIn(0.90, 1.0)
+                            SpikeAlertSeverity.MEDIUM -> (0.80 + (matchedSpikeAlert.recentWinRate * 0.10)).coerceIn(0.80, 0.90)
+                            SpikeAlertSeverity.LOW -> (0.70 + (matchedSpikeAlert.recentWinRate * 0.10)).coerceIn(0.70, 0.80)
+                        }
+                } else if (matchedSoloQ3d != null && matchedSoloQ3d.gamesPlayed > 0) {
+                    val volume = (matchedSoloQ3d.gamesPlayed / 8.0).coerceAtMost(1.0)
+                    val wr = matchedSoloQ3d.winRate.coerceIn(0.0, 1.0)
+                    soloQScore = ((volume * 0.5 + wr * 0.5) * 0.80).coerceIn(0.20, 0.80)
+                } else if (matchedSoloQ7d != null && matchedSoloQ7d.gamesPlayed > 0) {
+                    val volume = (matchedSoloQ7d.gamesPlayed / 15.0).coerceAtMost(1.0)
+                    val wr = matchedSoloQ7d.winRate.coerceIn(0.0, 1.0)
+                    soloQScore = ((volume * 0.5 + wr * 0.5) * 0.65).coerceIn(0.20, 0.65)
+                }
+            }
+
+            // 4. Composition fit & role gap score
+            var compositionFitScore = 0.0
             if (!isBan) {
-                // Role gap check
                 val canFillVacant = flexAnalysis.roleProbabilities.any { it.key in vacantRoles && it.value >= 0.20 }
                 if (canFillVacant) {
                     compositionFitScore += 0.45
-                } else if (lockedRoles.isNotEmpty() && flexAnalysis.roleProbabilities[bestRole] ?: 0.0 >= 0.70 && bestRole in lockedRoles) {
+                } else if (lockedRoles.isNotEmpty() &&
+                    flexAnalysis.roleProbabilities[targetRole] ?: 0.0 >= 0.70 &&
+                    targetRole in lockedRoles
+                ) {
                     compositionFitScore -= 0.40 // redundant role penalty
                 }
 
-                // Damage type gap check
                 val isAp =
                     profile?.damageProfile?.primaryType == DamageType.MAGIC ||
                         (profile?.damageProfile?.magicRatio ?: 0.0) >= 0.65
@@ -177,14 +259,13 @@ class DraftIntentPredictor(
                     compositionFitScore += 0.35
                 }
             } else {
-                // Ban phase targets high presence or opponent signature
                 if (metaStats?.tier == MetaTier.T0 || (metaStats?.presenceRate ?: 0.0) >= 0.70) {
                     compositionFitScore += 0.40
                 }
             }
             compositionFitScore = compositionFitScore.coerceIn(-1.0, 1.0)
 
-            // 4. Counter / denial score
+            // 5. Counter / denial score
             var counterDenialScore = 0.0
             if (patchMeta != null && enemyPicks.isNotEmpty()) {
                 var totalCounter = 0.0
@@ -197,25 +278,102 @@ class DraftIntentPredictor(
                 counterDenialScore = (totalCounter / enemyPicks.size).coerceIn(0.0, 1.0)
             }
 
-            // Total composite intent score
+            // 6. Total composite intent score
             val totalIntentScore =
-                if (isBan) {
-                    (metaScore * 0.50) + (playerMasteryScore * 0.35) + (compositionFitScore * 0.15)
+                if (hasDetailedProfiles) {
+                    if (isBan) {
+                        (metaScore * 0.40) + (playerMasteryScore * 0.30) + (soloQScore * 0.20) + (compositionFitScore * 0.10)
+                    } else {
+                        (metaScore * 0.25) + (playerMasteryScore * 0.30) + (soloQScore * 0.30) +
+                            (compositionFitScore * 0.10) + (counterDenialScore * 0.05)
+                    }
                 } else {
-                    (metaScore * 0.35) + (playerMasteryScore * 0.30) + (compositionFitScore * 0.25) + (counterDenialScore * 0.10)
+                    if (isBan) {
+                        (metaScore * 0.50) + (playerMasteryScore * 0.35) + (compositionFitScore * 0.15)
+                    } else {
+                        (metaScore * 0.35) + (playerMasteryScore * 0.30) + (compositionFitScore * 0.25) + (counterDenialScore * 0.10)
+                    }
                 }
 
-            // Construct rationale
+            // 7. Construct transparent rationale
             val reasons = mutableListOf<String>()
+            val playerPrefix = if (targetPlayerName != null) "$targetPlayerName ($targetRole)" else null
+
+            val masteryDesc =
+                when {
+                    matchedSignature != null -> {
+                        val record =
+                            targetCareerStats?.championRecords?.values?.firstOrNull {
+                                it.championId.equals(
+                                    champ,
+                                    ignoreCase = true,
+                                )
+                            }
+                        if (record != null) {
+                            val wrPct = String.format(Locale.US, "%.1f", record.winRate * 100.0)
+                            "$matchedSignature pick (${record.gamesPlayed}G, $wrPct% WR)"
+                        } else {
+                            "$matchedSignature pick for player"
+                        }
+                    }
+                    playerMasteryScore > 0.3 -> {
+                        val record =
+                            targetCareerStats?.championRecords?.values?.firstOrNull {
+                                it.championId.equals(
+                                    champ,
+                                    ignoreCase = true,
+                                )
+                            }
+                        if (record != null) {
+                            val wrPct = String.format(Locale.US, "%.1f", record.winRate * 100.0)
+                            "Career experience (${record.gamesPlayed}G, $wrPct% WR)"
+                        } else {
+                            null
+                        }
+                    }
+                    else -> null
+                }
+
+            val soloQDesc =
+                when {
+                    matchedSpikeAlert != null -> {
+                        val wrPct = String.format(Locale.US, "%.1f", matchedSpikeAlert.recentWinRate * 100.0)
+                        val multFormatted = String.format(Locale.US, "%.1f", matchedSpikeAlert.frequencyMultiplier)
+                        "Recent SoloQ ${matchedSpikeAlert.type.name} (${matchedSpikeAlert.recentGamesCount}G in ${matchedSpikeAlert.recentDays}d, $wrPct% WR, ${multFormatted}x surge)"
+                    }
+                    matchedSoloQ3d != null && matchedSoloQ3d.gamesPlayed > 0 -> {
+                        val wrPct = String.format(Locale.US, "%.1f", matchedSoloQ3d.winRate * 100.0)
+                        "Active SoloQ practice (${matchedSoloQ3d.gamesPlayed}G in 3d, $wrPct% WR)"
+                    }
+                    matchedSoloQ7d != null && matchedSoloQ7d.gamesPlayed > 0 -> {
+                        val wrPct = String.format(Locale.US, "%.1f", matchedSoloQ7d.winRate * 100.0)
+                        "Active SoloQ practice (${matchedSoloQ7d.gamesPlayed}G in 7d, $wrPct% WR)"
+                    }
+                    else -> null
+                }
+
+            if (playerPrefix != null) {
+                val playerDetails = listOfNotNull(masteryDesc, soloQDesc)
+                if (playerDetails.isNotEmpty()) {
+                    reasons.add("$playerPrefix: ${playerDetails.joinToString("; ")}")
+                } else {
+                    reasons.add(playerPrefix)
+                }
+            } else {
+                if (masteryDesc != null) reasons.add(masteryDesc)
+                if (soloQDesc != null) reasons.add(soloQDesc)
+            }
+
             if (metaStats?.tier == MetaTier.T0) {
                 reasons.add("T0 meta priority (${(metaStats.presenceRate * 100).toInt()}% presence)")
             } else if (metaStats?.tier == MetaTier.T1) {
                 reasons.add("T1 meta pick")
             }
-            if (matchedSignature != null) reasons.add("$matchedSignature pick for player")
+
             if (needsAp && (profile?.damageProfile?.magicRatio ?: 0.0) >= 0.65) reasons.add("Fills critical AP damage deficit")
-            if (vacantRoles.isNotEmpty() && bestRole in vacantRoles) reasons.add("Fills vacant $bestRole lane")
+            if (vacantRoles.isNotEmpty() && targetRole in vacantRoles) reasons.add("Fills vacant $targetRole lane")
             if (counterDenialScore > 0.3) reasons.add("Counters enemy composition")
+
             val rationale = if (reasons.isNotEmpty()) reasons.joinToString("; ") else "Standard draft candidate"
 
             scoredList.add(
@@ -223,11 +381,13 @@ class DraftIntentPredictor(
                     championId = profile?.displayName ?: champ,
                     probability = 0.0, // calculated after sorting Top N
                     intentScore = roundToFourDecimals(totalIntentScore),
-                    predictedRole = bestRole,
+                    predictedRole = targetRole,
                     metaScore = roundToFourDecimals(metaScore),
                     playerMasteryScore = roundToFourDecimals(playerMasteryScore),
+                    soloQScore = roundToFourDecimals(soloQScore),
                     compositionFitScore = roundToFourDecimals(compositionFitScore),
                     counterDenialScore = roundToFourDecimals(counterDenialScore),
+                    playerName = targetPlayerName,
                     rationale = rationale,
                 ),
             )
