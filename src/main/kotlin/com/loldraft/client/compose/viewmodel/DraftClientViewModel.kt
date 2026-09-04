@@ -18,9 +18,17 @@ import com.loldraft.models.DraftIntentPredictor
 import com.loldraft.models.DraftRecommender
 import com.loldraft.models.EvalBarCalculator
 import com.loldraft.server.ProMatchRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.Locale
 
 class DraftClientViewModel(
@@ -30,10 +38,13 @@ class DraftClientViewModel(
     private val recommender: DraftRecommender = DraftRecommender(),
     private val evaluator: DraftEvaluator = AnalyticalDraftEvaluator(),
     private val flawDetector: CompositionFlawDetector = CompositionFlawDetector(),
-) {
+    private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+) : AutoCloseable {
     private val appliedDraftTurns = mutableListOf<DraftTurn>()
     private val _uiState = MutableStateFlow(DraftClientState())
     val uiState: StateFlow<DraftClientState> = _uiState.asStateFlow()
+
+    private var calculationJob: Job? = null
 
     init {
         repository.initialize()
@@ -91,21 +102,34 @@ class DraftClientViewModel(
         recalculateDraftCalculations()
     }
 
+    fun awaitCalculations() {
+        runBlocking {
+            calculationJob?.join()
+        }
+    }
+
+    override fun close() {
+        calculationJob?.cancel()
+        coroutineScope.cancel()
+    }
+
     fun setFirstPickSide(side: Side) {
         val current = _uiState.value
         if (current.firstPickSide == side) return
-        val updatedSlots = current.boardSlots.map { slot ->
-            val spec = DraftTurnSpec.forTurn(slot.turnNumber, side)
-            slot.copy(
-                side = spec.side,
-                actionType = spec.actionType,
+        val updatedSlots =
+            current.boardSlots.map { slot ->
+                val spec = DraftTurnSpec.forTurn(slot.turnNumber, side)
+                slot.copy(
+                    side = spec.side,
+                    actionType = spec.actionType,
+                )
+            }
+        _uiState.value =
+            current.copy(
+                firstPickSide = side,
+                currentTurnSpec = DraftTurnSpec.forTurn(current.currentTurnNumber, side),
+                boardSlots = updatedSlots,
             )
-        }
-        _uiState.value = current.copy(
-            firstPickSide = side,
-            currentTurnSpec = DraftTurnSpec.forTurn(current.currentTurnNumber, side),
-            boardSlots = updatedSlots,
-        )
         recalculateDraftCalculations()
     }
 
@@ -120,34 +144,37 @@ class DraftClientViewModel(
         val oldBlueFiltered = current.blueFilteredTeams
         val oldRedFiltered = current.redFilteredTeams
 
-        _uiState.value = current.copy(
-            blueTeam = oldRed,
-            redTeam = oldBlue,
-            blueRosterIntelligence = oldRedRoster,
-            redRosterIntelligence = oldBlueRoster,
-            blueSelectedLeague = oldRedLeague,
-            redSelectedLeague = oldBlueLeague,
-            blueFilteredTeams = oldRedFiltered,
-            redFilteredTeams = oldBlueFiltered,
-            selectedLeague = oldRedLeague,
-            filteredTeams = oldRedFiltered,
-        )
+        _uiState.value =
+            current.copy(
+                blueTeam = oldRed,
+                redTeam = oldBlue,
+                blueRosterIntelligence = oldRedRoster,
+                redRosterIntelligence = oldBlueRoster,
+                blueSelectedLeague = oldRedLeague,
+                redSelectedLeague = oldBlueLeague,
+                blueFilteredTeams = oldRedFiltered,
+                redFilteredTeams = oldBlueFiltered,
+                selectedLeague = oldRedLeague,
+                filteredTeams = oldRedFiltered,
+            )
         recalculateDraftCalculations()
     }
 
     fun selectPatch(patch: String) {
         val current = _uiState.value
         val teams = repository.getTeams()
-        val blueFiltered = if (current.blueSelectedLeague == null) {
-            teams
-        } else {
-            repository.getTeams(league = current.blueSelectedLeague)
-        }
-        val redFiltered = if (current.redSelectedLeague == null) {
-            teams
-        } else {
-            repository.getTeams(league = current.redSelectedLeague)
-        }
+        val blueFiltered =
+            if (current.blueSelectedLeague == null) {
+                teams
+            } else {
+                repository.getTeams(league = current.blueSelectedLeague)
+            }
+        val redFiltered =
+            if (current.redSelectedLeague == null) {
+                teams
+            } else {
+                repository.getTeams(league = current.redSelectedLeague)
+            }
         val blue = teams.find { it.id == current.blueTeam?.id } ?: blueFiltered.firstOrNull() ?: teams.firstOrNull()
         val red = teams.find { it.id == current.redTeam?.id } ?: redFiltered.getOrNull(1) ?: blue
         _uiState.value =
@@ -169,32 +196,54 @@ class DraftClientViewModel(
 
     fun selectBlueLeague(league: String?) {
         val current = _uiState.value
-        val actualLeague = if (league.isNullOrBlank() || league.equals("ALL", ignoreCase = true) || league.equals("All Regions", ignoreCase = true) || league.equals("全部賽區", ignoreCase = true)) null else league
-        val filtered = if (actualLeague == null) {
-            current.allTeams
-        } else {
-            repository.getTeams(league = actualLeague)
-        }
-        _uiState.value = current.copy(
-            blueSelectedLeague = actualLeague,
-            blueFilteredTeams = filtered,
-            selectedLeague = actualLeague,
-            filteredTeams = filtered,
-        )
+        val actualLeague =
+            if (league.isNullOrBlank() ||
+                league.equals("ALL", ignoreCase = true) ||
+                league.equals("All Regions", ignoreCase = true) ||
+                league.equals("全部賽區", ignoreCase = true)
+            ) {
+                null
+            } else {
+                league
+            }
+        val filtered =
+            if (actualLeague == null) {
+                current.allTeams
+            } else {
+                repository.getTeams(league = actualLeague)
+            }
+        _uiState.value =
+            current.copy(
+                blueSelectedLeague = actualLeague,
+                blueFilteredTeams = filtered,
+                selectedLeague = actualLeague,
+                filteredTeams = filtered,
+            )
     }
 
     fun selectRedLeague(league: String?) {
         val current = _uiState.value
-        val actualLeague = if (league.isNullOrBlank() || league.equals("ALL", ignoreCase = true) || league.equals("All Regions", ignoreCase = true) || league.equals("全部賽區", ignoreCase = true)) null else league
-        val filtered = if (actualLeague == null) {
-            current.allTeams
-        } else {
-            repository.getTeams(league = actualLeague)
-        }
-        _uiState.value = current.copy(
-            redSelectedLeague = actualLeague,
-            redFilteredTeams = filtered,
-        )
+        val actualLeague =
+            if (league.isNullOrBlank() ||
+                league.equals("ALL", ignoreCase = true) ||
+                league.equals("All Regions", ignoreCase = true) ||
+                league.equals("全部賽區", ignoreCase = true)
+            ) {
+                null
+            } else {
+                league
+            }
+        val filtered =
+            if (actualLeague == null) {
+                current.allTeams
+            } else {
+                repository.getTeams(league = actualLeague)
+            }
+        _uiState.value =
+            current.copy(
+                redSelectedLeague = actualLeague,
+                redFilteredTeams = filtered,
+            )
     }
 
     fun setFearlessDialogOpen(isOpen: Boolean) {
@@ -203,15 +252,29 @@ class DraftClientViewModel(
 
     fun addFearlessExcludedChampion(championId: String) {
         val current = _uiState.value
-        val champEntry = current.allChampions.find { it.id.equals(championId, ignoreCase = true) || it.name.equals(championId, ignoreCase = true) }
+        val champEntry =
+            current.allChampions.find {
+                it.id.equals(championId, ignoreCase = true) ||
+                    it.name.equals(championId, ignoreCase = true)
+            }
         val idToAdd = champEntry?.id ?: championId
         if (current.fearlessExcludedChampionIds.any { it.equals(idToAdd, ignoreCase = true) }) return
 
         val updated = current.fearlessExcludedChampionIds + idToAdd
-        _uiState.value = current.copy(
-            fearlessExcludedChampionIds = updated,
-            selectedChampionId = if (current.selectedChampionId.equals(idToAdd, ignoreCase = true)) null else current.selectedChampionId,
-        )
+        _uiState.value =
+            current.copy(
+                fearlessExcludedChampionIds = updated,
+                selectedChampionId =
+                    if (current.selectedChampionId.equals(
+                            idToAdd,
+                            ignoreCase = true,
+                        )
+                    ) {
+                        null
+                    } else {
+                        current.selectedChampionId
+                    },
+            )
         recalculateDraftCalculations()
     }
 
@@ -236,12 +299,12 @@ class DraftClientViewModel(
         recalculateDraftCalculations()
     }
 
-
     fun selectBlueTeam(teamId: String) {
         val current = _uiState.value
-        val team = current.allTeams.find { it.id == teamId }
-            ?: repository.getTeams().find { it.id == teamId }
-            ?: return
+        val team =
+            current.allTeams.find { it.id == teamId }
+                ?: repository.getTeams().find { it.id == teamId }
+                ?: return
         val roster = computeRosterIntelligence(team.id)
         _uiState.value =
             current.copy(
@@ -253,9 +316,10 @@ class DraftClientViewModel(
 
     fun selectRedTeam(teamId: String) {
         val current = _uiState.value
-        val team = current.allTeams.find { it.id == teamId }
-            ?: repository.getTeams().find { it.id == teamId }
-            ?: return
+        val team =
+            current.allTeams.find { it.id == teamId }
+                ?: repository.getTeams().find { it.id == teamId }
+                ?: return
         val roster = computeRosterIntelligence(team.id)
         _uiState.value =
             current.copy(
@@ -286,7 +350,10 @@ class DraftClientViewModel(
             )
     }
 
-    fun selectChampion(championId: String?, preferredRole: Role? = null) {
+    fun selectChampion(
+        championId: String?,
+        preferredRole: Role? = null,
+    ) {
         _uiState.value =
             _uiState.value.copy(
                 selectedChampionId = championId,
@@ -294,12 +361,18 @@ class DraftClientViewModel(
             )
     }
 
-    fun updatePickRole(turnNumber: Int, newRole: Role) {
+    fun updatePickRole(
+        turnNumber: Int,
+        newRole: Role,
+    ) {
         val current = _uiState.value
-        val targetIndex = appliedDraftTurns.indexOfFirst { it.turnNumber == turnNumber && it.actionType == ActionType.PICK }
+        val targetIndex =
+            synchronized(appliedDraftTurns) {
+                appliedDraftTurns.indexOfFirst { it.turnNumber == turnNumber && it.actionType == ActionType.PICK }
+            }
         if (targetIndex == -1) return
 
-        val targetTurn = appliedDraftTurns[targetIndex]
+        val targetTurn = synchronized(appliedDraftTurns) { appliedDraftTurns[targetIndex] }
         val oldRole = targetTurn.role
         if (oldRole == newRole) return
 
@@ -307,39 +380,48 @@ class DraftClientViewModel(
         val rosterIntel = if (side == Side.BLUE) current.blueRosterIntelligence else current.redRosterIntelligence
 
         // Check if another pick on the same side already has newRole
-        val otherIndex = appliedDraftTurns.indexOfFirst {
-            it.side == side && it.actionType == ActionType.PICK && it.role == newRole && it.turnNumber != turnNumber
-        }
+        val otherIndex =
+            synchronized(appliedDraftTurns) {
+                appliedDraftTurns.indexOfFirst {
+                    it.side == side && it.actionType == ActionType.PICK && it.role == newRole && it.turnNumber != turnNumber
+                }
+            }
 
         if (otherIndex != -1) {
             // Swap scenario: other pick gets oldRole, target gets newRole
-            val otherTurn = appliedDraftTurns[otherIndex]
+            val otherTurn = synchronized(appliedDraftTurns) { appliedDraftTurns[otherIndex] }
             val otherNewPlayer = if (oldRole != null) rosterIntel[oldRole]?.playerId else otherTurn.player
             val targetNewPlayer = rosterIntel[newRole]?.playerId
 
-            appliedDraftTurns[otherIndex] = otherTurn.copy(role = oldRole, player = otherNewPlayer)
-            appliedDraftTurns[targetIndex] = targetTurn.copy(role = newRole, player = targetNewPlayer)
-
-            val updatedSlots = current.boardSlots.map { slot ->
-                when (slot.turnNumber) {
-                    targetTurn.turnNumber -> slot.copy(role = newRole, playerName = targetNewPlayer)
-                    otherTurn.turnNumber -> slot.copy(role = oldRole, playerName = otherNewPlayer)
-                    else -> slot
-                }
+            synchronized(appliedDraftTurns) {
+                appliedDraftTurns[otherIndex] = otherTurn.copy(role = oldRole, player = otherNewPlayer)
+                appliedDraftTurns[targetIndex] = targetTurn.copy(role = newRole, player = targetNewPlayer)
             }
+
+            val updatedSlots =
+                current.boardSlots.map { slot ->
+                    when (slot.turnNumber) {
+                        targetTurn.turnNumber -> slot.copy(role = newRole, playerName = targetNewPlayer)
+                        otherTurn.turnNumber -> slot.copy(role = oldRole, playerName = otherNewPlayer)
+                        else -> slot
+                    }
+                }
             _uiState.value = current.copy(boardSlots = updatedSlots)
         } else {
             // Single update scenario: assign newRole directly
             val targetNewPlayer = rosterIntel[newRole]?.playerId
-            appliedDraftTurns[targetIndex] = targetTurn.copy(role = newRole, player = targetNewPlayer)
-
-            val updatedSlots = current.boardSlots.map { slot ->
-                if (slot.turnNumber == targetTurn.turnNumber) {
-                    slot.copy(role = newRole, playerName = targetNewPlayer)
-                } else {
-                    slot
-                }
+            synchronized(appliedDraftTurns) {
+                appliedDraftTurns[targetIndex] = targetTurn.copy(role = newRole, player = targetNewPlayer)
             }
+
+            val updatedSlots =
+                current.boardSlots.map { slot ->
+                    if (slot.turnNumber == targetTurn.turnNumber) {
+                        slot.copy(role = newRole, playerName = targetNewPlayer)
+                    } else {
+                        slot
+                    }
+                }
             _uiState.value = current.copy(boardSlots = updatedSlots)
         }
 
@@ -408,7 +490,9 @@ class DraftClientViewModel(
                 role = assignedRole,
                 player = assignedPlayer,
             )
-        appliedDraftTurns.add(turn)
+        synchronized(appliedDraftTurns) {
+            appliedDraftTurns.add(turn)
+        }
 
         val nextTurnNum = turnNum + 1
         val isComplete = nextTurnNum > 20
@@ -436,7 +520,14 @@ class DraftClientViewModel(
         _uiState.value =
             current.copy(
                 currentTurnNumber = nextTurnNum.coerceAtMost(20),
-                currentTurnSpec = if (nextTurnNum <= 20) DraftTurnSpec.forTurn(nextTurnNum, current.firstPickSide) else DraftTurnSpec.forTurn(20, current.firstPickSide),
+                currentTurnSpec =
+                    if (nextTurnNum <=
+                        20
+                    ) {
+                        DraftTurnSpec.forTurn(nextTurnNum, current.firstPickSide)
+                    } else {
+                        DraftTurnSpec.forTurn(20, current.firstPickSide)
+                    },
                 boardSlots = updatedSlots,
                 bannedChampionIds = updatedBanned,
                 pickedChampionIds = updatedPicked,
@@ -449,8 +540,11 @@ class DraftClientViewModel(
     }
 
     fun undoLastTurn() {
-        if (appliedDraftTurns.isEmpty()) return
-        val undoneTurn = appliedDraftTurns.removeAt(appliedDraftTurns.size - 1)
+        val undoneTurn =
+            synchronized(appliedDraftTurns) {
+                if (appliedDraftTurns.isEmpty()) return
+                appliedDraftTurns.removeAt(appliedDraftTurns.size - 1)
+            }
         val targetTurnNum = undoneTurn.turnNumber
 
         val current = _uiState.value
@@ -502,7 +596,9 @@ class DraftClientViewModel(
     }
 
     fun resetDraft() {
-        appliedDraftTurns.clear()
+        synchronized(appliedDraftTurns) {
+            appliedDraftTurns.clear()
+        }
         val current = _uiState.value
         val resetSlots =
             (1..20).map { turnNum ->
@@ -525,7 +621,7 @@ class DraftClientViewModel(
                 selectedChampionId = null,
                 preferredRoleForSelection = null,
                 isDraftComplete = false,
-                evalBar = EvalBarState(),
+                evalBar = EvalBarState(phaseDescription = "待 10 人全部選取預測 (0/10)", isEvaluated = false),
             )
 
         recalculateDraftCalculations()
@@ -545,109 +641,185 @@ class DraftClientViewModel(
 
     private fun recalculateDraftCalculations() {
         val current = _uiState.value
-        val draftState = DraftState.fromTurns(appliedDraftTurns).withFearlessSpent(current.fearlessExcludedChampionIds)
-        val patchMeta = repository.getPatchMetaForPrediction(current.selectedPatch)
+        val turnsSnapshot = synchronized(appliedDraftTurns) { appliedDraftTurns.toList() }
+        val draftState = DraftState.fromTurns(turnsSnapshot).withFearlessSpent(current.fearlessExcludedChampionIds)
+        val totalPicks = draftState.bluePicks.size + draftState.redPicks.size
+        val isAllTenPicksSelected = (totalPicks == 10)
 
-        // 1. Eval Bar
-        val evalResult = evaluator.evaluate(draftState, patchMeta = patchMeta)
-        val blueWr = evalResult.blueWinRate
-        val redWr = 1.0 - blueWr
-        val evalScore = EvalBarCalculator.calculate(blueWr).score
-        val advSide =
-            when {
-                evalScore > 0.15 -> Side.BLUE
-                evalScore < -0.15 -> Side.RED
-                else -> null
-            }
-        val phaseDesc =
-            when (advSide) {
-                Side.BLUE -> String.format(Locale.US, "Blue Advantage (+%.2f)", evalScore)
-                Side.RED -> String.format(Locale.US, "Red Advantage (%.2f)", evalScore)
-                null -> "Even Matchup (0.00)"
-            }
-
-        // 2. Intent Predictions & Recommendations for current action
-        val actingSide = current.currentTurnSpec.side
-        val isBan = current.currentTurnSpec.actionType == ActionType.BAN
-        val opponentTeam = if (actingSide == Side.BLUE) current.redTeam else current.blueTeam
-
-        val actingRoster = if (actingSide == Side.BLUE) current.blueRosterIntelligence else current.redRosterIntelligence
-        val oppRoster = if (actingSide == Side.BLUE) current.redRosterIntelligence else current.blueRosterIntelligence
-
-        val actingProfiles = actingRoster.mapValues {
-            it.value.dossier?.let { d -> com.loldraft.data.player.ProPlayerDetailedProfile.fromDossier(it.key, d) } ?: fallbackProfile(it.value)
-        }
-        val oppProfiles = oppRoster.mapValues {
-            it.value.dossier?.let { d -> com.loldraft.data.player.ProPlayerDetailedProfile.fromDossier(it.key, d) } ?: fallbackProfile(it.value)
-        }
-
-        val opponentBans = if (opponentTeam != null) {
-            repository.getOpponentBansAgainstTeam(opponentTeam.id)
-        } else {
-            emptyList()
-        }
-
-        val predictions =
-            if (isBan) {
-                intentPredictor.predictNextAction(
-                    draftState = draftState,
-                    patchMeta = patchMeta,
-                    opponentPlayerProfilesByRole = oppProfiles,
-                    opponentBansAgainstTargetTeam = opponentBans,
-                    targetTeamName = opponentTeam?.name,
-                    firstPickSide = current.firstPickSide,
-                    topN = 5,
-                ).predictions
-            } else {
-                intentPredictor.predictNextAction(
-                    draftState = draftState,
-                    patchMeta = patchMeta,
-                    playerProfilesByRole = actingProfiles,
-                    firstPickSide = current.firstPickSide,
-                    topN = 5,
-                ).predictions
-            }
-
-        // 3. Recommendations: Best Bans during Ban phase, Best Picks during Pick phase
-        val recommendations =
-            if (isBan) {
-                recommender.recommendBestBans(
-                    draftState = draftState,
-                    targetSide = actingSide,
-                    patchMeta = patchMeta,
-                    opponentBansAgainstTargetTeam = opponentBans,
-                    opponentPlayerProfilesByRole = oppProfiles,
-                    opponentTeamName = opponentTeam?.name,
-                    limit = 5,
-                )
-            } else {
-                recommender.recommendBestPicks(
-                    draftState = draftState,
-                    targetSide = actingSide,
-                    patchMeta = patchMeta,
-                    limit = 5,
+        // Immediately update evalBar for UI responsiveness if not 10 picks
+        if (!isAllTenPicksSelected) {
+            val pendingDesc =
+                if (totalPicks == 0) {
+                    "待 10 人全部選取預測 (0/10)"
+                } else {
+                    String.format(Locale.US, "待 10 人全部選取預測 (%d/10)", totalPicks)
+                }
+            _uiState.update { state ->
+                state.copy(
+                    evalBar =
+                        EvalBarState(
+                            blueWinRate = 0.50,
+                            redWinRate = 0.50,
+                            evalScore = 0.0,
+                            advantageSide = null,
+                            phaseDescription = pendingDesc,
+                            isEvaluated = false,
+                        ),
                 )
             }
+        }
 
-        // 4. Flaw warnings
-        val allFlaws = flawDetector.analyzeDraft(draftState).allFlaws
+        calculationJob?.cancel()
+        calculationJob =
+            coroutineScope.launch {
+                val patchMeta = repository.getPatchMetaForPrediction(current.selectedPatch)
 
-        _uiState.value =
-            _uiState.value.copy(
-                evalBar =
-                    EvalBarState(
-                        blueWinRate = blueWr,
-                        redWinRate = redWr,
-                        evalScore = evalScore,
-                        advantageSide = advSide,
-                        phaseDescription = phaseDesc,
-                    ),
-                intentPredictions = predictions,
-                counterRecommendations = recommendations,
-                compositionFlaws = allFlaws,
-            )
+                // 1. Eval Bar: ONLY predict win rate when all 10 champions have been selected
+                val evalBarState =
+                    if (isAllTenPicksSelected) {
+                        val evalResult = evaluator.evaluate(draftState, patchMeta = patchMeta)
+                        val blueWr = evalResult.blueWinRate
+                        val redWr = 1.0 - blueWr
+                        val evalScore = EvalBarCalculator.calculate(blueWr).score
+                        val advSide =
+                            when {
+                                evalScore > 0.15 -> Side.BLUE
+                                evalScore < -0.15 -> Side.RED
+                                else -> null
+                            }
+                        val phaseDesc =
+                            when (advSide) {
+                                Side.BLUE -> String.format(Locale.US, "Blue Advantage (+%.2f)", evalScore)
+                                Side.RED -> String.format(Locale.US, "Red Advantage (%.2f)", evalScore)
+                                null -> "Even Matchup (0.00)"
+                            }
+                        EvalBarState(
+                            blueWinRate = blueWr,
+                            redWinRate = redWr,
+                            evalScore = evalScore,
+                            advantageSide = advSide,
+                            phaseDescription = phaseDesc,
+                            isEvaluated = true,
+                        )
+                    } else {
+                        val pendingDesc =
+                            if (totalPicks == 0) {
+                                "待 10 人全部選取預測 (0/10)"
+                            } else {
+                                String.format(Locale.US, "待 10 人全部選取預測 (%d/10)", totalPicks)
+                            }
+                        EvalBarState(
+                            blueWinRate = 0.50,
+                            redWinRate = 0.50,
+                            evalScore = 0.0,
+                            advantageSide = null,
+                            phaseDescription = pendingDesc,
+                            isEvaluated = false,
+                        )
+                    }
+
+                // If draft is complete, no next-turn intent predictions needed
+                if (current.isDraftComplete) {
+                    val allFlaws = flawDetector.analyzeDraft(draftState).allFlaws
+                    _uiState.update { state ->
+                        state.copy(
+                            evalBar = evalBarState,
+                            intentPredictions = emptyList(),
+                            compositionFlaws = allFlaws,
+                        )
+                    }
+                    return@launch
+                }
+
+                // 2. Intent Predictions & Recommendations for current action
+                val actingSide = current.currentTurnSpec.side
+                val isBan = current.currentTurnSpec.actionType == ActionType.BAN
+                val opponentTeam = if (actingSide == Side.BLUE) current.redTeam else current.blueTeam
+
+                val actingRoster = if (actingSide == Side.BLUE) current.blueRosterIntelligence else current.redRosterIntelligence
+                val oppRoster = if (actingSide == Side.BLUE) current.redRosterIntelligence else current.blueRosterIntelligence
+
+                val actingProfiles =
+                    actingRoster.mapValues {
+                        it.value.dossier?.let { d ->
+                            com.loldraft.data.player.ProPlayerDetailedProfile
+                                .fromDossier(it.key, d)
+                        }
+                            ?: fallbackProfile(it.value)
+                    }
+                val oppProfiles =
+                    oppRoster.mapValues {
+                        it.value.dossier?.let { d ->
+                            com.loldraft.data.player.ProPlayerDetailedProfile
+                                .fromDossier(it.key, d)
+                        }
+                            ?: fallbackProfile(it.value)
+                    }
+
+                val opponentBans =
+                    if (opponentTeam != null) {
+                        repository.getOpponentBansAgainstTeam(opponentTeam.id)
+                    } else {
+                        emptyList()
+                    }
+
+                val predictions =
+                    if (isBan) {
+                        intentPredictor
+                            .predictNextAction(
+                                draftState = draftState,
+                                patchMeta = patchMeta,
+                                opponentPlayerProfilesByRole = oppProfiles,
+                                opponentBansAgainstTargetTeam = opponentBans,
+                                targetTeamName = opponentTeam?.name,
+                                firstPickSide = current.firstPickSide,
+                                topN = 5,
+                            ).predictions
+                    } else {
+                        intentPredictor
+                            .predictNextAction(
+                                draftState = draftState,
+                                patchMeta = patchMeta,
+                                playerProfilesByRole = actingProfiles,
+                                firstPickSide = current.firstPickSide,
+                                topN = 5,
+                            ).predictions
+                    }
+
+                // 3. Recommendations: Best Bans during Ban phase, Best Picks during Pick phase
+                val recommendations =
+                    if (isBan) {
+                        recommender.recommendBestBans(
+                            draftState = draftState,
+                            targetSide = actingSide,
+                            patchMeta = patchMeta,
+                            opponentBansAgainstTargetTeam = opponentBans,
+                            opponentPlayerProfilesByRole = oppProfiles,
+                            opponentTeamName = opponentTeam?.name,
+                            limit = 5,
+                        )
+                    } else {
+                        recommender.recommendBestPicks(
+                            draftState = draftState,
+                            targetSide = actingSide,
+                            patchMeta = patchMeta,
+                            limit = 5,
+                        )
+                    }
+
+                // 4. Flaw warnings
+                val allFlaws = flawDetector.analyzeDraft(draftState).allFlaws
+
+                _uiState.update { state ->
+                    state.copy(
+                        evalBar = evalBarState,
+                        intentPredictions = predictions,
+                        counterRecommendations = recommendations,
+                        compositionFlaws = allFlaws,
+                    )
+                }
+            }
     }
-
 
     private fun filterChampions(
         all: List<com.loldraft.platform.pro.api.ProChampionEntry>,
@@ -696,7 +868,8 @@ class DraftClientViewModel(
     }
 
     private fun fallbackProfile(intel: PlayerRosterIntelligence): com.loldraft.data.player.ProPlayerDetailedProfile =
-        com.loldraft.data.player.ProPlayerDetailedProfile.fromDossier(intel.role, fallbackDossier(intel))
+        com.loldraft.data.player.ProPlayerDetailedProfile
+            .fromDossier(intel.role, fallbackDossier(intel))
 
     private fun fallbackDossier(intel: PlayerRosterIntelligence): com.loldraft.data.player.PlayerIntelligenceDossier {
         val careerStats =

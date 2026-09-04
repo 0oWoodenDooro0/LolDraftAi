@@ -31,6 +31,7 @@ import com.loldraft.client.compose.ui.theme.CardDark
 import com.loldraft.client.compose.ui.theme.GoldAccent
 import com.loldraft.client.compose.ui.theme.RedSideColor
 import com.loldraft.client.compose.ui.theme.SurfaceDark
+import com.loldraft.client.compose.ui.theme.TextSecondary
 import java.util.Locale
 
 @Composable
@@ -68,8 +69,13 @@ fun EvalBarView(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = String.format(Locale.US, "%.1f%%", evalBar.blueWinRate * 100),
-                    color = BlueSideColor,
+                    text =
+                        if (evalBar.isEvaluated) {
+                            String.format(Locale.US, "%.1f%%", evalBar.blueWinRate * 100)
+                        } else {
+                            "--%"
+                        },
+                    color = if (evalBar.isEvaluated) BlueSideColor else TextSecondary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                 )
@@ -87,6 +93,7 @@ fun EvalBarView(
                     text = evalBar.phaseDescription,
                     color =
                         when {
+                            !evalBar.isEvaluated -> GoldAccent
                             evalBar.evalScore > 0.15 -> BlueSideColor
                             evalBar.evalScore < -0.15 -> RedSideColor
                             else -> GoldAccent
@@ -98,8 +105,13 @@ fun EvalBarView(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = String.format(Locale.US, "%.1f%%", evalBar.redWinRate * 100),
-                    color = RedSideColor,
+                    text =
+                        if (evalBar.isEvaluated) {
+                            String.format(Locale.US, "%.1f%%", evalBar.redWinRate * 100)
+                        } else {
+                            "--%"
+                        },
+                    color = if (evalBar.isEvaluated) RedSideColor else TextSecondary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                 )

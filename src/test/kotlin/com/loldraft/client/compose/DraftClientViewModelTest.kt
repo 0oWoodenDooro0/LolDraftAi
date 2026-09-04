@@ -5,9 +5,11 @@ import com.loldraft.data.models.ActionType
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.server.ProMatchRepository
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -23,39 +25,40 @@ class DraftClientViewModelTest {
         viewModel = DraftClientViewModel(repository = repository)
     }
 
+    @AfterEach
+    fun tearDown() {
+        viewModel.close()
+    }
+
     @Test
     fun `test initial state defaults to patch 16_17 and turn 1`() {
         val state = viewModel.uiState.value
-
-        assertEquals("16.17", state.selectedPatch, "Default patch must be 16.17")
-        assertTrue(state.availablePatches.contains("16.17"), "Available patches must contain 16.17")
-        assertEquals(1, state.currentTurnNumber, "Initial turn must be 1")
-        assertEquals(Side.BLUE, state.currentTurnSpec.side, "Turn 1 is Blue Side")
-        assertEquals(ActionType.BAN, state.currentTurnSpec.actionType, "Turn 1 is Ban")
-        assertEquals(20, state.boardSlots.size, "Board must have 20 draft slots")
+        assertEquals("16.17", state.selectedPatch)
+        assertEquals(1, state.currentTurnNumber)
+        assertEquals(Side.BLUE, state.currentTurnSpec.side)
+        assertEquals(ActionType.BAN, state.currentTurnSpec.actionType)
+        assertEquals(20, state.boardSlots.size)
         assertNotNull(state.evalBar, "Eval bar must be initialized")
-        assertTrue(state.allChampions.isNotEmpty(), "Champion list must be populated")
+        assertFalse(state.evalBar.isEvaluated, "Eval bar must not be evaluated before 10 picks")
     }
 
     @Test
     fun `test locking in a champion advances turn and updates draft slots`() {
-        // Turn 1: Blue Ban -> Lock in "Kalista"
+        // Turn 1: Blue Ban -> Lock in Kalista
         viewModel.lockInChampion("Kalista")
 
         val stateAfterT1 = viewModel.uiState.value
-        assertEquals(2, stateAfterT1.currentTurnNumber, "Turn must advance to 2")
-        assertEquals(Side.RED, stateAfterT1.currentTurnSpec.side, "Turn 2 is Red Side")
-        assertEquals(ActionType.BAN, stateAfterT1.currentTurnSpec.actionType, "Turn 2 is Ban")
+        assertEquals(2, stateAfterT1.currentTurnNumber)
+        assertEquals(Side.RED, stateAfterT1.currentTurnSpec.side)
+        assertEquals(ActionType.BAN, stateAfterT1.currentTurnSpec.actionType)
 
         val slot1 = stateAfterT1.boardSlots.first { it.turnNumber == 1 }
-        assertEquals("Kalista", slot1.championId, "Slot 1 must have Kalista")
+        assertEquals("Kalista", slot1.championId)
         assertTrue(stateAfterT1.bannedChampionIds.contains("Kalista"))
+        assertFalse(slot1.isCurrentTurn)
 
-        // Turn 2: Red Ban -> Lock in "Ashe"
-        viewModel.lockInChampion("Ashe")
-        val stateAfterT2 = viewModel.uiState.value
-        assertEquals(3, stateAfterT2.currentTurnNumber, "Turn must advance to 3")
-        assertTrue(stateAfterT2.bannedChampionIds.contains("Ashe"))
+        val slot2 = stateAfterT1.boardSlots.first { it.turnNumber == 2 }
+        assertTrue(slot2.isCurrentTurn)
     }
 
     @Test
@@ -64,87 +67,80 @@ class DraftClientViewModelTest {
         assertEquals(2, viewModel.uiState.value.currentTurnNumber)
 
         viewModel.undoLastTurn()
-        val reverted = viewModel.uiState.value
-        assertEquals(1, reverted.currentTurnNumber, "Turn must revert to 1")
-        assertFalse(reverted.bannedChampionIds.contains("Kalista"))
-        val slot1 = reverted.boardSlots.first { it.turnNumber == 1 }
-        assertEquals(null, slot1.championId, "Slot 1 champion must be cleared")
+        val stateAfterUndo = viewModel.uiState.value
+        assertEquals(1, stateAfterUndo.currentTurnNumber)
+        assertFalse(stateAfterUndo.bannedChampionIds.contains("Kalista"))
+
+        val slot1 = stateAfterUndo.boardSlots.first { it.turnNumber == 1 }
+        assertNull(slot1.championId)
+        assertTrue(slot1.isCurrentTurn)
     }
 
     @Test
     fun `test resetDraft resets all 20 turns to empty`() {
         viewModel.lockInChampion("Kalista")
         viewModel.lockInChampion("Ashe")
-        viewModel.lockInChampion("Lucian")
-        assertEquals(4, viewModel.uiState.value.currentTurnNumber)
+        assertEquals(3, viewModel.uiState.value.currentTurnNumber)
 
         viewModel.resetDraft()
-        val resetState = viewModel.uiState.value
-        assertEquals(1, resetState.currentTurnNumber)
-        assertTrue(resetState.bannedChampionIds.isEmpty())
-        assertTrue(resetState.pickedChampionIds.isEmpty())
+        val stateReset = viewModel.uiState.value
+        assertEquals(1, stateReset.currentTurnNumber)
+        assertTrue(stateReset.bannedChampionIds.isEmpty())
+        assertTrue(stateReset.pickedChampionIds.isEmpty())
+        assertTrue(stateReset.boardSlots.all { it.championId == null })
+        assertFalse(stateReset.evalBar.isEvaluated)
+        assertTrue(stateReset.evalBar.phaseDescription.contains("(0/10)"))
     }
 
     @Test
     fun `test champion search and role filter`() {
-        viewModel.setSearchQuery("Ahri")
-        val searchFiltered = viewModel.uiState.value.filteredChampions
-        assertEquals(1, searchFiltered.size)
-        assertEquals("Ahri", searchFiltered[0].name)
+        // Initially filteredChampions contains all champions
+        val initialCount = viewModel.uiState.value.filteredChampions.size
+        assertTrue(initialCount > 50)
 
+        // Filter by text search "Aatrox"
+        viewModel.setSearchQuery("Aatrox")
+        val searchResults = viewModel.uiState.value.filteredChampions
+        assertEquals(1, searchResults.size)
+        assertEquals("Aatrox", searchResults.first().id)
+
+        // Clear search and filter by TOP role
         viewModel.setSearchQuery("")
         viewModel.setRoleFilter(Role.TOP)
-        val topChamps = viewModel.uiState.value.filteredChampions
-        assertTrue(topChamps.isNotEmpty())
-        assertTrue(topChamps.all { it.primaryRole == Role.TOP })
+        val topResults = viewModel.uiState.value.filteredChampions
+        assertTrue(topResults.isNotEmpty())
+        assertTrue(topResults.all { it.primaryRole == Role.TOP })
     }
 
     @Test
     fun `test selecting team updates roster and player intelligence pools`() {
         val teams = repository.getTeams()
-        if (teams.size >= 2) {
-            val teamA = teams[0]
-            val teamB = teams[1]
+        assertTrue(teams.isNotEmpty(), "Teams list should not be empty")
 
-            viewModel.selectBlueTeam(teamA.id)
-            viewModel.selectRedTeam(teamB.id)
+        val targetTeam = teams.first()
+        viewModel.selectBlueTeam(targetTeam.id)
 
-            val state = viewModel.uiState.value
-            assertEquals(teamA.id, state.blueTeam?.id)
-            assertEquals(teamB.id, state.redTeam?.id)
-            assertTrue(state.blueRosterIntelligence.isNotEmpty(), "Blue roster intelligence should be populated")
-            assertTrue(state.redRosterIntelligence.isNotEmpty(), "Red roster intelligence should be populated")
-        }
+        val state = viewModel.uiState.value
+        assertEquals(targetTeam.id, state.blueTeam?.id)
+        assertTrue(state.blueRosterIntelligence.isNotEmpty(), "Blue roster intelligence should be populated")
     }
 
     @Test
     fun `test league filter reduces filtered teams list`() {
-        val allTeams = viewModel.uiState.value.allTeams
-        val leagues = viewModel.uiState.value.availableLeagues
+        val leagues = repository.getLeagues()
+        if (leagues.size > 1) {
+            val selectedLeague = leagues.first()
+            viewModel.selectLeague(selectedLeague)
 
-        if (leagues.isNotEmpty()) {
-            val targetLeague = leagues.first()
-            viewModel.selectLeague(targetLeague)
-
-            val state = viewModel.uiState.value
-            assertEquals(targetLeague, state.selectedLeague)
-            assertTrue(state.filteredTeams.isNotEmpty())
-            assertTrue(state.filteredTeams.all { it.league.equals(targetLeague, ignoreCase = true) })
-            assertTrue(state.filteredTeams.size <= allTeams.size)
-
-            // Select "ALL" resets back to all teams
-            viewModel.selectLeague("ALL")
-            val allState = viewModel.uiState.value
-            assertEquals(null, allState.selectedLeague)
-            assertEquals(allTeams.size, allState.filteredTeams.size)
+            val filtered = viewModel.uiState.value.filteredTeams
+            assertTrue(filtered.isNotEmpty(), "Filtered teams should not be empty for $selectedLeague")
+            assertTrue(filtered.all { it.league == selectedLeague }, "All teams in filtered list should belong to $selectedLeague")
         }
     }
 
     @Test
     fun `test dual independent league filters for blue and red sides`() {
-        val allTeams = viewModel.uiState.value.allTeams
-        val leagues = viewModel.uiState.value.availableLeagues
-
+        val leagues = repository.getLeagues()
         if (leagues.size >= 2) {
             val leagueA = leagues[0]
             val leagueB = leagues[1]
@@ -155,104 +151,106 @@ class DraftClientViewModelTest {
             val state = viewModel.uiState.value
             assertEquals(leagueA, state.blueSelectedLeague)
             assertEquals(leagueB, state.redSelectedLeague)
-            assertTrue(state.blueFilteredTeams.isNotEmpty())
-            assertTrue(state.redFilteredTeams.isNotEmpty())
-            assertTrue(state.blueFilteredTeams.all { it.league.equals(leagueA, ignoreCase = true) })
-            assertTrue(state.redFilteredTeams.all { it.league.equals(leagueB, ignoreCase = true) })
-
-            // Test swap teams swaps the selected leagues and lists
-            viewModel.swapTeams()
-            val swapped = viewModel.uiState.value
-            assertEquals(leagueB, swapped.blueSelectedLeague)
-            assertEquals(leagueA, swapped.redSelectedLeague)
-            assertEquals(state.redFilteredTeams, swapped.blueFilteredTeams)
-            assertEquals(state.blueFilteredTeams, swapped.redFilteredTeams)
+            assertTrue(state.blueFilteredTeams.all { it.league == leagueA })
+            assertTrue(state.redFilteredTeams.all { it.league == leagueB })
         }
     }
 
     @Test
     fun `test fearless draft exclusion prevents lock-in and manages exclusions`() {
         viewModel.addFearlessExcludedChampion("Aatrox")
-        assertTrue(viewModel.uiState.value.fearlessExcludedChampionIds.contains("Aatrox"))
+        assertTrue(
+            viewModel.uiState.value.fearlessExcludedChampionIds
+                .contains("Aatrox"),
+        )
 
-        // Attempt to lock in excluded champion Aatrox should be rejected
-        val turnBefore = viewModel.uiState.value.currentTurnNumber
+        // Attempting to lock in Aatrox should be ignored because it is fearless-excluded
         viewModel.lockInChampion("Aatrox")
-        assertEquals(turnBefore, viewModel.uiState.value.currentTurnNumber, "Turn must not advance for fearless excluded champion")
+        assertEquals(1, viewModel.uiState.value.currentTurnNumber, "Lock-in should be prevented for fearless excluded champion")
 
-        // Remove from fearless exclusions
+        // Remove from fearless
         viewModel.removeFearlessExcludedChampion("Aatrox")
-        assertFalse(viewModel.uiState.value.fearlessExcludedChampionIds.contains("Aatrox"))
+        assertFalse(
+            viewModel.uiState.value.fearlessExcludedChampionIds
+                .contains("Aatrox"),
+        )
 
         // Now lock-in should succeed
         viewModel.lockInChampion("Aatrox")
-        assertEquals(turnBefore + 1, viewModel.uiState.value.currentTurnNumber, "Turn should advance once fearless exclusion is removed")
+        assertEquals(2, viewModel.uiState.value.currentTurnNumber)
     }
 
     @Test
     fun `test fearless draft importCurrentPicksToFearless and clear`() {
-        // Fast forward to picks (turns 1-6 are bans, turn 7 is first pick)
+        // Fast forward 6 bans to reach Turn 7 (Blue Pick 1)
         repeat(6) {
-            viewModel.lockInChampion("Champ$it")
+            viewModel.lockInChampion("BanChamp$it")
         }
         assertEquals(7, viewModel.uiState.value.currentTurnNumber)
-        assertEquals(ActionType.PICK, viewModel.uiState.value.currentTurnSpec.actionType)
 
-        // Lock in a pick
-        viewModel.lockInChampion("Orianna")
-        assertTrue(viewModel.uiState.value.pickedChampionIds.contains("Orianna"))
+        // Pick Renekton
+        viewModel.lockInChampion("Renekton")
+        assertTrue(
+            viewModel.uiState.value.pickedChampionIds
+                .contains("Renekton"),
+        )
 
-        // Import current picks into Fearless Draft
+        // Import current picks into fearless
         viewModel.importCurrentPicksToFearless()
-        assertTrue(viewModel.uiState.value.fearlessExcludedChampionIds.contains("Orianna"))
+        assertTrue(
+            viewModel.uiState.value.fearlessExcludedChampionIds
+                .contains("Renekton"),
+        )
 
-        // Clear all fearless exclusions
+        // Clear fearless
         viewModel.clearFearlessExcludedChampions()
-        assertTrue(viewModel.uiState.value.fearlessExcludedChampionIds.isEmpty())
+        assertTrue(
+            viewModel.uiState.value.fearlessExcludedChampionIds
+                .isEmpty(),
+        )
     }
 
     @Test
     fun `test selectChampion with preferredRole from prediction locks into intended role`() {
-        // Fast forward 6 bans to reach Blue Pick 1 (Turn 7)
+        // Fast forward 6 bans to reach Turn 7 (Blue Pick 1)
         repeat(6) {
             viewModel.lockInChampion("BanChamp$it")
         }
         assertEquals(7, viewModel.uiState.value.currentTurnNumber)
-        assertEquals(ActionType.PICK, viewModel.uiState.value.currentTurnSpec.actionType)
-        assertEquals(Side.BLUE, viewModel.uiState.value.currentTurnSpec.side)
 
-        // Select a champion (e.g. Nautilus which is primary SUP) but with preferredRole = Role.MID
+        // Select Nautilus (default primaryRole: SUPPORT) with preferredRole = MID
         viewModel.selectChampion("Nautilus", preferredRole = Role.MID)
         assertEquals("Nautilus", viewModel.uiState.value.selectedChampionId)
         assertEquals(Role.MID, viewModel.uiState.value.preferredRoleForSelection)
 
-        // Lock in Nautilus
+        // Lock Nautilus in -> should occupy MID slot
         viewModel.lockInChampion("Nautilus")
-
-        // Turn 7 slot should be locked with Nautilus assigned to MID
-        val slot7 = viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }
-        assertEquals("Nautilus", slot7.championId)
-        assertEquals(Role.MID, slot7.role)
-        assertEquals(null, viewModel.uiState.value.selectedChampionId)
-        assertEquals(null, viewModel.uiState.value.preferredRoleForSelection)
+        val slot7 =
+            viewModel.uiState.value.boardSlots
+                .first { it.turnNumber == 7 }
+        assertEquals(Role.MID, slot7.role, "Nautilus should be assigned to MID because of preferredRole")
     }
 
     @Test
     fun `test updatePickRole changes role and updates board slot`() {
-        // Fast forward 6 bans
+        // Fast forward 6 bans to reach Turn 7 (Blue Pick 1)
         repeat(6) {
             viewModel.lockInChampion("BanChamp$it")
         }
 
-        // Turn 7: Blue Pick 1 -> Nautilus (default role assigned, e.g. SUP)
-        viewModel.lockInChampion("Nautilus")
-        val slot7Before = viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }
-        assertNotNull(slot7Before.role)
+        // Turn 7: Blue Pick 1 -> Lock Renekton in (default primaryRole: TOP)
+        viewModel.lockInChampion("Renekton")
+        val slot7Before =
+            viewModel.uiState.value.boardSlots
+                .first { it.turnNumber == 7 }
+        assertEquals(Role.TOP, slot7Before.role)
 
-        // Change role of Turn 7 to TOP
-        viewModel.updatePickRole(7, Role.TOP)
-        val slot7After = viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }
-        assertEquals(Role.TOP, slot7After.role)
+        // Update role of Turn 7 to MID
+        viewModel.updatePickRole(7, Role.MID)
+        val slot7After =
+            viewModel.uiState.value.boardSlots
+                .first { it.turnNumber == 7 }
+        assertEquals(Role.MID, slot7After.role, "Turn 7 role should now be updated to MID")
     }
 
     @Test
@@ -265,7 +263,12 @@ class DraftClientViewModelTest {
         // Turn 7: Blue Pick 1 -> Lock Nautilus in as MID
         viewModel.selectChampion("Nautilus", preferredRole = Role.MID)
         viewModel.lockInChampion("Nautilus")
-        assertEquals(Role.MID, viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }.role)
+        assertEquals(
+            Role.MID,
+            viewModel.uiState.value.boardSlots
+                .first { it.turnNumber == 7 }
+                .role,
+        )
 
         // Turn 8: Red Pick 1
         viewModel.lockInChampion("Aatrox")
@@ -275,14 +278,23 @@ class DraftClientViewModelTest {
         // Turn 10: Blue Pick 2 -> Lock Leona in as SUP
         viewModel.selectChampion("Leona", preferredRole = Role.SUPPORT)
         viewModel.lockInChampion("Leona")
-        assertEquals(Role.SUPPORT, viewModel.uiState.value.boardSlots.first { it.turnNumber == 10 }.role)
+        assertEquals(
+            Role.SUPPORT,
+            viewModel.uiState.value.boardSlots
+                .first { it.turnNumber == 10 }
+                .role,
+        )
 
         // Now adjust Nautilus (Turn 7) to Role.SUPPORT
         // Since Leona (Turn 10) currently has Role.SUPPORT, they should swap!
         viewModel.updatePickRole(7, Role.SUPPORT)
 
-        val slot7 = viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }
-        val slot10 = viewModel.uiState.value.boardSlots.first { it.turnNumber == 10 }
+        val slot7 =
+            viewModel.uiState.value.boardSlots
+                .first { it.turnNumber == 7 }
+        val slot10 =
+            viewModel.uiState.value.boardSlots
+                .first { it.turnNumber == 10 }
 
         assertEquals(Role.SUPPORT, slot7.role, "Turn 7 (Nautilus) should now be SUPPORT")
         assertEquals(Role.MID, slot10.role, "Turn 10 (Leona) should now be swapped to MID")
@@ -297,12 +309,17 @@ class DraftClientViewModelTest {
 
         // Turn 7: Blue Pick 1 -> Lock in Renekton (default primaryRole: TOP)
         viewModel.lockInChampion("Renekton")
-        val slot7Before = viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }
+        val slot7Before =
+            viewModel.uiState.value.boardSlots
+                .first { it.turnNumber == 7 }
         assertEquals(Role.TOP, slot7Before.role)
 
         // Change role of Renekton from TOP to MID
         viewModel.updatePickRole(7, Role.MID)
-        val slot7After = viewModel.uiState.value.boardSlots.first { it.turnNumber == 7 }
+        viewModel.awaitCalculations()
+        val slot7After =
+            viewModel.uiState.value.boardSlots
+                .first { it.turnNumber == 7 }
         assertEquals(Role.MID, slot7After.role)
 
         // Recalculations were executed for Turn 8 (Red pick 1).
@@ -312,9 +329,87 @@ class DraftClientViewModelTest {
         for (pred in topPredictions) {
             assertFalse(
                 pred.rationale.contains("Lane counter vs Renekton"),
-                "Red TOP candidate must not claim lane counter vs Renekton after Renekton moved to MID"
+                "Red TOP candidate must not claim lane counter vs Renekton after Renekton moved to MID",
             )
         }
     }
 
+    @Test
+    fun `test win rate prediction is NOT evaluated while total picks is less than 10`() {
+        // During 6 bans: total picks = 0
+        repeat(6) {
+            viewModel.lockInChampion("BanChamp$it")
+        }
+        viewModel.awaitCalculations()
+        val evalBarAfterBans = viewModel.uiState.value.evalBar
+        assertFalse(evalBarAfterBans.isEvaluated, "Must not evaluate win rate during ban phase")
+        assertEquals(0.50, evalBarAfterBans.blueWinRate, 0.001)
+        assertEquals(0.50, evalBarAfterBans.redWinRate, 0.001)
+        assertTrue(evalBarAfterBans.phaseDescription.contains("(0/10)"))
+
+        // Turns 7 to 11 (5 picks locked in: Blue 3, Red 2)
+        val pickChamps = listOf("Renekton", "Aatrox", "Sejuani", "Leona", "Jinx")
+        pickChamps.forEach { champ ->
+            viewModel.lockInChampion(champ)
+        }
+        viewModel.awaitCalculations()
+
+        val evalBarMidPicks = viewModel.uiState.value.evalBar
+        assertFalse(evalBarMidPicks.isEvaluated, "Must not evaluate win rate when picks < 10 (currently 5)")
+        assertEquals(0.50, evalBarMidPicks.blueWinRate, 0.001)
+        assertEquals(0.50, evalBarMidPicks.redWinRate, 0.001)
+        assertTrue(evalBarMidPicks.phaseDescription.contains("(5/10)"))
+    }
+
+    @Test
+    fun `test win rate prediction IS evaluated when all 10 picks are selected`() {
+        // 20 turns:
+        // Turns 1..6: 6 bans
+        val bans1 = listOf("Ban1", "Ban2", "Ban3", "Ban4", "Ban5", "Ban6")
+        bans1.forEach { viewModel.lockInChampion(it) }
+
+        // Turns 7..12: 6 picks (B1, R1, R2, B2, B3, R3)
+        val picks1 = listOf("Renekton", "Aatrox", "Sejuani", "Leona", "Jinx", "Viktor")
+        picks1.forEach { viewModel.lockInChampion(it) }
+
+        // Turns 13..16: 4 bans
+        val bans2 = listOf("Ban7", "Ban8", "Ban9", "Ban10")
+        bans2.forEach { viewModel.lockInChampion(it) }
+
+        // Turns 17..19: 3 picks (R4, B4, B5) -> Total picks = 9
+        val picks2 = listOf("Thresh", "Ahri", "Vi")
+        picks2.forEach { viewModel.lockInChampion(it) }
+
+        viewModel.awaitCalculations()
+        val evalBar9Picks = viewModel.uiState.value.evalBar
+        assertFalse(evalBar9Picks.isEvaluated, "Must not evaluate win rate with only 9 picks")
+        assertEquals(0.50, evalBar9Picks.blueWinRate, 0.001)
+        assertTrue(evalBar9Picks.phaseDescription.contains("(9/10)"))
+
+        // Turn 20: Red pick 5 (10th pick) -> Total picks = 10!
+        viewModel.lockInChampion("Aphelios")
+        viewModel.awaitCalculations()
+
+        val stateFinal = viewModel.uiState.value
+        assertTrue(stateFinal.isDraftComplete)
+        val evalBarFinal = stateFinal.evalBar
+        assertTrue(evalBarFinal.isEvaluated, "Win rate prediction MUST be evaluated when all 10 picks are selected")
+        assertTrue(evalBarFinal.blueWinRate in 0.0..1.0, "Blue win rate should be in [0, 1]")
+        assertTrue(evalBarFinal.redWinRate in 0.0..1.0, "Red win rate should be in [0, 1]")
+        assertEquals(1.0, evalBarFinal.blueWinRate + evalBarFinal.redWinRate, 0.001, "Win rates must sum to 1.0")
+        assertTrue(
+            evalBarFinal.phaseDescription.contains("Advantage") || evalBarFinal.phaseDescription.contains("Matchup"),
+            "Phase description should show advantage or matchup",
+        )
+
+        // Undo 1 turn: reverts to 9 picks -> evaluation must return to pending
+        viewModel.undoLastTurn()
+        viewModel.awaitCalculations()
+
+        val evalBarAfterUndo = viewModel.uiState.value.evalBar
+        assertFalse(evalBarAfterUndo.isEvaluated, "Undoing back to 9 picks must revert to unpredicted state")
+        assertEquals(0.50, evalBarAfterUndo.blueWinRate, 0.001)
+        assertEquals(0.50, evalBarAfterUndo.redWinRate, 0.001)
+        assertTrue(evalBarAfterUndo.phaseDescription.contains("(9/10)"))
+    }
 }

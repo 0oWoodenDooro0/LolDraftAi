@@ -105,36 +105,38 @@
         ]
     },
     {
-        "championId": "Janna",
-        "displayName": "Janna",
-        "primaryRole": "SUPPORT",
-        "secondaryRoles": [],
+        "championId": "Rek'Sai",
+        "displayName": "Rek'Sai",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP"
+        ],
         "damageProfile": {
-            "physicalRatio": 0.05,
-            "magicRatio": 0.95,
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
             "trueRatio": 0.0,
-            "primaryType": "MAGIC"
+            "primaryType": "PHYSICAL"
         },
         "ccRating": {
-            "hardCcDurationSeconds": 2.5,
+            "hardCcDurationSeconds": 1.8,
             "hasReliableHardCc": true,
-            "tier": "HEAVY"
+            "tier": "MODERATE"
         },
         "durability": {
-            "durabilityScore": 3.2,
-            "tankinessTier": "SQUISHY"
+            "durabilityScore": 7.0,
+            "tankinessTier": "BRUISER"
         },
         "radar": {
-            "laningStrength": 7.2,
-            "engage": 5.0,
-            "disengage": 9.8,
-            "waveclear": 4.0,
-            "lateGameScaling": 7.8
+            "laningStrength": 8.0,
+            "engage": 8.0,
+            "disengage": 5.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 5.5
         },
-        "powerSpike": "MID_GAME_SPIKE",
+        "powerSpike": "EARLY_SPIKE",
         "tags": [
-            "ENCHANTER",
-            "DISENGAGE_PEEL"
+            "DIVER",
+            "EARLY_BULLY"
         ]
     },
     {
@@ -171,38 +173,36 @@
         ]
     },
     {
-        "championId": "Rek'Sai",
-        "displayName": "Rek'Sai",
-        "primaryRole": "JUNGLE",
-        "secondaryRoles": [
-            "TOP"
-        ],
+        "championId": "Janna",
+        "displayName": "Janna",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
         "damageProfile": {
-            "physicalRatio": 0.95,
-            "magicRatio": 0.05,
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
             "trueRatio": 0.0,
-            "primaryType": "PHYSICAL"
+            "primaryType": "MAGIC"
         },
         "ccRating": {
-            "hardCcDurationSeconds": 1.8,
+            "hardCcDurationSeconds": 2.5,
             "hasReliableHardCc": true,
-            "tier": "MODERATE"
+            "tier": "HEAVY"
         },
         "durability": {
-            "durabilityScore": 7.0,
-            "tankinessTier": "BRUISER"
+            "durabilityScore": 3.2,
+            "tankinessTier": "SQUISHY"
         },
         "radar": {
-            "laningStrength": 8.0,
-            "engage": 8.0,
-            "disengage": 5.0,
-            "waveclear": 6.5,
-            "lateGameScaling": 5.5
+            "laningStrength": 7.2,
+            "engage": 5.0,
+            "disengage": 9.8,
+            "waveclear": 4.0,
+            "lateGameScaling": 7.8
         },
-        "powerSpike": "EARLY_SPIKE",
+        "powerSpike": "MID_GAME_SPIKE",
         "tags": [
-            "DIVER",
-            "EARLY_BULLY"
+            "ENCHANTER",
+            "DISENGAGE_PEEL"
         ]
     },
     {
@@ -517,42 +517,6 @@
         ]
     },
     {
-        "championId": "Brand",
-        "displayName": "Brand",
-        "primaryRole": "SUPPORT",
-        "secondaryRoles": [
-            "JUNGLE",
-            "MID"
-        ],
-        "damageProfile": {
-            "physicalRatio": 0.05,
-            "magicRatio": 0.95,
-            "trueRatio": 0.0,
-            "primaryType": "MAGIC"
-        },
-        "ccRating": {
-            "hardCcDurationSeconds": 1.8,
-            "hasReliableHardCc": true,
-            "tier": "MODERATE"
-        },
-        "durability": {
-            "durabilityScore": 3.8,
-            "tankinessTier": "SQUISHY"
-        },
-        "radar": {
-            "laningStrength": 8.0,
-            "engage": 7.0,
-            "disengage": 4.0,
-            "waveclear": 8.5,
-            "lateGameScaling": 8.0
-        },
-        "powerSpike": "MID_GAME_SPIKE",
-        "tags": [
-            "BURST_MAGE",
-            "POKE"
-        ]
-    },
-    {
         "championId": "Zac",
         "displayName": "Zac",
         "primaryRole": "JUNGLE",
@@ -586,6 +550,42 @@
         "tags": [
             "VANGUARD_TANK",
             "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Brand",
+        "displayName": "Brand",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "JUNGLE",
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 7.0,
+            "disengage": 4.0,
+            "waveclear": 8.5,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "POKE"
         ]
     },
     {

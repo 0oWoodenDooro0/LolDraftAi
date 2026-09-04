@@ -27,7 +27,8 @@ data class EvalBarState(
     val redWinRate: Double = 0.50,
     val evalScore: Double = 0.0,
     val advantageSide: Side? = null,
-    val phaseDescription: String = "Even Matchup",
+    val phaseDescription: String = "待 10 人全部選取預測 (0/10)",
+    val isEvaluated: Boolean = false,
 )
 
 data class DraftClientState(
@@ -65,4 +66,3 @@ data class DraftClientState(
     val isFearlessDialogOpen: Boolean = false,
     val isDraftComplete: Boolean = false,
 )
-
