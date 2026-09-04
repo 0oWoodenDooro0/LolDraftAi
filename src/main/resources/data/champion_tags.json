@@ -1,0 +1,5855 @@
+[
+    {
+        "championId": "Qiyana",
+        "displayName": "Qiyana",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 4.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 8.5,
+            "disengage": 6.0,
+            "waveclear": 7.0,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ASSASSIN",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Vladimir",
+        "displayName": "Vladimir",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 6.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 6.5,
+            "disengage": 6.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 9.8
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "BATTLEMAGE",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Jayce",
+        "displayName": "Jayce",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.8,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 5.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 5.5,
+            "disengage": 5.5,
+            "waveclear": 8.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "POKE",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Rek'Sai",
+        "displayName": "Rek'Sai",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 7.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 8.0,
+            "disengage": 5.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 5.5
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "DIVER",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Kalista",
+        "displayName": "Kalista",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 9.0,
+            "engage": 7.5,
+            "disengage": 6.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 6.0
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Janna",
+        "displayName": "Janna",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 3.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.2,
+            "engage": 5.0,
+            "disengage": 9.8,
+            "waveclear": 4.0,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ENCHANTER",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Irelia",
+        "displayName": "Irelia",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.8,
+            "magicRatio": 0.2,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 6.8,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.2,
+            "engage": 7.5,
+            "disengage": 5.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "DIVER",
+            "SKIRMISHER"
+        ]
+    },
+    {
+        "championId": "Lux",
+        "displayName": "Lux",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 6.0,
+            "disengage": 6.5,
+            "waveclear": 8.0,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "POKE"
+        ]
+    },
+    {
+        "championId": "Azir",
+        "displayName": "Azir",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 4.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.2,
+            "engage": 8.0,
+            "disengage": 7.5,
+            "waveclear": 8.5,
+            "lateGameScaling": 9.2
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "BATTLEMAGE",
+            "HYPER_CARRY",
+            "WAVECLEAR_STALL"
+        ]
+    },
+    {
+        "championId": "Evelynn",
+        "displayName": "Evelynn",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 7.5,
+            "disengage": 5.5,
+            "waveclear": 6.5,
+            "lateGameScaling": 8.5
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "ASSASSIN",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Maokai",
+        "displayName": "Maokai",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "SUPPORT",
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.15,
+            "magicRatio": 0.85,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 8.8,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 9.0,
+            "disengage": 7.5,
+            "waveclear": 6.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Aatrox",
+        "displayName": "Aatrox",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 7.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 7.0,
+            "disengage": 5.0,
+            "waveclear": 7.5,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "JUGGERNAUT",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Rengar",
+        "displayName": "Rengar",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.2,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 4.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 7.0,
+            "disengage": 5.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 7.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ASSASSIN",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Pyke",
+        "displayName": "Pyke",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 5.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 8.5,
+            "disengage": 7.0,
+            "waveclear": 4.0,
+            "lateGameScaling": 5.0
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "CATCHER",
+            "ASSASSIN",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Nocturne",
+        "displayName": "Nocturne",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 6.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 8.5,
+            "disengage": 4.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 6.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "DIVER",
+            "GLOBAL_PRESENCE"
+        ]
+    },
+    {
+        "championId": "Zac",
+        "displayName": "Zac",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP",
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.2,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 9.5,
+            "disengage": 6.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Brand",
+        "displayName": "Brand",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "JUNGLE",
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 7.0,
+            "disengage": 4.0,
+            "waveclear": 8.5,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "POKE"
+        ]
+    },
+    {
+        "championId": "Master Yi",
+        "displayName": "Master Yi",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.7,
+            "magicRatio": 0.0,
+            "trueRatio": 0.3,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.0,
+            "hasReliableHardCc": false,
+            "tier": "NONE"
+        },
+        "durability": {
+            "durabilityScore": 5.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 5.0,
+            "disengage": 4.5,
+            "waveclear": 7.0,
+            "lateGameScaling": 9.5
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "SKIRMISHER",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Xayah",
+        "displayName": "Xayah",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 6.5,
+            "disengage": 8.5,
+            "waveclear": 7.8,
+            "lateGameScaling": 8.8
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "HYPER_CARRY",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Jax",
+        "displayName": "Jax",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.7,
+            "magicRatio": 0.3,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 7.2,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 6.5,
+            "disengage": 5.0,
+            "waveclear": 5.5,
+            "lateGameScaling": 9.0
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "SKIRMISHER",
+            "SPLIT_PUSHER",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Darius",
+        "displayName": "Darius",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.0,
+            "trueRatio": 0.15,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 7.8,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 9.2,
+            "engage": 5.5,
+            "disengage": 4.0,
+            "waveclear": 7.5,
+            "lateGameScaling": 6.0
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "JUGGERNAUT",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Teemo",
+        "displayName": "Teemo",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 4.0,
+            "disengage": 5.5,
+            "waveclear": 6.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "POKE",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Twisted Fate",
+        "displayName": "Twisted Fate",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "BOT",
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.15,
+            "magicRatio": 0.85,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 7.0,
+            "disengage": 6.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "GLOBAL_PRESENCE",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Quinn",
+        "displayName": "Quinn",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.2,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 5.0,
+            "disengage": 6.5,
+            "waveclear": 6.0,
+            "lateGameScaling": 6.8
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "ASSASSIN",
+            "SPLIT_PUSHER"
+        ]
+    },
+    {
+        "championId": "Talon",
+        "displayName": "Talon",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 7.0,
+            "disengage": 6.0,
+            "waveclear": 7.0,
+            "lateGameScaling": 6.8
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "ASSASSIN"
+        ]
+    },
+    {
+        "championId": "Draven",
+        "displayName": "Draven",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.0,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 9.5,
+            "engage": 6.0,
+            "disengage": 5.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Katarina",
+        "displayName": "Katarina",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.3,
+            "magicRatio": 0.7,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.0,
+            "hasReliableHardCc": false,
+            "tier": "NONE"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 6.0,
+            "disengage": 6.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 8.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ASSASSIN",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Tahm Kench",
+        "displayName": "Tahm Kench",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.5,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 6.5,
+            "disengage": 8.5,
+            "waveclear": 5.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "WARDEN_TANK",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Annie",
+        "displayName": "Annie",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.2,
+            "engage": 8.5,
+            "disengage": 4.5,
+            "waveclear": 7.0,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Graves",
+        "displayName": "Graves",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 5.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 6.0,
+            "disengage": 6.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 8.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Sona",
+        "displayName": "Sona",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 3.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 6.5,
+            "disengage": 7.5,
+            "waveclear": 5.0,
+            "lateGameScaling": 9.0
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "ENCHANTER"
+        ]
+    },
+    {
+        "championId": "Zilean",
+        "displayName": "Zilean",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.2,
+            "engage": 5.0,
+            "disengage": 8.5,
+            "waveclear": 7.0,
+            "lateGameScaling": 8.5
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "ENCHANTER",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Rakan",
+        "displayName": "Rakan",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.8,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 6.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 6.8,
+            "engage": 9.5,
+            "disengage": 8.0,
+            "waveclear": 4.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "CATCHER",
+            "HARD_ENGAGE",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Yorick",
+        "displayName": "Yorick",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.2,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 7.8,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 4.5,
+            "disengage": 4.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "JUGGERNAUT",
+            "SPLIT_PUSHER"
+        ]
+    },
+    {
+        "championId": "Smolder",
+        "displayName": "Smolder",
+        "primaryRole": "BOT",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.65,
+            "magicRatio": 0.2,
+            "trueRatio": 0.15,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 4.5,
+            "disengage": 5.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 9.8
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "MARKSMAN",
+            "HYPER_CARRY",
+            "POKE"
+        ]
+    },
+    {
+        "championId": "Poppy",
+        "displayName": "Poppy",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "JUNGLE",
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.8,
+            "magicRatio": 0.2,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 8.8,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.8,
+            "engage": 6.5,
+            "disengage": 8.8,
+            "waveclear": 5.5,
+            "lateGameScaling": 6.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "WARDEN_TANK",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Nunu & Willump",
+        "displayName": "Nunu & Willump",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.2,
+            "magicRatio": 0.8,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 8.0,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 5.5,
+            "engage": 8.0,
+            "disengage": 5.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 5.5
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "VANGUARD_TANK"
+        ]
+    },
+    {
+        "championId": "Lee Sin",
+        "displayName": "Lee Sin",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 6.2,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 8.0,
+            "disengage": 7.0,
+            "waveclear": 5.5,
+            "lateGameScaling": 5.2
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "DIVER",
+            "PICK_POTENTIAL",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Milio",
+        "displayName": "Milio",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 4.5,
+            "disengage": 9.0,
+            "waveclear": 4.0,
+            "lateGameScaling": 8.2
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "ENCHANTER",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Wukong",
+        "displayName": "Wukong",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 7.2,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 8.8,
+            "disengage": 5.0,
+            "waveclear": 5.8,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "DIVER",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Aurora",
+        "displayName": "Aurora",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 4.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 8.0,
+            "disengage": 7.0,
+            "waveclear": 7.5,
+            "lateGameScaling": 8.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BATTLEMAGE",
+            "SKIRMISHER"
+        ]
+    },
+    {
+        "championId": "Sejuani",
+        "displayName": "Sejuani",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.2,
+            "magicRatio": 0.8,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.0,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 8.8,
+            "disengage": 6.8,
+            "waveclear": 6.0,
+            "lateGameScaling": 7.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Tristana",
+        "displayName": "Tristana",
+        "primaryRole": "BOT",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.0,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.2,
+            "engage": 6.5,
+            "disengage": 6.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 9.0
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "HYPER_CARRY",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Neeko",
+        "displayName": "Neeko",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 4.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 8.8,
+            "disengage": 5.5,
+            "waveclear": 8.0,
+            "lateGameScaling": 7.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Caitlyn",
+        "displayName": "Caitlyn",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.8,
+            "engage": 4.0,
+            "disengage": 5.5,
+            "waveclear": 8.0,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "EARLY_BULLY",
+            "POKE"
+        ]
+    },
+    {
+        "championId": "Singed",
+        "displayName": "Singed",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 8.5,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 6.5,
+            "disengage": 7.5,
+            "waveclear": 8.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "JUGGERNAUT",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Garen",
+        "displayName": "Garen",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.0,
+            "trueRatio": 0.15,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.2,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 8.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 5.5,
+            "disengage": 4.5,
+            "waveclear": 8.0,
+            "lateGameScaling": 6.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "JUGGERNAUT",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Heimerdinger",
+        "displayName": "Heimerdinger",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "TOP",
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 6.0,
+            "disengage": 6.5,
+            "waveclear": 8.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BATTLEMAGE",
+            "POKE",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Nidalee",
+        "displayName": "Nidalee",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.0,
+            "hasReliableHardCc": false,
+            "tier": "NONE"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 6.0,
+            "disengage": 6.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 5.5
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "POKE",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "LeBlanc",
+        "displayName": "LeBlanc",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.2,
+            "engage": 7.2,
+            "disengage": 6.5,
+            "waveclear": 6.0,
+            "lateGameScaling": 6.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ASSASSIN",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Karma",
+        "displayName": "Karma",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "MID",
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 6.5,
+            "disengage": 8.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 6.5
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "ENCHANTER",
+            "POKE",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Twitch",
+        "displayName": "Twitch",
+        "primaryRole": "BOT",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.75,
+            "magicRatio": 0.15,
+            "trueRatio": 0.1,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.8,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 5.5,
+            "engage": 5.0,
+            "disengage": 5.5,
+            "waveclear": 6.5,
+            "lateGameScaling": 9.8
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "MARKSMAN",
+            "HYPER_CARRY",
+            "ASSASSIN"
+        ]
+    },
+    {
+        "championId": "Sett",
+        "displayName": "Sett",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "SUPPORT",
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.8,
+            "magicRatio": 0.0,
+            "trueRatio": 0.2,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 8.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 7.5,
+            "disengage": 5.0,
+            "waveclear": 7.0,
+            "lateGameScaling": 6.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "JUGGERNAUT",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Gnar",
+        "displayName": "Gnar",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 6.8,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 8.5,
+            "disengage": 6.5,
+            "waveclear": 6.5,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "HARD_ENGAGE",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Leona",
+        "displayName": "Leona",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.0,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 7.2,
+            "engage": 9.8,
+            "disengage": 3.5,
+            "waveclear": 3.5,
+            "lateGameScaling": 6.0
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Urgot",
+        "displayName": "Urgot",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.0,
+            "trueRatio": 0.15,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 7.8,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 6.5,
+            "disengage": 4.5,
+            "waveclear": 7.0,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "JUGGERNAUT"
+        ]
+    },
+    {
+        "championId": "Viktor",
+        "displayName": "Viktor",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 4.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 6.5,
+            "disengage": 6.5,
+            "waveclear": 9.2,
+            "lateGameScaling": 9.2
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "BATTLEMAGE",
+            "WAVECLEAR_STALL",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Fizz",
+        "displayName": "Fizz",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 4.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.2,
+            "engage": 8.0,
+            "disengage": 7.5,
+            "waveclear": 6.0,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ASSASSIN",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Kai'Sa",
+        "displayName": "Kai'Sa",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.55,
+            "magicRatio": 0.4,
+            "trueRatio": 0.05,
+            "primaryType": "MIXED"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.0,
+            "hasReliableHardCc": false,
+            "tier": "NONE"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 6.5,
+            "disengage": 6.0,
+            "waveclear": 7.2,
+            "lateGameScaling": 9.0
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "MARKSMAN",
+            "HYPER_CARRY",
+            "DIVER"
+        ]
+    },
+    {
+        "championId": "Gragas",
+        "displayName": "Gragas",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "JUNGLE",
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 7.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 8.5,
+            "disengage": 7.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "DISENGAGE_PEEL",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Volibear",
+        "displayName": "Volibear",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.6,
+            "magicRatio": 0.4,
+            "trueRatio": 0.0,
+            "primaryType": "MIXED"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 8.2,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.2,
+            "engage": 7.5,
+            "disengage": 4.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 6.8
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "JUGGERNAUT",
+            "DIVER"
+        ]
+    },
+    {
+        "championId": "Yone",
+        "displayName": "Yone",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.65,
+            "magicRatio": 0.25,
+            "trueRatio": 0.1,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 6.2,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 8.5,
+            "disengage": 6.0,
+            "waveclear": 7.8,
+            "lateGameScaling": 9.2
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "SKIRMISHER",
+            "HARD_ENGAGE",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Alistar",
+        "displayName": "Alistar",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.5,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 9.5,
+            "disengage": 7.5,
+            "waveclear": 3.5,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Anivia",
+        "displayName": "Anivia",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 4.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 7.5,
+            "disengage": 7.8,
+            "waveclear": 9.5,
+            "lateGameScaling": 8.8
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "WAVECLEAR_STALL"
+        ]
+    },
+    {
+        "championId": "Jinx",
+        "displayName": "Jinx",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.2,
+            "engage": 4.0,
+            "disengage": 4.5,
+            "waveclear": 8.5,
+            "lateGameScaling": 9.5
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "MARKSMAN",
+            "HYPER_CARRY",
+            "WAVECLEAR_STALL"
+        ]
+    },
+    {
+        "championId": "Renata Glasc",
+        "displayName": "Renata Glasc",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 6.5,
+            "disengage": 9.0,
+            "waveclear": 4.0,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "CATCHER",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Kha'Zix",
+        "displayName": "Kha'Zix",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 6.5,
+            "disengage": 6.0,
+            "waveclear": 6.0,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ASSASSIN",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Seraphine",
+        "displayName": "Seraphine",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "BOT",
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 7.5,
+            "disengage": 7.5,
+            "waveclear": 8.5,
+            "lateGameScaling": 8.2
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "ENCHANTER",
+            "BURST_MAGE",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Riven",
+        "displayName": "Riven",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 6.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 6.5,
+            "disengage": 6.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "SKIRMISHER",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Sion",
+        "displayName": "Sion",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.8,
+            "magicRatio": 0.2,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.2,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 7.5,
+            "disengage": 5.0,
+            "waveclear": 7.8,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Ashe",
+        "displayName": "Ashe",
+        "primaryRole": "BOT",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 8.5,
+            "disengage": 6.0,
+            "waveclear": 7.0,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "HARD_ENGAGE",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Nasus",
+        "displayName": "Nasus",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 8.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 5.0,
+            "engage": 4.0,
+            "disengage": 4.5,
+            "waveclear": 6.0,
+            "lateGameScaling": 9.0
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "JUGGERNAUT",
+            "SPLIT_PUSHER"
+        ]
+    },
+    {
+        "championId": "Ryze",
+        "displayName": "Ryze",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 5.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 7.0,
+            "disengage": 6.5,
+            "waveclear": 8.8,
+            "lateGameScaling": 9.0
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "BATTLEMAGE",
+            "WAVECLEAR_STALL"
+        ]
+    },
+    {
+        "championId": "Blitzcrank",
+        "displayName": "Blitzcrank",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.2,
+            "magicRatio": 0.8,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 7.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 9.2,
+            "disengage": 5.0,
+            "waveclear": 3.5,
+            "lateGameScaling": 5.5
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "CATCHER",
+            "PICK_POTENTIAL",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Malphite",
+        "displayName": "Malphite",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "MID",
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.2,
+            "magicRatio": 0.8,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.2,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 5.5,
+            "engage": 9.5,
+            "disengage": 3.5,
+            "waveclear": 6.0,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Taliyah",
+        "displayName": "Taliyah",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 7.5,
+            "disengage": 6.8,
+            "waveclear": 8.5,
+            "lateGameScaling": 8.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BATTLEMAGE",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Shen",
+        "displayName": "Shen",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.4,
+            "magicRatio": 0.6,
+            "trueRatio": 0.0,
+            "primaryType": "MIXED"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 8.8,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 7.2,
+            "engage": 7.5,
+            "disengage": 8.0,
+            "waveclear": 4.5,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "WARDEN_TANK",
+            "GLOBAL_PRESENCE",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Aurelion Sol",
+        "displayName": "Aurelion Sol",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 4.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 7.5,
+            "disengage": 6.0,
+            "waveclear": 9.0,
+            "lateGameScaling": 9.8
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "BATTLEMAGE",
+            "HYPER_CARRY",
+            "WAVECLEAR_STALL"
+        ]
+    },
+    {
+        "championId": "Senna",
+        "displayName": "Senna",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "BOT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 5.5,
+            "disengage": 6.5,
+            "waveclear": 6.0,
+            "lateGameScaling": 9.5
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "MARKSMAN",
+            "ENCHANTER",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Kayle",
+        "displayName": "Kayle",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.4,
+            "magicRatio": 0.55,
+            "trueRatio": 0.05,
+            "primaryType": "MIXED"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 4.5,
+            "engage": 4.0,
+            "disengage": 6.0,
+            "waveclear": 7.5,
+            "lateGameScaling": 9.8
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "MARKSMAN",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Sivir",
+        "displayName": "Sivir",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.0,
+            "hasReliableHardCc": false,
+            "tier": "NONE"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 4.0,
+            "disengage": 7.0,
+            "waveclear": 9.0,
+            "lateGameScaling": 8.5
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "WAVECLEAR_STALL"
+        ]
+    },
+    {
+        "championId": "Briar",
+        "displayName": "Briar",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 6.8,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 8.0,
+            "disengage": 3.5,
+            "waveclear": 6.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "DIVER"
+        ]
+    },
+    {
+        "championId": "Yasuo",
+        "displayName": "Yasuo",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "TOP",
+            "BOT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 6.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 7.5,
+            "disengage": 6.8,
+            "waveclear": 8.0,
+            "lateGameScaling": 9.0
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "SKIRMISHER",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Ezreal",
+        "displayName": "Ezreal",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.75,
+            "magicRatio": 0.25,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.0,
+            "hasReliableHardCc": false,
+            "tier": "NONE"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 4.5,
+            "disengage": 8.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "POKE"
+        ]
+    },
+    {
+        "championId": "Zyra",
+        "displayName": "Zyra",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.2,
+            "engage": 7.5,
+            "disengage": 6.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 7.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "CATCHER",
+            "BURST_MAGE",
+            "POKE"
+        ]
+    },
+    {
+        "championId": "Zed",
+        "displayName": "Zed",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.2,
+            "engage": 7.2,
+            "disengage": 6.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ASSASSIN",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Trundle",
+        "displayName": "Trundle",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.0,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 8.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 5.0,
+            "disengage": 5.0,
+            "waveclear": 6.0,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "JUGGERNAUT",
+            "SPLIT_PUSHER"
+        ]
+    },
+    {
+        "championId": "Hecarim",
+        "displayName": "Hecarim",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 7.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 8.8,
+            "disengage": 4.5,
+            "waveclear": 8.0,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "DIVER",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Kennen",
+        "displayName": "Kennen",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 4.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 9.0,
+            "disengage": 6.0,
+            "waveclear": 7.0,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Zeri",
+        "displayName": "Zeri",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.8,
+            "magicRatio": 0.2,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 5.0,
+            "disengage": 6.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 9.2
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "MARKSMAN",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Pantheon",
+        "displayName": "Pantheon",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "MID",
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 6.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 7.8,
+            "disengage": 6.0,
+            "waveclear": 6.0,
+            "lateGameScaling": 6.0
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "DIVER",
+            "EARLY_BULLY",
+            "GLOBAL_PRESENCE"
+        ]
+    },
+    {
+        "championId": "Shaco",
+        "displayName": "Shaco",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.7,
+            "magicRatio": 0.3,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 6.0,
+            "disengage": 7.0,
+            "waveclear": 5.5,
+            "lateGameScaling": 6.0
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "ASSASSIN",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Diana",
+        "displayName": "Diana",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 6.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 8.5,
+            "disengage": 4.0,
+            "waveclear": 7.8,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "DIVER",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Bard",
+        "displayName": "Bard",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 5.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 7.8,
+            "disengage": 7.5,
+            "waveclear": 4.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "CATCHER",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Renekton",
+        "displayName": "Renekton",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 7.8,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.8,
+            "engage": 6.8,
+            "disengage": 4.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 5.5
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "DIVER",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Galio",
+        "displayName": "Galio",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.8,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 8.0,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 8.5,
+            "disengage": 6.5,
+            "waveclear": 8.0,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "GLOBAL_PRESENCE",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Ekko",
+        "displayName": "Ekko",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 5.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.8,
+            "engage": 7.0,
+            "disengage": 6.5,
+            "waveclear": 7.0,
+            "lateGameScaling": 8.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ASSASSIN",
+            "DIVER"
+        ]
+    },
+    {
+        "championId": "Shyvana",
+        "displayName": "Shyvana",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.4,
+            "magicRatio": 0.6,
+            "trueRatio": 0.0,
+            "primaryType": "MIXED"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.0,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 7.8,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 6.5,
+            "disengage": 4.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "JUGGERNAUT"
+        ]
+    },
+    {
+        "championId": "Xin Zhao",
+        "displayName": "Xin Zhao",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 7.2,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.2,
+            "engage": 8.0,
+            "disengage": 5.0,
+            "waveclear": 6.0,
+            "lateGameScaling": 6.5
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "DIVER",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Kassadin",
+        "displayName": "Kassadin",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.0,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 5.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 4.5,
+            "engage": 7.5,
+            "disengage": 6.5,
+            "waveclear": 6.0,
+            "lateGameScaling": 9.8
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "ASSASSIN",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Lissandra",
+        "displayName": "Lissandra",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 5.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 8.8,
+            "disengage": 6.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Vex",
+        "displayName": "Vex",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 8.2,
+            "disengage": 6.5,
+            "waveclear": 8.0,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Gwen",
+        "displayName": "Gwen",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.8,
+            "trueRatio": 0.1,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 6.8,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 5.5,
+            "disengage": 6.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 9.5
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "SKIRMISHER",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Varus",
+        "displayName": "Varus",
+        "primaryRole": "BOT",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.65,
+            "magicRatio": 0.35,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 7.5,
+            "disengage": 5.0,
+            "waveclear": 8.2,
+            "lateGameScaling": 7.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "POKE",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Warwick",
+        "displayName": "Warwick",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.5,
+            "magicRatio": 0.5,
+            "trueRatio": 0.0,
+            "primaryType": "MIXED"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 7.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 7.5,
+            "disengage": 4.5,
+            "waveclear": 6.0,
+            "lateGameScaling": 6.5
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "DIVER",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Nautilus",
+        "displayName": "Nautilus",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.15,
+            "magicRatio": 0.85,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 8.8,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 9.5,
+            "disengage": 4.5,
+            "waveclear": 4.0,
+            "lateGameScaling": 6.0
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Dr. Mundo",
+        "displayName": "Dr. Mundo",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.7,
+            "magicRatio": 0.3,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 9.5,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 5.0,
+            "disengage": 4.5,
+            "waveclear": 7.0,
+            "lateGameScaling": 8.5
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "JUGGERNAUT",
+            "POKE"
+        ]
+    },
+    {
+        "championId": "Soraka",
+        "displayName": "Soraka",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 4.0,
+            "disengage": 8.5,
+            "waveclear": 4.5,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ENCHANTER",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Naafiri",
+        "displayName": "Naafiri",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 4.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 7.5,
+            "disengage": 5.0,
+            "waveclear": 7.0,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ASSASSIN"
+        ]
+    },
+    {
+        "championId": "Vi",
+        "displayName": "Vi",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 7.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 6.8,
+            "engage": 9.2,
+            "disengage": 3.8,
+            "waveclear": 6.0,
+            "lateGameScaling": 6.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "DIVER",
+            "HARD_ENGAGE",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Ahri",
+        "displayName": "Ahri",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.8,
+            "trueRatio": 0.15,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 7.8,
+            "disengage": 7.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Elise",
+        "displayName": "Elise",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 4.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.2,
+            "engage": 8.0,
+            "disengage": 5.5,
+            "waveclear": 5.5,
+            "lateGameScaling": 5.0
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "DIVER",
+            "PICK_POTENTIAL",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Cho'Gath",
+        "displayName": "Cho'Gath",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.15,
+            "magicRatio": 0.75,
+            "trueRatio": 0.1,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.0,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 6.5,
+            "disengage": 6.0,
+            "waveclear": 7.0,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "WAVECLEAR_STALL"
+        ]
+    },
+    {
+        "championId": "Fiddlesticks",
+        "displayName": "Fiddlesticks",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 4.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 9.5,
+            "disengage": 6.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 8.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Amumu",
+        "displayName": "Amumu",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.0,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 5.5,
+            "engage": 9.5,
+            "disengage": 4.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Nami",
+        "displayName": "Nami",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 7.2,
+            "disengage": 8.5,
+            "waveclear": 4.0,
+            "lateGameScaling": 6.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ENCHANTER",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Rumble",
+        "displayName": "Rumble",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "MID",
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 6.8,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.8,
+            "engage": 8.0,
+            "disengage": 5.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 7.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BATTLEMAGE",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Akali",
+        "displayName": "Akali",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.2,
+            "magicRatio": 0.8,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 4.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 7.0,
+            "disengage": 7.0,
+            "waveclear": 6.0,
+            "lateGameScaling": 8.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ASSASSIN"
+        ]
+    },
+    {
+        "championId": "Hwei",
+        "displayName": "Hwei",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 7.5,
+            "disengage": 7.5,
+            "waveclear": 9.0,
+            "lateGameScaling": 8.8
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "ARTILLERY_MAGE",
+            "WAVECLEAR_STALL"
+        ]
+    },
+    {
+        "championId": "Miss Fortune",
+        "displayName": "Miss Fortune",
+        "primaryRole": "BOT",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.0,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 7.5,
+            "disengage": 4.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Corki",
+        "displayName": "Corki",
+        "primaryRole": "BOT",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 5.0,
+            "disengage": 5.0,
+            "waveclear": 8.5,
+            "lateGameScaling": 8.8
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "POKE",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Vel'Koz",
+        "displayName": "Vel'Koz",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.75,
+            "trueRatio": 0.2,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 5.0,
+            "disengage": 6.5,
+            "waveclear": 8.5,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ARTILLERY_MAGE",
+            "POKE"
+        ]
+    },
+    {
+        "championId": "Rell",
+        "displayName": "Rell",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 8.5,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 9.5,
+            "disengage": 6.5,
+            "waveclear": 4.0,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Gangplank",
+        "displayName": "Gangplank",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.0,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 5.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 6.0,
+            "disengage": 6.0,
+            "waveclear": 8.5,
+            "lateGameScaling": 9.2
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "SKIRMISHER",
+            "GLOBAL_PRESENCE",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Nilah",
+        "displayName": "Nilah",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 5.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 6.8,
+            "engage": 8.0,
+            "disengage": 5.5,
+            "waveclear": 6.5,
+            "lateGameScaling": 9.0
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "MARKSMAN",
+            "SKIRMISHER",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Aphelios",
+        "displayName": "Aphelios",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 6.0,
+            "disengage": 5.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 9.5
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "MARKSMAN",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Bel'Veth",
+        "displayName": "Bel'Veth",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.75,
+            "magicRatio": 0.0,
+            "trueRatio": 0.25,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 6.2,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 6.8,
+            "engage": 7.0,
+            "disengage": 5.0,
+            "waveclear": 7.0,
+            "lateGameScaling": 9.2
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "SKIRMISHER",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Vayne",
+        "displayName": "Vayne",
+        "primaryRole": "BOT",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.65,
+            "magicRatio": 0.0,
+            "trueRatio": 0.35,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 5.5,
+            "engage": 4.5,
+            "disengage": 7.0,
+            "waveclear": 4.5,
+            "lateGameScaling": 9.8
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "MARKSMAN",
+            "HYPER_CARRY",
+            "SKIRMISHER"
+        ]
+    },
+    {
+        "championId": "Viego",
+        "displayName": "Viego",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 6.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 7.5,
+            "disengage": 5.0,
+            "waveclear": 7.0,
+            "lateGameScaling": 8.8
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "SKIRMISHER",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Lillia",
+        "displayName": "Lillia",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.85,
+            "trueRatio": 0.1,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 5.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 6.8,
+            "engage": 7.5,
+            "disengage": 6.5,
+            "waveclear": 8.0,
+            "lateGameScaling": 8.5
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "SKIRMISHER",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Tryndamere",
+        "displayName": "Tryndamere",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.0,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 6.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 5.0,
+            "disengage": 5.0,
+            "waveclear": 7.5,
+            "lateGameScaling": 8.5
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "SKIRMISHER",
+            "SPLIT_PUSHER",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Zoe",
+        "displayName": "Zoe",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.2,
+            "engage": 6.5,
+            "disengage": 6.0,
+            "waveclear": 7.2,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "POKE",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Syndra",
+        "displayName": "Syndra",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.9,
+            "trueRatio": 0.05,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.8,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.2,
+            "engage": 7.0,
+            "disengage": 7.2,
+            "waveclear": 8.5,
+            "lateGameScaling": 8.2
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Jhin",
+        "displayName": "Jhin",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 7.0,
+            "disengage": 6.0,
+            "waveclear": 7.5,
+            "lateGameScaling": 8.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "PICK_POTENTIAL",
+            "POKE"
+        ]
+    },
+    {
+        "championId": "Karthus",
+        "displayName": "Karthus",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "BOT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 5.0,
+            "disengage": 4.0,
+            "waveclear": 9.0,
+            "lateGameScaling": 9.5
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "BATTLEMAGE",
+            "HYPER_CARRY",
+            "GLOBAL_PRESENCE"
+        ]
+    },
+    {
+        "championId": "Mel",
+        "displayName": "Mel",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 7.0,
+            "disengage": 7.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE"
+        ]
+    },
+    {
+        "championId": "Yuumi",
+        "displayName": "Yuumi",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 5.0,
+            "disengage": 8.0,
+            "waveclear": 3.0,
+            "lateGameScaling": 8.5
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "ENCHANTER",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Ornn",
+        "displayName": "Ornn",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.3,
+            "magicRatio": 0.7,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.5,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 7.0,
+            "engage": 9.0,
+            "disengage": 6.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 8.8
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Cassiopeia",
+        "displayName": "Cassiopeia",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 4.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 7.5,
+            "disengage": 7.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 9.2
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "BATTLEMAGE",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Orianna",
+        "displayName": "Orianna",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 8.0,
+            "disengage": 7.5,
+            "waveclear": 8.8,
+            "lateGameScaling": 8.5
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "BURST_MAGE",
+            "WAVECLEAR_STALL",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Kayn",
+        "displayName": "Kayn",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 6.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 7.5,
+            "disengage": 6.0,
+            "waveclear": 8.0,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ASSASSIN",
+            "DIVER"
+        ]
+    },
+    {
+        "championId": "Kindred",
+        "displayName": "Kindred",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.8,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 5.5,
+            "disengage": 6.5,
+            "waveclear": 6.0,
+            "lateGameScaling": 9.0
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "MARKSMAN",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Xerath",
+        "displayName": "Xerath",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 3.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 5.5,
+            "disengage": 5.5,
+            "waveclear": 9.0,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ARTILLERY_MAGE",
+            "POKE"
+        ]
+    },
+    {
+        "championId": "Thresh",
+        "displayName": "Thresh",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.2,
+            "magicRatio": 0.8,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.8,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 7.2,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.2,
+            "engage": 8.5,
+            "disengage": 8.2,
+            "waveclear": 4.0,
+            "lateGameScaling": 6.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "CATCHER",
+            "PICK_POTENTIAL",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "K'Sante",
+        "displayName": "K'Sante",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.75,
+            "magicRatio": 0.15,
+            "trueRatio": 0.1,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.0,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 7.8,
+            "disengage": 7.2,
+            "waveclear": 6.8,
+            "lateGameScaling": 8.2
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "WARDEN_TANK",
+            "SKIRMISHER"
+        ]
+    },
+    {
+        "championId": "Udyr",
+        "displayName": "Udyr",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.5,
+            "magicRatio": 0.5,
+            "trueRatio": 0.0,
+            "primaryType": "MIXED"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 8.2,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 6.5,
+            "disengage": 5.5,
+            "waveclear": 8.0,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "JUGGERNAUT"
+        ]
+    },
+    {
+        "championId": "Samira",
+        "displayName": "Samira",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 4.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 8.0,
+            "disengage": 5.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "DIVER"
+        ]
+    },
+    {
+        "championId": "Lulu",
+        "displayName": "Lulu",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 5.0,
+            "disengage": 9.5,
+            "waveclear": 4.0,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "ENCHANTER",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Veigar",
+        "displayName": "Veigar",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "BOT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 3.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 6.5,
+            "disengage": 7.5,
+            "waveclear": 8.0,
+            "lateGameScaling": 9.5
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "BURST_MAGE",
+            "WAVECLEAR_STALL"
+        ]
+    },
+    {
+        "championId": "Ambessa",
+        "displayName": "Ambessa",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 7.2,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 7.5,
+            "disengage": 5.0,
+            "waveclear": 6.0,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "DIVER",
+            "SKIRMISHER"
+        ]
+    },
+    {
+        "championId": "Illaoi",
+        "displayName": "Illaoi",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.0,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 7.8,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 4.5,
+            "disengage": 3.5,
+            "waveclear": 8.0,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "JUGGERNAUT",
+            "SPLIT_PUSHER"
+        ]
+    },
+    {
+        "championId": "Kog'Maw",
+        "displayName": "Kog'Maw",
+        "primaryRole": "BOT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.45,
+            "magicRatio": 0.55,
+            "trueRatio": 0.0,
+            "primaryType": "MIXED"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 4.0,
+            "disengage": 4.5,
+            "waveclear": 7.0,
+            "lateGameScaling": 9.8
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "MARKSMAN",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Mordekaiser",
+        "displayName": "Mordekaiser",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 8.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 6.5,
+            "disengage": 4.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 7.8
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "JUGGERNAUT",
+            "PICK_POTENTIAL"
+        ]
+    },
+    {
+        "championId": "Ivern",
+        "displayName": "Ivern",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.2,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 4.5,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 6.0,
+            "disengage": 8.5,
+            "waveclear": 5.0,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ENCHANTER",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Camille",
+        "displayName": "Camille",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "SUPPORT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.55,
+            "magicRatio": 0.05,
+            "trueRatio": 0.4,
+            "primaryType": "TRUE_DAMAGE"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 7.2,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 8.8,
+            "disengage": 5.0,
+            "waveclear": 6.0,
+            "lateGameScaling": 9.0
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "DIVER",
+            "PICK_POTENTIAL",
+            "SPLIT_PUSHER"
+        ]
+    },
+    {
+        "championId": "Ziggs",
+        "displayName": "Ziggs",
+        "primaryRole": "BOT",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.2,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 3.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.8,
+            "engage": 5.5,
+            "disengage": 6.5,
+            "waveclear": 9.5,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "ARTILLERY_MAGE",
+            "POKE",
+            "WAVECLEAR_STALL"
+        ]
+    },
+    {
+        "championId": "Swain",
+        "displayName": "Swain",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "MID",
+            "BOT"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.0,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 7.0,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.2,
+            "engage": 7.5,
+            "disengage": 5.5,
+            "waveclear": 7.5,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BATTLEMAGE",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Taric",
+        "displayName": "Taric",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.2,
+            "magicRatio": 0.8,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 8.8,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.5,
+            "engage": 6.5,
+            "disengage": 8.5,
+            "waveclear": 4.0,
+            "lateGameScaling": 8.5
+        },
+        "powerSpike": "LATE_GAME_SPIKE",
+        "tags": [
+            "WARDEN_TANK",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Kled",
+        "displayName": "Kled",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.95,
+            "magicRatio": 0.05,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.8,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 7.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 8.0,
+            "disengage": 4.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 6.5
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "DIVER",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Akshan",
+        "displayName": "Akshan",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.9,
+            "magicRatio": 0.1,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.0,
+            "hasReliableHardCc": false,
+            "tier": "NONE"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.0,
+            "engage": 5.5,
+            "disengage": 6.0,
+            "waveclear": 7.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "ASSASSIN",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Braum",
+        "displayName": "Braum",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.8,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.2,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.8,
+            "engage": 7.0,
+            "disengage": 9.5,
+            "waveclear": 3.5,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "WARDEN_TANK",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Fiora",
+        "displayName": "Fiora",
+        "primaryRole": "TOP",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.7,
+            "magicRatio": 0.0,
+            "trueRatio": 0.3,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.0,
+            "hasReliableHardCc": true,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 6.8,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.2,
+            "engage": 5.0,
+            "disengage": 6.5,
+            "waveclear": 5.0,
+            "lateGameScaling": 9.5
+        },
+        "powerSpike": "HYPER_SCALING",
+        "tags": [
+            "SKIRMISHER",
+            "SPLIT_PUSHER",
+            "HYPER_CARRY"
+        ]
+    },
+    {
+        "championId": "Sylas",
+        "displayName": "Sylas",
+        "primaryRole": "MID",
+        "secondaryRoles": [
+            "TOP",
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.9,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 1.5,
+            "hasReliableHardCc": true,
+            "tier": "MODERATE"
+        },
+        "durability": {
+            "durabilityScore": 6.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 6.8,
+            "engage": 7.5,
+            "disengage": 5.0,
+            "waveclear": 6.5,
+            "lateGameScaling": 8.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "SKIRMISHER",
+            "DIVER"
+        ]
+    },
+    {
+        "championId": "Olaf",
+        "displayName": "Olaf",
+        "primaryRole": "TOP",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.75,
+            "magicRatio": 0.0,
+            "trueRatio": 0.25,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.5,
+            "hasReliableHardCc": false,
+            "tier": "LIGHT"
+        },
+        "durability": {
+            "durabilityScore": 7.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 8.8,
+            "engage": 6.5,
+            "disengage": 4.0,
+            "waveclear": 6.8,
+            "lateGameScaling": 6.5
+        },
+        "powerSpike": "EARLY_SPIKE",
+        "tags": [
+            "JUGGERNAUT",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Malzahar",
+        "displayName": "Malzahar",
+        "primaryRole": "MID",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 4.2,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.2,
+            "engage": 7.0,
+            "disengage": 5.5,
+            "waveclear": 8.5,
+            "lateGameScaling": 8.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "BATTLEMAGE",
+            "PICK_POTENTIAL",
+            "WAVECLEAR_STALL"
+        ]
+    },
+    {
+        "championId": "Lucian",
+        "displayName": "Lucian",
+        "primaryRole": "BOT",
+        "secondaryRoles": [
+            "MID"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 0.0,
+            "hasReliableHardCc": false,
+            "tier": "NONE"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 8.5,
+            "engage": 5.5,
+            "disengage": 6.0,
+            "waveclear": 7.0,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "MARKSMAN",
+            "EARLY_BULLY"
+        ]
+    },
+    {
+        "championId": "Morgana",
+        "displayName": "Morgana",
+        "primaryRole": "SUPPORT",
+        "secondaryRoles": [
+            "JUNGLE"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.05,
+            "magicRatio": 0.95,
+            "trueRatio": 0.0,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.5,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 4.0,
+            "tankinessTier": "SQUISHY"
+        },
+        "radar": {
+            "laningStrength": 7.5,
+            "engage": 6.5,
+            "disengage": 8.5,
+            "waveclear": 7.0,
+            "lateGameScaling": 7.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "CATCHER",
+            "DISENGAGE_PEEL"
+        ]
+    },
+    {
+        "championId": "Jarvan IV",
+        "displayName": "Jarvan IV",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.85,
+            "magicRatio": 0.15,
+            "trueRatio": 0.0,
+            "primaryType": "PHYSICAL"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 2.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 7.5,
+            "tankinessTier": "BRUISER"
+        },
+        "radar": {
+            "laningStrength": 7.2,
+            "engage": 9.2,
+            "disengage": 4.0,
+            "waveclear": 6.2,
+            "lateGameScaling": 6.2
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "DIVER",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Skarner",
+        "displayName": "Skarner",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [
+            "TOP"
+        ],
+        "damageProfile": {
+            "physicalRatio": 0.4,
+            "magicRatio": 0.6,
+            "trueRatio": 0.0,
+            "primaryType": "MIXED"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.2,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.2,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.8,
+            "engage": 8.5,
+            "disengage": 5.5,
+            "waveclear": 6.8,
+            "lateGameScaling": 7.5
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE"
+        ]
+    },
+    {
+        "championId": "Rammus",
+        "displayName": "Rammus",
+        "primaryRole": "JUNGLE",
+        "secondaryRoles": [],
+        "damageProfile": {
+            "physicalRatio": 0.1,
+            "magicRatio": 0.8,
+            "trueRatio": 0.1,
+            "primaryType": "MAGIC"
+        },
+        "ccRating": {
+            "hardCcDurationSeconds": 3.0,
+            "hasReliableHardCc": true,
+            "tier": "HEAVY"
+        },
+        "durability": {
+            "durabilityScore": 9.5,
+            "tankinessTier": "FRONTLINE_TANK"
+        },
+        "radar": {
+            "laningStrength": 6.0,
+            "engage": 8.5,
+            "disengage": 4.0,
+            "waveclear": 5.5,
+            "lateGameScaling": 7.0
+        },
+        "powerSpike": "MID_GAME_SPIKE",
+        "tags": [
+            "VANGUARD_TANK",
+            "HARD_ENGAGE"
+        ]
+    }
+]

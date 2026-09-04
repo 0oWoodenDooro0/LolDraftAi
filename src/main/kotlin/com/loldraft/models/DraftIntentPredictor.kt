@@ -471,9 +471,14 @@ class DraftIntentPredictor(
                     }
                 } else {
                     val rawScore = when {
-                        matchedDuoStats != null ->
-                            (botDuoScore * 0.40) + (playerMasteryScore * 0.25) + (metaScore * 0.20) +
-                                (soloQScore * 0.10) + (compositionFitScore * 0.05)
+                        matchedDuoStats != null -> {
+                            if (hasDetailedProfiles || targetCareerStats != null) {
+                                (botDuoScore * 0.35) + (playerMasteryScore * 0.25) + (metaScore * 0.20) +
+                                    (soloQScore * 0.10) + (compositionFitScore * 0.10)
+                            } else {
+                                (botDuoScore * 0.45) + (metaScore * 0.35) + (compositionFitScore * 0.20)
+                            }
+                        }
                         hasDetailedProfiles && hasTargetSoloQData ->
                             (metaScore * 0.25) + (playerMasteryScore * 0.30) + (soloQScore * 0.30) +
                                 (compositionFitScore * 0.10) + (counterDenialScore * 0.05)

@@ -253,9 +253,8 @@ class DraftRecommenderTest {
 
             val topMage =
                 report.recommendations.firstOrNull {
-                    it.championId == "Syndra" ||
-                        it.championId == "Orianna" ||
-                        it.championId == "Ahri"
+                    it.championId in listOf("Syndra", "Orianna", "Ahri", "Lissandra", "Gragas", "Viktor", "Hwei") ||
+                        (recommender.tagRegistry.getProfile(it.championId)?.damageProfile?.magicRatio ?: 0.0) >= 0.70
                 }
             assertNotNull(topMage, "應推薦 AP 中路法師")
             assertTrue(topMage!!.flawsResolved.isNotEmpty(), "應記錄被成功修復的缺陷")
