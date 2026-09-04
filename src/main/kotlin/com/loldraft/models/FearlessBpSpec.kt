@@ -4,8 +4,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 全局 BP (Fearless Draft) AI 預測模型系統設計規格書 - 資料結構定義
- * 依據規格書第 3 節 JSON Schema 規範定義。
+ * 全局 BP (Fearless Draft) 純行為預測架構規格書 - 資料結構定義
+ * 依據 Pure Behavioral Draft Prediction 規格書規範定義。
  */
 @Serializable
 data class FearlessTurnInfo(
@@ -77,6 +77,10 @@ data class FearlessConstraints(
 data class FearlessHistory(
     @SerialName("player_pick_counts")
     val playerPickCounts: Map<String, Map<String, Int>> = emptyMap(),
+    @SerialName("player_decayed_frequencies")
+    val playerDecayedFrequencies: Map<String, Map<String, Double>> = emptyMap(),
+    @SerialName("decay_lambda")
+    val decayLambda: Double = 0.95,
 )
 
 @Serializable

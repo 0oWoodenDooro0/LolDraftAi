@@ -10,21 +10,23 @@ import kotlin.math.exp
 import kotlin.math.roundToInt
 
 /**
- * 全局 BP (Fearless Draft) AI 預測模型 - 序列推薦與條件生成推論引擎
+ * 全局 BP (Fearless Draft) 純行為預測架構 - 序列推薦與條件生成推論引擎
+ * (Pure Behavioral Draft Prediction: Conditioning on Identity, Context, and Algorithmic Hard Constraints)
  *
  * 遵循規格書三大核心原則：
  * 1. 去主觀化 (Zero Human Bias)：實體 ID Embeddings (Region, Team, 10 位選手 Roster)，無靜態人為標籤。
  * 2. 純賽前維度 (Pure Pre-Match Decisions)：完全無局內數值 (零 KDA、零 DPM、零 15 分經濟差)。
  * 3. 動態約束合規 (Dynamic Action Masking)：嚴格遵守全局 BP，已鎖定英雄 Logit = -1e9，機率 0%。
  * 4. 即時輪換適應 (Roster Agnostic)：以位置向量動態組合，更換選手即時更新 ID 向量即可推論。
+ * 5. 純統計經驗與行為克隆：完全移除深度學習/神經網絡，依賴客觀歷史機率與 CSP 動態硬約束。
  */
-class FearlessTransformerPredictor(
+class FearlessBehaviorPredictor(
     val patchMeta: PatchMetaMatrix? = null,
 ) {
     companion object {
         const val MASK_VALUE = -1e9
 
-        // 賽區基準潛在風格偏移 (自監督學習學出之風格特徵)
+        // 賽區基準潛在風格偏置 (由客觀聯賽選角頻率統計生成)
         val REGION_LATENT_BIAS: Map<String, Map<String, Double>> = mapOf(
             "lpl" to mapOf(
                 "renekton" to 0.45, "jax" to 0.40, "camille" to 0.35, "gnar" to 0.35,
@@ -42,7 +44,7 @@ class FearlessTransformerPredictor(
             ),
         )
 
-        // 經典組合協同權重 (Synergy Attention)
+        // 經典組合協同權重 (Synergy Association)
         val SYNERGY_PAIRS: Map<Pair<String, String>, Double> = mapOf(
             ("xayah" to "rakan") to 0.90,
             ("lucian" to "nami") to 0.85,
@@ -60,7 +62,7 @@ class FearlessTransformerPredictor(
             ("varus" to "alistar") to 0.65,
         )
 
-        // 對抗克制矩陣 (Counter Attention)
+        // 對抗克制矩陣 (Counter Association)
         val COUNTER_PAIRS: Map<Pair<String, String>, Double> = mapOf(
             ("poppy" to "jax") to 0.70,
             ("poppy" to "camille") to 0.70,
@@ -263,17 +265,21 @@ class FearlessTransformerPredictor(
             }
         }
 
-        // 2. 實體識別層與歷史選角 (Entity Identification & Objective Pick History)
-        // 選手近期選角分佈 (player_pick_counts)
+        // 2. 實體識別層與歷史選角 (Entity Identification & Objective Pick History with Decay λ^t)
         if (actingPlayer != null) {
-            val playerHistory = history.playerPickCounts[actingPlayer]
-            if (playerHistory != null) {
-                val displayName = ChampionNormalizer.normalize(champion)
-                val count = playerHistory[displayName] ?: playerHistory[champion] ?: 0
-                if (count > 0) {
-                    // 對數次數平滑加權
-                    logit += (kotlin.math.ln(1.0 + count.toDouble()) * 0.45)
-                }
+            val displayName = ChampionNormalizer.normalize(champion)
+            val slug = ChampionNormalizer.toSlug(champion)
+
+            val decayedMap = history.playerDecayedFrequencies[actingPlayer]
+            val decayedWeight = decayedMap?.get(displayName) ?: decayedMap?.get(slug) ?: 0.0
+
+            val countMap = history.playerPickCounts[actingPlayer]
+            val rawCount = countMap?.get(displayName) ?: countMap?.get(slug) ?: 0
+
+            if (decayedWeight > 0.0) {
+                logit += (kotlin.math.ln(1.0 + decayedWeight) * 0.55)
+            } else if (rawCount > 0) {
+                logit += (kotlin.math.ln(1.0 + rawCount.toDouble()) * 0.45)
             }
         }
 
@@ -328,11 +334,21 @@ class FearlessTransformerPredictor(
         val parts = mutableListOf<String>()
 
         val actionName = if (isBan) "禁用" else "挑選"
-        parts.add("[Fearless AI] 預測 $actionName ($pct)")
+        parts.add("[Fearless Behavioral] 預測 $actionName ($pct)")
 
         if (actingPlayer != null) {
-            val count = history.playerPickCounts[actingPlayer]?.get(displayName) ?: 0
-            if (count > 0) {
+            val displayNameNorm = ChampionNormalizer.normalize(champion)
+            val slug = ChampionNormalizer.toSlug(champion)
+
+            val decayed = history.playerDecayedFrequencies[actingPlayer]?.get(displayNameNorm)
+                ?: history.playerDecayedFrequencies[actingPlayer]?.get(slug)
+            val count = history.playerPickCounts[actingPlayer]?.get(displayNameNorm)
+                ?: history.playerPickCounts[actingPlayer]?.get(slug) ?: 0
+
+            if (decayed != null && decayed > 0.0) {
+                val formattedDecayed = (decayed * 10.0).roundToInt() / 10.0
+                parts.add("選手 $actingPlayer 近期高頻選用 (衰減加權: $formattedDecayed)")
+            } else if (count > 0) {
                 parts.add("選手 $actingPlayer 近期高頻選用 ($count 場)")
             }
         }
@@ -361,3 +377,6 @@ class FearlessTransformerPredictor(
         return parts.joinToString(" - ")
     }
 }
+
+/** Backward compatibility alias */
+typealias FearlessTransformerPredictor = FearlessBehaviorPredictor

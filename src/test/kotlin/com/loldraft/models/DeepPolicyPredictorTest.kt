@@ -35,7 +35,7 @@ class DeepPolicyPredictorTest {
         assertTrue(sumProb in 0.01..1.0)
 
         // Rationale should mention DL Policy
-        assertTrue(result.predictions.first().rationale.contains("[DL Policy]"))
+        assertTrue(result.predictions.first().rationale.contains("[Empirical Policy]"))
     }
 
     @Test

@@ -14,11 +14,16 @@ enum class BpPredictionAlgorithm(
     HEURISTIC_EXPERT(
         displayName = "啟發式多因子 (Heuristic)",
         shortName = "Heuristic",
-        description = "專家啟發式多因子規則引擎，結合版本強度、選手熟練度、下路組合與剋制矩陣",
+        description = "專家啟發式多因子規則引擎，結合版本強度、選手熟練度、下路組合與克制矩陣",
     ),
-    DEEP_LEARNING_POLICY(
-        displayName = "深度學習網絡 (Deep Learning)",
-        shortName = "Deep Learning",
-        description = "條件實體嵌入策略神經網絡，支援賽區/戰隊風格條件注入、嚴格分路約束與標準全局 BP 動態動作遮罩 (Action Masking)",
-    ),
+    EMPIRICAL_BEHAVIORAL(
+        displayName = "經驗行為統計 (Empirical)",
+        shortName = "Empirical",
+        description = "純經驗行為統計預測，結合賽區/戰隊客觀頻率、選手時間指數衰減歷史、嚴格分路約束與全局 BP 動態動作遮罩 (CSP Action Masking)",
+    );
+
+    companion object {
+        @JvmField
+        val DEEP_LEARNING_POLICY = EMPIRICAL_BEHAVIORAL
+    }
 }

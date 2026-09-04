@@ -218,7 +218,7 @@ fun TopBarView(
                 )
             }
 
-            // Algorithm Switcher (啟發式 vs 深度學習)
+            // Algorithm Switcher (啟發式 vs 經驗統計)
             Row(
                 modifier =
                     Modifier
@@ -252,11 +252,11 @@ fun TopBarView(
                                 if (!isHeuristic) GoldAccent.copy(alpha = 0.2f) else Color.Transparent,
                                 RoundedCornerShape(4.dp),
                             )
-                            .clickable { onSelectAlgorithm(BpPredictionAlgorithm.DEEP_LEARNING_POLICY) }
+                            .clickable { onSelectAlgorithm(BpPredictionAlgorithm.EMPIRICAL_BEHAVIORAL) }
                             .padding(horizontal = 8.dp, vertical = 5.dp),
                 ) {
                     Text(
-                        text = "⚡ 深度學習",
+                        text = "⚡ 經驗統計",
                         color = if (!isHeuristic) GoldAccent else TextSecondary,
                         fontWeight = if (!isHeuristic) FontWeight.Bold else FontWeight.Normal,
                         fontSize = 11.sp,

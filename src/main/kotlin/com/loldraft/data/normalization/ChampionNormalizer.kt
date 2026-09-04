@@ -175,7 +175,8 @@ object ChampionNormalizer {
             "Zyra",
         )
 
-    private fun cleanKey(name: String): String = name.lowercase().replace(Regex("[^a-z0-9]"), "")
+    private val CLEAN_KEY_REGEX = Regex("[^a-z0-9]")
+    private fun cleanKey(name: String): String = name.lowercase().replace(CLEAN_KEY_REGEX, "")
 
     private val MAPPINGS: Map<String, String> =
         run {

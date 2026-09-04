@@ -14,6 +14,7 @@ import com.loldraft.data.player.PlayerRosterIntelligence
 import com.loldraft.models.AnalyticalDraftEvaluator
 import com.loldraft.models.BpPredictionAlgorithm
 import com.loldraft.models.CompositionFlawDetector
+import com.loldraft.models.EmpiricalPolicyPredictor
 import com.loldraft.models.DeepPolicyPredictor
 import com.loldraft.models.DraftEvaluator
 import com.loldraft.models.DraftIntentPredictor
@@ -37,7 +38,7 @@ class DraftClientViewModel(
     private val repository: ProMatchRepository = ProMatchRepository(),
     private val playerIntelService: PlayerIntelligenceService = PlayerIntelligenceService(),
     private val intentPredictor: DraftIntentPredictor = DraftIntentPredictor(),
-    private val deepPolicyPredictor: DeepPolicyPredictor = DeepPolicyPredictor(),
+    private val empiricalPolicyPredictor: EmpiricalPolicyPredictor = EmpiricalPolicyPredictor(),
     private val recommender: DraftRecommender = DraftRecommender(),
     private val evaluator: DraftEvaluator = AnalyticalDraftEvaluator(),
     private val flawDetector: CompositionFlawDetector = CompositionFlawDetector(),
@@ -779,11 +780,11 @@ class DraftClientViewModel(
                     }
 
                 val predictions =
-                    if (current.selectedAlgorithm == BpPredictionAlgorithm.DEEP_LEARNING_POLICY) {
+                    if (current.selectedAlgorithm == BpPredictionAlgorithm.EMPIRICAL_BEHAVIORAL) {
                         val actingTeam = if (actingSide == Side.BLUE) current.blueTeam else current.redTeam
                         val targetTeam = if (isBan) opponentTeam else actingTeam
                         val league = if (actingSide == Side.BLUE) current.blueSelectedLeague else current.redSelectedLeague
-                        deepPolicyPredictor.predictNextAction(
+                        empiricalPolicyPredictor.predictNextAction(
                             draftState = draftState,
                             patchMeta = patchMeta,
                             league = league,

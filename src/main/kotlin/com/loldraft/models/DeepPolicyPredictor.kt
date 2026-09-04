@@ -15,18 +15,19 @@ import java.util.Locale
 import kotlin.math.exp
 
 /**
- * Deep Learning Policy Predictor for next-step Ban/Pick intent prediction.
+ * Empirical Behavioral Policy Predictor for next-step Ban/Pick intent prediction.
  *
  * Architecture Highlights:
- * 1. Conditioned Entity Embeddings: Dynamic style injection based on League (LCK, LPL, LEC, LCS)
- *    and Team identity (T1, GEN, BLG, etc.).
- * 2. Strict Action Masking: Dynamically sets logits of illegal actions to -1e9 before Softmax,
+ * 1. Conditioned Empirical Latent Distribution: Objective style injection based on League (LCK, LPL, LEC, LCS)
+ *    and Team identity (T1, GEN, BLG, etc.) derived from match frequencies.
+ * 2. Strict CSP Action Masking: Dynamically sets logits of illegal actions to -1e9 before Softmax,
  *    covering current draft bans/picks, standard Fearless Draft (cross-game global bans),
  *    and vacant role constraint pruning.
  * 3. Graceful Redistribution: When a top meta champion is masked out by Fearless Draft,
  *    probability mass seamlessly shifts to the next-best legal candidate with explanatory rationale.
+ * 4. Zero Deep Learning Dependency: Pure statistical and algorithmic execution, eliminating GPU/ONNX overhead.
  */
-class DeepPolicyPredictor(
+class EmpiricalPolicyPredictor(
     val modelPath: String? = null,
 ) {
     companion object {
@@ -112,7 +113,7 @@ class DeepPolicyPredictor(
     }
 
     /**
-     * Predicts the next action (BAN or PICK) using the Deep Learning Policy Network
+     * Predicts the next action (BAN or PICK) using Empirical Behavioral Policy
      * with condition embeddings and dynamic Action Masking.
      */
     fun predictNextAction(
@@ -140,88 +141,70 @@ class DeepPolicyPredictor(
         val lockedRoles = actingTeamPicks.mapNotNull { it.role }.toSet()
         val vacantRoles = Role.entries.filterNot { it in lockedRoles }.toSet()
 
-        // 2. Identify the ideal unconstrained pick (to detect if Fearless Draft masked out top pick)
-        val allKnownChampions = (BASE_POLICY_LOGITS.keys + ChampionRoleDictionary.getAllBaselineRoles().keys).distinct()
+        val allCandidatePool = (BASE_POLICY_LOGITS.keys + (patchMeta?.championStats?.keys ?: emptySet()))
+            .map { ChampionNormalizer.toSlug(it) }
+            .distinct()
 
-        // 3. Compute Unmasked Logits for each champion
         val rawLogits = mutableMapOf<String, Double>()
-        for (champ in allKnownChampions) {
-            rawLogits[champ] = computeChampionLogit(
+        val maskedLogits = mutableMapOf<String, Double>()
+
+        for (champ in allCandidatePool) {
+            val (primaryRole, secondaryRoles) = ChampionRoleDictionary.getBaselineRole(champ)
+            val isRoleCompatible = if (!isBan && vacantRoles.isNotEmpty()) {
+                vacantRoles.contains(primaryRole) || secondaryRoles.any { vacantRoles.contains(it) }
+            } else {
+                true
+            }
+
+            val isActionLegal = !currentBans.contains(champ) &&
+                !currentPicks.contains(champ) &&
+                !fearlessSpent.contains(champ) &&
+                isRoleCompatible
+
+            val actingProfiles = if (isBan) opponentPlayerProfilesByRole else playerProfilesByRole
+            val baseLogit = computeChampionLogit(
                 champion = champ,
                 turnSpec = turnSpec,
                 draftState = draftState,
                 patchMeta = patchMeta,
                 league = league,
                 teamName = targetTeamName,
-                playerProfiles = if (isBan) opponentPlayerProfilesByRole else playerProfilesByRole,
+                playerProfiles = actingProfiles,
                 isBan = isBan,
             )
+
+            rawLogits[champ] = baseLogit
+            maskedLogits[champ] = if (isActionLegal) baseLogit else MASK_VALUE
         }
 
-        // Check which champion would have been top-1 if unconstrained
-        val unconstrainedTopChamp = rawLogits.maxByOrNull { it.value }?.key
+        // 2. Identify Top Unmasked vs Top Masked
+        val topUnconstrainedChamp = rawLogits.maxByOrNull { it.value }?.key
+        val wasFearlessAlternative = topUnconstrainedChamp != null &&
+            fearlessSpent.contains(topUnconstrainedChamp) &&
+            maskedLogits[topUnconstrainedChamp] == MASK_VALUE
 
-        // 4. Apply Action Masking: M(c) = 0 -> Logit = -1e9
-        val maskedLogits = mutableMapOf<String, Double>()
-        val illegalReasons = mutableMapOf<String, String>()
+        // 3. Compute Softmax over Legal Actions
+        val legalEntries = maskedLogits.filter { it.value > -1e8 }
+        val maxLegalLogit = legalEntries.maxOfOrNull { it.value } ?: 0.0
 
-        for (champ in allKnownChampions) {
-            val isCurrentBan = champ in currentBans
-            val isCurrentPick = champ in currentPicks
-            val isFearlessSpent = champ in fearlessSpent
+        val expValues = legalEntries.mapValues { exp(it.value - maxLegalLogit) }
+        val sumExp = expValues.values.sum().coerceAtLeast(1e-9)
 
-            var isRoleInvalid = false
-            if (!isBan && vacantRoles.isNotEmpty()) {
-                val (primaryRole, secondaryRoles) = ChampionRoleDictionary.getBaselineRole(champ)
-                val isViable = primaryRole in vacantRoles || secondaryRoles.any { it in vacantRoles }
-                if (!isViable) {
-                    isRoleInvalid = true
-                }
-            }
+        val probabilities = expValues.mapValues { it.value / sumExp }
 
-            if (isCurrentBan) {
-                maskedLogits[champ] = MASK_VALUE
-                illegalReasons[champ] = "本局已禁"
-            } else if (isCurrentPick) {
-                maskedLogits[champ] = MASK_VALUE
-                illegalReasons[champ] = "本局已選"
-            } else if (isFearlessSpent) {
-                maskedLogits[champ] = MASK_VALUE
-                illegalReasons[champ] = "全局BP已禁用 (系列賽前局已選)"
-            } else if (isRoleInvalid) {
-                maskedLogits[champ] = MASK_VALUE
-                illegalReasons[champ] = "分路已鎖定 (隊伍已無空缺路線)"
-            } else {
-                maskedLogits[champ] = rawLogits[champ] ?: 0.0
-            }
-        }
+        // 4. Extract Top-N Recommendations
+        val sortedCandidates = probabilities.entries
+            .sortedByDescending { it.value }
+            .take(topN)
 
-        // 5. Masked Softmax Re-normalization
-        val legalCandidates = maskedLogits.filterValues { it > -1e8 }
-        if (legalCandidates.isEmpty()) {
-            return IntentPredictionResult(
-                turnSpec = turnSpec,
-                actingSide = actingSide,
-                actionType = turnSpec.actionType,
-                predictions = emptyList(),
-            )
-        }
-
-        val maxLogit = legalCandidates.values.maxOrNull() ?: 0.0
-        val expScores = legalCandidates.mapValues { exp(it.value - maxLogit) }
-        val sumExp = expScores.values.sum().coerceAtLeast(1e-9)
-
-        val probabilities = expScores.mapValues { it.value / sumExp }
-
-        // 6. Format Candidates & Explanatory Rationale
-        val sortedLegal = probabilities.toList().sortedByDescending { it.second }
-        val topCandidates = sortedLegal.take(topN).map { (champSlug, prob) ->
+        val topCandidates = sortedCandidates.map { (champSlug, prob) ->
             val (primaryRole, secondaryRoles) = ChampionRoleDictionary.getBaselineRole(champSlug)
-            val assignedRole = if (primaryRole in vacantRoles) primaryRole else secondaryRoles.firstOrNull { it in vacantRoles } ?: primaryRole
-
-            val wasFearlessAlternative = unconstrainedTopChamp != null &&
-                unconstrainedTopChamp in fearlessSpent &&
-                champSlug != unconstrainedTopChamp
+            val assignedRole = if (!isBan && vacantRoles.isNotEmpty()) {
+                if (vacantRoles.contains(primaryRole)) primaryRole
+                else secondaryRoles.firstOrNull { vacantRoles.contains(it) } ?: vacantRoles.first()
+            } else {
+                primaryRole
+            }
 
             val rationale = buildRationale(
                 champion = champSlug,
@@ -229,7 +212,7 @@ class DeepPolicyPredictor(
                 prob = prob,
                 isBan = isBan,
                 wasFearlessAlternative = wasFearlessAlternative,
-                maskedTopChamp = unconstrainedTopChamp,
+                maskedTopChamp = topUnconstrainedChamp,
                 league = league,
                 teamName = targetTeamName,
                 patchMeta = patchMeta,
@@ -268,7 +251,7 @@ class DeepPolicyPredictor(
     ): Double {
         var logit = BASE_POLICY_LOGITS[champion] ?: 1.0
 
-        // 1. Patch Factor & Empirical Meta Adjustment (版本因數)
+        // 1. Patch Factor & Empirical Meta Adjustment (版本因素)
         if (patchMeta != null) {
             val stats = patchMeta.championStats[champion] ?: patchMeta.championStats[ChampionNormalizer.toSlug(champion)]
             if (stats != null) {
@@ -369,7 +352,7 @@ class DeepPolicyPredictor(
                 "戰隊專屬風格加權 ($teamName)"
             !league.isNullOrBlank() && LEAGUE_BIAS.keys.any { league.lowercase().contains(it) } ->
                 "賽區風格傾向 ($league)"
-            else -> "策略神經網絡推薦"
+            else -> "經驗統計模型推薦"
         }
 
         val patchStats = patchMeta?.championStats?.get(champion)
@@ -385,9 +368,12 @@ class DeepPolicyPredictor(
         val conditionDetail = if (patchDesc != null) "$conditionNote, $patchDesc" else conditionNote
 
         return if (wasFearlessAlternative && !maskedTopChamp.isNullOrBlank()) {
-            "[DL Policy] 策略網絡預測 $actionText ($probStr) - 原首選「$maskedTopChamp」已受全局BP排除，依 ${patchDesc ?: "版本數據"} 自動挑選最佳替代解 ($conditionNote)"
+            "[Empirical Policy] 經驗行為預測 $actionText ($probStr) - 原首選「$maskedTopChamp」已受全局BP排除，依 ${patchDesc ?: "版本數據"} 自動挑選最佳替代解 ($conditionNote)"
         } else {
-            "[DL Policy] 策略網絡預測 $actionText ($probStr) - 契合 $assignedRole 分路與 $conditionDetail"
+            "[Empirical Policy] 經驗行為預測 $actionText ($probStr) - 契合 $assignedRole 分路與 $conditionDetail"
         }
     }
 }
+
+/** Backward compatibility alias */
+typealias DeepPolicyPredictor = EmpiricalPolicyPredictor
