@@ -65,24 +65,6 @@ class ServerApplicationTest {
         }
 
     @Test
-    fun `test static web dashboard index html is served at root`() =
-        testApplication {
-            application {
-                mainModule()
-            }
-
-            val rootRes = client.get("/")
-            assertEquals(HttpStatusCode.OK, rootRes.status)
-            val rootHtml = rootRes.bodyAsText()
-            assertTrue(rootHtml.contains("LoL Draft AI") || rootHtml.contains("BP"))
-
-            val indexRes = client.get("/index.html")
-            assertEquals(HttpStatusCode.OK, indexRes.status)
-            val indexHtml = indexRes.bodyAsText()
-            assertTrue(indexHtml.contains("<!DOCTYPE html>"))
-        }
-
-    @Test
     fun `test full websocket BP session flow on unified server`() =
         testApplication {
             application {

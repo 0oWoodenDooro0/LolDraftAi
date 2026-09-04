@@ -11,6 +11,7 @@ import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.normalization.ChampionNormalizer
 import com.loldraft.data.player.PlayerCareerStats
+import com.loldraft.data.player.PlayerIntelligenceDossier
 import com.loldraft.data.player.ProPlayerDetailedProfile
 import com.loldraft.data.player.SignatureTier
 import com.loldraft.data.player.SoloQChampionStats
@@ -32,8 +33,12 @@ class DraftIntentPredictor(
         teamProfile: TeamTacticalProfile? = null,
         playerStatsByRole: Map<Role, PlayerCareerStats>? = null,
         playerProfilesByRole: Map<Role, ProPlayerDetailedProfile>? = null,
+        playerDossiersByRole: Map<Role, PlayerIntelligenceDossier>? = null,
         topN: Int = 3,
     ): IntentPredictionResult {
+        val effectiveProfiles =
+            playerProfilesByRole
+                ?: playerDossiersByRole?.mapValues { ProPlayerDetailedProfile.fromDossier(it.key, it.value) }
         val turnNumber = draftState.currentTurnNumber.coerceIn(1, 20)
         val turnSpec = DraftTurnSpec.forTurn(turnNumber)
         return predictForTurnSpec(
@@ -42,7 +47,7 @@ class DraftIntentPredictor(
             patchMeta = patchMeta,
             teamProfile = teamProfile,
             playerStatsByRole = playerStatsByRole,
-            playerProfilesByRole = playerProfilesByRole,
+            playerProfilesByRole = effectiveProfiles,
             topN = topN,
         )
     }
@@ -54,8 +59,12 @@ class DraftIntentPredictor(
         teamProfile: TeamTacticalProfile? = null,
         playerStatsByRole: Map<Role, PlayerCareerStats>? = null,
         playerProfilesByRole: Map<Role, ProPlayerDetailedProfile>? = null,
+        playerDossiersByRole: Map<Role, PlayerIntelligenceDossier>? = null,
         topN: Int = 3,
     ): IntentPredictionResult {
+        val effectiveProfiles =
+            playerProfilesByRole
+                ?: playerDossiersByRole?.mapValues { ProPlayerDetailedProfile.fromDossier(it.key, it.value) }
         val turnNumber = draftState.currentTurnNumber.coerceIn(1, 20)
         val defaultSpec = DraftTurnSpec.forTurn(turnNumber)
         val turnSpec =
@@ -75,7 +84,7 @@ class DraftIntentPredictor(
             patchMeta = patchMeta,
             teamProfile = teamProfile,
             playerStatsByRole = playerStatsByRole,
-            playerProfilesByRole = playerProfilesByRole,
+            playerProfilesByRole = effectiveProfiles,
             topN = topN,
         )
     }

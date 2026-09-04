@@ -438,4 +438,61 @@ class PlayerIntelligenceServiceTest {
         assertEquals(listOf(Role.TOP, Role.JUNGLE, Role.MID, Role.BOT, Role.SUPPORT), roles)
         assertEquals("Faker", profiles.find { it.role == Role.MID }?.playerId)
     }
+
+    @Test
+    fun `test getTeamRosterIntelligence returns 5 standard roles with signature and soloq data`() {
+        val games = createSampleT1Games()
+        val service = PlayerIntelligenceService(proGames = games)
+        val rosterIntel = service.getTeamRosterIntelligence(teamId = "t1", referenceTimeMs = nowMs)
+
+        assertEquals(5, rosterIntel.size)
+        assertTrue(rosterIntel.containsKey(Role.MID))
+        val mid = rosterIntel[Role.MID]
+        assertNotNull(mid)
+        assertEquals("Faker", mid?.playerId)
+        assertTrue(mid!!.signaturePicks.isNotEmpty())
+    }
+
+    @Test
+    fun `test practice spike is detected and tagged in roster player intelligence`() {
+        val games = createSampleT1Games()
+        val service = PlayerIntelligenceService(proGames = games)
+        service.registerSoloQAccount(
+            "Faker",
+            SoloQAccount(
+                accountId = "kr_faker",
+                summonerName = "Hide on bush",
+                server = SoloQServer.KR,
+            ),
+        )
+        val soloQGames = mutableListOf<SoloQGame>()
+        for (i in 1..5) {
+            soloQGames.add(
+                createSoloQGame(
+                    gameId = "sq_galio_w_$i",
+                    accountId = "kr_faker",
+                    championId = "Galio",
+                    daysAgo = 0.3 * i,
+                    win = true,
+                ),
+            )
+        }
+        service.addSoloQGames(soloQGames)
+
+        val rosterIntel = service.getTeamRosterIntelligence(teamId = "t1", referenceTimeMs = nowMs)
+        val mid = rosterIntel[Role.MID]
+        assertNotNull(mid)
+        assertTrue(mid!!.practiceSpikes.isNotEmpty() || mid.recentSoloQ7Days.isNotEmpty())
+    }
+
+    @Test
+    fun `test fallback when no soloq games exist for player in roster`() {
+        val games = createSampleT1Games()
+        val service = PlayerIntelligenceService(proGames = games)
+        val rosterIntel = service.getTeamRosterIntelligence(teamId = "t1", soloQGames = emptyList(), referenceTimeMs = nowMs)
+
+        val supIntel = rosterIntel[Role.SUPPORT]
+        assertNotNull(supIntel)
+        assertEquals("Keria", supIntel?.playerId)
+    }
 }

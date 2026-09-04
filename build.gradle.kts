@@ -3,6 +3,8 @@ plugins {
     kotlin("jvm") version "2.1.21"
     kotlin("plugin.serialization") version "2.1.21"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.1.21"
+    id("org.jetbrains.compose") version "1.7.3"
 }
 
 group = "com.loldraft"
@@ -14,6 +16,7 @@ application {
 
 repositories {
     mavenCentral()
+    google()
 }
 
 dependencies {
@@ -22,6 +25,10 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     implementation("com.microsoft.onnxruntime:onnxruntime:1.20.0")
+
+    // Compose Multiplatform Desktop
+    implementation(compose.desktop.currentOs)
+    implementation(compose.material3)
 
     // Ktor Server & WebSockets
     implementation("io.ktor:ktor-server-core:$ktorVersion")
@@ -38,9 +45,24 @@ dependencies {
     testImplementation("io.ktor:ktor-client-websockets:$ktorVersion")
 }
 
+tasks.register<JavaExec>("runCompose") {
+    group = "application"
+    description = "Runs the Compose Multiplatform Desktop application"
+    mainClass.set("com.loldraft.client.compose.MainKt")
+    classpath = sourceSets["main"].runtimeClasspath
+}
+
 tasks.test {
     useJUnitPlatform()
     maxHeapSize = "2g"
+}
+
+ktlint {
+    filter {
+        exclude("**/lol_draft_ai/**")
+        exclude("**/generated/**")
+        exclude("**/build/**")
+    }
 }
 
 kotlin {
