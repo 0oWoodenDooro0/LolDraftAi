@@ -178,9 +178,9 @@ class DraftIntentPredictorTest {
             assertTrue(top1.playerMasteryScore > 0.0)
             assertTrue(top1.rationale.isNotBlank())
 
-            // Sum of candidate probabilities should be normalized to 1.0
-            val totalProb = result.predictions.sumOf { it.probability }
-            assertEquals(1.0, totalProb, 0.001)
+            // Probabilities reflect true global empirical share (not artificially forced to sum to 1.0)
+            assertTrue(top1.probability > 0.0 && top1.probability < 1.0, "機率應為真實全域百分比")
+            assertTrue(top1.probability > result.predictions[1].probability, "Top 1 機率應高於 Top 2")
         }
 
         @Test

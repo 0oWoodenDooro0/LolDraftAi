@@ -461,7 +461,7 @@ class PlayerSoloQDraftPredictionTest {
             }
 
             val totalProb = result.predictions.sumOf { it.probability }
-            assertEquals(1.0, totalProb, 0.001, "預測機率總和應歸一化為 1.0")
+            assertTrue(totalProb > 0.0 && totalProb <= 1.0, "Top 3 候選機率總和應在合理全域佔比區間內")
         }
     }
 }

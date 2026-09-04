@@ -139,15 +139,16 @@ class DraftPolicyEngine:
                 )
             )
 
-        top_candidates = sorted(scored, key=lambda x: x.intent_score, reverse=True)[:top_n]
+        total_pool_score = sum(c.intent_score for c in scored)
+        if total_pool_score > 0:
+            for c in scored:
+                c.probability = round(c.intent_score / total_pool_score, 4)
+        else:
+            uniform = 1.0 / len(scored) if scored else 0.0
+            for c in scored:
+                c.probability = round(uniform, 4)
 
-        # Softmax normalization
-        if top_candidates:
-            max_s = max(c.intent_score for c in top_candidates)
-            exps = [math.exp((c.intent_score - max_s) / 0.5) for c in top_candidates]
-            sum_e = sum(exps)
-            for i, c in enumerate(top_candidates):
-                c.probability = round(exps[i] / sum_e, 4)
+        top_candidates = sorted(scored, key=lambda x: x.probability, reverse=True)[:top_n]
 
         return IntentPredictionResult(
             turn_number=turn_number,
