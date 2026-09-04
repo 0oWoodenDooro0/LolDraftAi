@@ -11,9 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -45,15 +43,12 @@ fun AiDecisionPanelView(
     compositionFlaws: List<CompositionFlaw>,
     modifier: Modifier = Modifier,
 ) {
-    val scrollState = rememberScrollState()
-
     Column(
         modifier =
             modifier
                 .background(SurfaceDark, RoundedCornerShape(8.dp))
                 .border(1.dp, BorderDark, RoundedCornerShape(8.dp))
-                .padding(12.dp)
-                .verticalScroll(scrollState),
+                .padding(12.dp),
     ) {
         // Section 1: Intent Prediction
         Row(verticalAlignment = Alignment.CenterVertically) {
