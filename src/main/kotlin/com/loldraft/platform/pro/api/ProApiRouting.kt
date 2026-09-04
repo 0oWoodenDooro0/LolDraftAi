@@ -52,14 +52,25 @@ fun Route.proApiRouting(repository: ProMatchRepository) {
             )
         }
 
+        get("/patches") {
+            call.respond(
+                HttpStatusCode.OK,
+                mapOf(
+                    "patches" to repository.getPatches(),
+                    "defaultPatch" to repository.getDefaultPatch(),
+                ),
+            )
+        }
+
         get("/leagues") {
             call.respond(HttpStatusCode.OK, repository.getLeagues())
         }
 
         get("/teams") {
             val league = call.request.queryParameters["league"]
+            val patch = call.request.queryParameters["patch"]
             val query = call.request.queryParameters["query"]
-            val teams = repository.getTeams(league = league, query = query)
+            val teams = repository.getTeams(league = league, patch = patch, query = query)
             call.respond(HttpStatusCode.OK, teams)
         }
 

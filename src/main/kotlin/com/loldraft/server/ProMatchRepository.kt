@@ -5,6 +5,7 @@ import com.loldraft.data.models.Game
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.models.Team
+import com.loldraft.data.normalization.PatchNormalizer
 import com.loldraft.data.sources.OraclesElixirCsvParser
 import com.loldraft.data.style.TeamStyleAnalyzer
 import com.loldraft.data.style.TeamTacticalProfile
@@ -28,6 +29,11 @@ class ProMatchRepository(
 
     val totalGamesCount: Int
         get() = games.size
+
+    fun getAllLoadedGames(): List<Game> {
+        ensureInitialized()
+        return games.toList()
+    }
 
     fun initialize() {
         if (initialized) return
@@ -53,6 +59,30 @@ class ProMatchRepository(
         initialized = true
     }
 
+    fun getPatches(): List<String> {
+        ensureInitialized()
+        return games
+            .mapNotNull { it.patch.takeIf { p -> p.isNotBlank() } }
+            .distinct()
+            .sortedWith(
+                Comparator { a, b ->
+                    val pa = PatchNormalizer.parse(a)
+                    val pb = PatchNormalizer.parse(b)
+                    when {
+                        pa != null && pb != null -> pa.compareTo(pb)
+                        pa != null -> 1
+                        pb != null -> -1
+                        else -> a.compareTo(b)
+                    }
+                },
+            )
+    }
+
+    fun getDefaultPatch(): String {
+        ensureInitialized()
+        return getPatches().lastOrNull() ?: "16.17"
+    }
+
     fun getLeagues(): List<String> {
         ensureInitialized()
         return games
@@ -64,16 +94,23 @@ class ProMatchRepository(
 
     fun getTeams(
         league: String? = null,
+        patch: String? = null,
         query: String? = null,
     ): List<ProTeamSummary> {
         ensureInitialized()
 
-        val matchingGames =
-            if (league.isNullOrBlank()) {
-                games
-            } else {
-                games.filter { it.tournament.equals(league, ignoreCase = true) }
-            }
+        var matchingGames: List<Game> = games
+        if (!league.isNullOrBlank()) {
+            matchingGames = matchingGames.filter { it.tournament.equals(league, ignoreCase = true) }
+        }
+        if (!patch.isNullOrBlank()) {
+            val targetPatch = PatchNormalizer.normalize(patch)
+            matchingGames =
+                matchingGames.filter {
+                    val gamePatch = PatchNormalizer.normalize(it.patch)
+                    gamePatch.equals(targetPatch, ignoreCase = true) || it.patch.equals(patch, ignoreCase = true)
+                }
+        }
 
         val teamMap = mutableMapOf<String, MutableList<Pair<Team, Boolean>>>()
         val teamLeagueMap = mutableMapOf<String, String>()
@@ -149,6 +186,20 @@ class ProMatchRepository(
                 )
         }
 
+        // Tally empirical role counts from tournament match picks
+        val pickRoleCounts = mutableMapOf<String, MutableMap<Role, Int>>()
+        for (game in games) {
+            val allPicks = game.draftState.bluePicks + game.draftState.redPicks
+            for (pick in allPicks) {
+                val r = pick.role
+                if (r != null && pick.championId.isNotBlank()) {
+                    pickRoleCounts
+                        .getOrPut(pick.championId.lowercase()) { mutableMapOf() }
+                        .merge(r, 1, Int::plus)
+                }
+            }
+        }
+
         for (game in games) {
             val picksAndBans =
                 game.draftState.bluePicks.map { it.championId } +
@@ -157,14 +208,21 @@ class ProMatchRepository(
                     game.draftState.redBans
 
             for (champ in picksAndBans) {
-                if (champ.isNotBlank() && !championMap.containsKey(champ.lowercase())) {
-                    championMap[champ.lowercase()] =
+                if (champ.isBlank()) continue
+                val key = champ.lowercase()
+                val existing = championMap[key]
+                if (existing == null) {
+                    val empiricalRole = pickRoleCounts[key]?.maxByOrNull { it.value }?.key ?: Role.MID
+                    championMap[key] =
                         ProChampionEntry(
                             id = champ,
                             name = champ,
-                            primaryRole = null,
+                            primaryRole = empiricalRole,
                             tags = emptyList(),
                         )
+                } else if (existing.primaryRole == null) {
+                    val empiricalRole = pickRoleCounts[key]?.maxByOrNull { it.value }?.key ?: Role.MID
+                    championMap[key] = existing.copy(primaryRole = empiricalRole)
                 }
             }
         }
