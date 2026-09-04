@@ -3,6 +3,7 @@ package com.loldraft.data.player
 import com.loldraft.data.models.ActionType
 import com.loldraft.data.models.Game
 import com.loldraft.data.models.Role
+import com.loldraft.data.models.Side
 import kotlin.math.max
 
 data class CareerAnalyzerConfig(
@@ -34,17 +35,48 @@ class PlayerCareerAnalyzer(
 
         for (game in games) {
             val turns = game.draftState.turns
-            for (turn in turns) {
-                if (turn.actionType == ActionType.PICK && turn.player.equals(playerId, ignoreCase = true)) {
-                    if (playerRole == null || turn.role == null || turn.role == playerRole) {
-                        val won = game.winner != null && game.winner == turn.side
-                        pickEvents.add(
-                            PickEvent(
-                                championId = turn.championId,
-                                role = turn.role,
-                                won = won,
-                            ),
-                        )
+            if (turns.isNotEmpty()) {
+                for (turn in turns) {
+                    if (turn.actionType == ActionType.PICK && turn.player.equals(playerId, ignoreCase = true)) {
+                        if (playerRole == null || turn.role == null || turn.role == playerRole) {
+                            val won = game.winner != null && game.winner == turn.side
+                            pickEvents.add(
+                                PickEvent(
+                                    championId = turn.championId,
+                                    role = turn.role,
+                                    won = won,
+                                ),
+                            )
+                        }
+                    }
+                }
+            } else {
+                for (pick in game.draftState.bluePicks) {
+                    if (pick.playerId != null && pick.playerId.equals(playerId, ignoreCase = true)) {
+                        if (playerRole == null || pick.role == null || pick.role == playerRole) {
+                            val won = game.winner != null && game.winner == Side.BLUE
+                            pickEvents.add(
+                                PickEvent(
+                                    championId = pick.championId,
+                                    role = pick.role,
+                                    won = won,
+                                ),
+                            )
+                        }
+                    }
+                }
+                for (pick in game.draftState.redPicks) {
+                    if (pick.playerId != null && pick.playerId.equals(playerId, ignoreCase = true)) {
+                        if (playerRole == null || pick.role == null || pick.role == playerRole) {
+                            val won = game.winner != null && game.winner == Side.RED
+                            pickEvents.add(
+                                PickEvent(
+                                    championId = pick.championId,
+                                    role = pick.role,
+                                    won = won,
+                                ),
+                            )
+                        }
                     }
                 }
             }

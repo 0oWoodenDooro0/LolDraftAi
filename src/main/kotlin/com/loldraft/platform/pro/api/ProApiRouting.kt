@@ -1,6 +1,7 @@
 package com.loldraft.platform.pro.api
 
 import com.loldraft.data.models.Role
+import com.loldraft.data.player.PlayerIntelligenceService
 import com.loldraft.server.ProMatchRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
@@ -38,7 +39,10 @@ data class ProChampionEntry(
     val tags: List<String> = emptyList(),
 )
 
-fun Route.proApiRouting(repository: ProMatchRepository) {
+fun Route.proApiRouting(
+    repository: ProMatchRepository,
+    playerIntelligenceService: PlayerIntelligenceService = repository.playerIntelligenceService,
+) {
     route("/api/pro") {
         get("/health") {
             call.respond(
@@ -95,6 +99,17 @@ fun Route.proApiRouting(repository: ProMatchRepository) {
             }
             val roster = repository.getTeamRoster(teamId)
             call.respond(HttpStatusCode.OK, roster)
+        }
+
+        get("/teams/{teamId}/players") {
+            val teamId = call.parameters["teamId"] ?: throw IllegalArgumentException("Missing teamId")
+            val profile = repository.getTeamProfile(teamId)
+            if (profile == null) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Team '$teamId' not found"))
+                return@get
+            }
+            val players = playerIntelligenceService.getTeamPlayerProfiles(teamId)
+            call.respond(HttpStatusCode.OK, players)
         }
 
         get("/champions") {

@@ -103,3 +103,38 @@ data class PlayerIntelligenceDossier(
     val activeSpikeAlerts: List<SpikeAlert>,
     val blindPickConfidences: Map<String, BlindPickConfidence>,
 )
+
+@Serializable
+data class ProPlayerDetailedProfile(
+    val playerId: String,
+    val role: Role,
+    val totalProGames: Int,
+    val proWinRate: Double,
+    val careerStats: PlayerCareerStats,
+    val signaturePicks: List<SignaturePick>,
+    val recentSoloQ3Days: List<SoloQChampionStats>,
+    val recentSoloQ7Days: List<SoloQChampionStats>,
+    val activeSpikeAlerts: List<SpikeAlert>,
+    val linkedAccounts: List<SoloQAccount> = emptyList(),
+    val dossier: PlayerIntelligenceDossier? = null,
+) {
+    companion object {
+        fun fromDossier(
+            role: Role,
+            dossier: PlayerIntelligenceDossier,
+        ): ProPlayerDetailedProfile =
+            ProPlayerDetailedProfile(
+                playerId = dossier.playerId,
+                role = role,
+                totalProGames = dossier.careerStats.totalProGames,
+                proWinRate = dossier.careerStats.winRate,
+                careerStats = dossier.careerStats,
+                signaturePicks = dossier.careerStats.signaturePicks,
+                recentSoloQ3Days = dossier.recentSoloQ3Days,
+                recentSoloQ7Days = dossier.recentSoloQ7Days,
+                activeSpikeAlerts = dossier.activeSpikeAlerts,
+                linkedAccounts = dossier.linkedAccounts,
+                dossier = dossier,
+            )
+    }
+}
