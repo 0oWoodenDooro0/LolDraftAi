@@ -17,9 +17,6 @@ import com.loldraft.data.player.PlayerIntelligenceDossier
 import com.loldraft.data.player.ProPlayerDetailedProfile
 import com.loldraft.data.player.SignaturePick
 import com.loldraft.data.player.SignatureTier
-import com.loldraft.data.player.SoloQChampionStats
-import com.loldraft.data.player.SpikeAlert
-import com.loldraft.data.player.SpikeAlertSeverity
 import com.loldraft.data.style.TeamTacticalProfile
 import java.util.Locale
 import kotlin.math.round
@@ -323,36 +320,7 @@ class DraftIntentPredictor(
                 }
             }
 
-            // 4. SoloQ practice & spike alert score
-            var soloQScore = 0.0
-            var matchedSpikeAlert: SpikeAlert? = null
-            var matchedSoloQ3d: SoloQChampionStats? = null
-            var matchedSoloQ7d: SoloQChampionStats? = null
-
-            if (!isBan && targetProfile != null) {
-                matchedSpikeAlert = targetProfile.activeSpikeAlerts.firstOrNull { it.championId.equals(champ, ignoreCase = true) }
-                matchedSoloQ3d = targetProfile.recentSoloQ3Days.firstOrNull { it.championId.equals(champ, ignoreCase = true) }
-                matchedSoloQ7d = targetProfile.recentSoloQ7Days.firstOrNull { it.championId.equals(champ, ignoreCase = true) }
-
-                if (matchedSpikeAlert != null) {
-                    soloQScore =
-                        when (matchedSpikeAlert.severity) {
-                            SpikeAlertSeverity.HIGH -> (0.90 + (matchedSpikeAlert.recentWinRate * 0.10)).coerceIn(0.90, 1.0)
-                            SpikeAlertSeverity.MEDIUM -> (0.80 + (matchedSpikeAlert.recentWinRate * 0.10)).coerceIn(0.80, 0.90)
-                            SpikeAlertSeverity.LOW -> (0.70 + (matchedSpikeAlert.recentWinRate * 0.10)).coerceIn(0.70, 0.80)
-                        }
-                } else if (matchedSoloQ3d != null && matchedSoloQ3d.gamesPlayed > 0) {
-                    val volume = (matchedSoloQ3d.gamesPlayed / 8.0).coerceAtMost(1.0)
-                    val wr = matchedSoloQ3d.winRate.coerceIn(0.0, 1.0)
-                    soloQScore = ((volume * 0.5 + wr * 0.5) * 0.80).coerceIn(0.20, 0.80)
-                } else if (matchedSoloQ7d != null && matchedSoloQ7d.gamesPlayed > 0) {
-                    val volume = (matchedSoloQ7d.gamesPlayed / 15.0).coerceAtMost(1.0)
-                    val wr = matchedSoloQ7d.winRate.coerceIn(0.0, 1.0)
-                    soloQScore = ((volume * 0.5 + wr * 0.5) * 0.65).coerceIn(0.20, 0.65)
-                }
-            }
-
-            // 5. Composition fit & role gap score
+            // 4. Composition fit & role gap score
             var compositionFitScore = 0.0
             if (!isBan) {
                 val canFillVacant = flexAnalysis.roleProbabilities.any { it.key in vacantRoles && it.value >= 0.20 }
@@ -443,18 +411,9 @@ class DraftIntentPredictor(
             val proRecord = if (!isBan) findChampionRecord(targetCareerStats, champ) else null
             val proGamesPlayed = proRecord?.gamesPlayed ?: 0
             val isProUnplayed = !isBan && targetCareerStats != null && targetCareerStats.totalProGames >= 5 && proGamesPlayed == 0
-            val hasSoloQPractice = soloQScore > 0.3
             val isMetaMustPick = metaStats?.tier == MetaTier.T0 || (metaStats?.presenceRate ?: 0.0) >= 0.85
 
-            val hasTargetSoloQData =
-                targetProfile != null &&
-                    (
-                        targetProfile.activeSpikeAlerts.isNotEmpty() ||
-                            targetProfile.recentSoloQ3Days.isNotEmpty() ||
-                            targetProfile.recentSoloQ7Days.isNotEmpty()
-                    )
-
-            // 7. Total composite intent score directly from data
+            // 6. Total composite intent score directly from data
             val totalIntentScore =
                 if (isBan) {
                     val hasRespectBans = opponentBansAgainstTargetTeam != null && opponentBansAgainstTargetTeam.isNotEmpty()
@@ -475,15 +434,12 @@ class DraftIntentPredictor(
                         when {
                             matchedDuoStats != null -> {
                                 if (hasDetailedProfiles || targetCareerStats != null) {
-                                    (botDuoScore * 0.35) + (playerMasteryScore * 0.25) + (metaScore * 0.20) +
-                                        (soloQScore * 0.10) + (compositionFitScore * 0.10)
+                                    (botDuoScore * 0.40) + (playerMasteryScore * 0.25) + (metaScore * 0.20) +
+                                        (compositionFitScore * 0.15)
                                 } else {
                                     (botDuoScore * 0.45) + (metaScore * 0.35) + (compositionFitScore * 0.20)
                                 }
                             }
-                            hasDetailedProfiles && hasTargetSoloQData ->
-                                (metaScore * 0.25) + (playerMasteryScore * 0.30) + (soloQScore * 0.30) +
-                                    (compositionFitScore * 0.10) + (counterDenialScore * 0.05)
                             hasDetailedProfiles || targetCareerStats != null ->
                                 (playerMasteryScore * 0.45) + (metaScore * 0.30) +
                                     (compositionFitScore * 0.15) + (counterDenialScore * 0.10)
@@ -540,34 +496,14 @@ class DraftIntentPredictor(
                         else -> null
                     }
 
-                val soloQDesc =
-                    when {
-                        matchedSpikeAlert != null -> {
-                            val wrPct = String.format(Locale.US, "%.1f", matchedSpikeAlert.recentWinRate * 100.0)
-                            val multFormatted = String.format(Locale.US, "%.1f", matchedSpikeAlert.frequencyMultiplier)
-                            "Recent SoloQ ${matchedSpikeAlert.type.name} (${matchedSpikeAlert.recentGamesCount}G in ${matchedSpikeAlert.recentDays}d, $wrPct% WR, ${multFormatted}x surge)"
-                        }
-                        matchedSoloQ3d != null && matchedSoloQ3d.gamesPlayed > 0 -> {
-                            val wrPct = String.format(Locale.US, "%.1f", matchedSoloQ3d.winRate * 100.0)
-                            "Active SoloQ practice (${matchedSoloQ3d.gamesPlayed}G in 3d, $wrPct% WR)"
-                        }
-                        matchedSoloQ7d != null && matchedSoloQ7d.gamesPlayed > 0 -> {
-                            val wrPct = String.format(Locale.US, "%.1f", matchedSoloQ7d.winRate * 100.0)
-                            "Active SoloQ practice (${matchedSoloQ7d.gamesPlayed}G in 7d, $wrPct% WR)"
-                        }
-                        else -> null
-                    }
-
                 if (playerPrefix != null) {
-                    val playerDetails = listOfNotNull(masteryDesc, soloQDesc)
-                    if (playerDetails.isNotEmpty()) {
-                        reasons.add("$playerPrefix: ${playerDetails.joinToString("; ")}")
+                    if (masteryDesc != null) {
+                        reasons.add("$playerPrefix: $masteryDesc")
                     } else {
                         reasons.add(playerPrefix)
                     }
-                } else {
-                    if (masteryDesc != null) reasons.add(masteryDesc)
-                    if (soloQDesc != null) reasons.add(soloQDesc)
+                } else if (masteryDesc != null) {
+                    reasons.add(masteryDesc)
                 }
 
                 if (metaStats?.tier == MetaTier.T0) {
@@ -621,7 +557,6 @@ class DraftIntentPredictor(
                     predictedRole = if (isBan) null else targetRole,
                     metaScore = roundToFourDecimals(metaScore),
                     playerMasteryScore = roundToFourDecimals(playerMasteryScore),
-                    soloQScore = roundToFourDecimals(soloQScore),
                     compositionFitScore = roundToFourDecimals(compositionFitScore),
                     counterDenialScore = roundToFourDecimals(counterDenialScore),
                     playerName = if (isBan) matchedOpponentPlayer else targetPlayerName,

@@ -39,6 +39,7 @@ class DraftClientViewModel(
         repository.initialize()
         val patches = repository.getPatches().ifEmpty { listOf("16.17") }
         val defaultPatch = repository.getDefaultPatch()
+        val leagues = repository.getLeagues()
         val teams = repository.getTeams()
 
         val blue = teams.find { it.name.contains("T1", ignoreCase = true) } ?: teams.firstOrNull()
@@ -64,9 +65,16 @@ class DraftClientViewModel(
 
         _uiState.value =
             DraftClientState(
+                selectedLeague = null,
+                blueSelectedLeague = null,
+                redSelectedLeague = null,
+                availableLeagues = leagues,
                 selectedPatch = defaultPatch,
                 availablePatches = patches,
                 allTeams = teams,
+                filteredTeams = teams,
+                blueFilteredTeams = teams,
+                redFilteredTeams = teams,
                 blueTeam = blue,
                 redTeam = red,
                 blueRosterIntelligence = blueRoster,
@@ -107,11 +115,22 @@ class DraftClientViewModel(
         val oldRed = current.redTeam
         val oldBlueRoster = current.blueRosterIntelligence
         val oldRedRoster = current.redRosterIntelligence
+        val oldBlueLeague = current.blueSelectedLeague
+        val oldRedLeague = current.redSelectedLeague
+        val oldBlueFiltered = current.blueFilteredTeams
+        val oldRedFiltered = current.redFilteredTeams
+
         _uiState.value = current.copy(
             blueTeam = oldRed,
             redTeam = oldBlue,
             blueRosterIntelligence = oldRedRoster,
             redRosterIntelligence = oldBlueRoster,
+            blueSelectedLeague = oldRedLeague,
+            redSelectedLeague = oldBlueLeague,
+            blueFilteredTeams = oldRedFiltered,
+            redFilteredTeams = oldBlueFiltered,
+            selectedLeague = oldRedLeague,
+            filteredTeams = oldRedFiltered,
         )
         recalculateDraftCalculations()
     }
@@ -119,12 +138,25 @@ class DraftClientViewModel(
     fun selectPatch(patch: String) {
         val current = _uiState.value
         val teams = repository.getTeams()
-        val blue = teams.find { it.id == current.blueTeam?.id } ?: teams.firstOrNull()
-        val red = teams.find { it.id == current.redTeam?.id } ?: teams.getOrNull(1) ?: blue
+        val blueFiltered = if (current.blueSelectedLeague == null) {
+            teams
+        } else {
+            repository.getTeams(league = current.blueSelectedLeague)
+        }
+        val redFiltered = if (current.redSelectedLeague == null) {
+            teams
+        } else {
+            repository.getTeams(league = current.redSelectedLeague)
+        }
+        val blue = teams.find { it.id == current.blueTeam?.id } ?: blueFiltered.firstOrNull() ?: teams.firstOrNull()
+        val red = teams.find { it.id == current.redTeam?.id } ?: redFiltered.getOrNull(1) ?: blue
         _uiState.value =
             current.copy(
                 selectedPatch = patch,
                 allTeams = teams,
+                filteredTeams = blueFiltered,
+                blueFilteredTeams = blueFiltered,
+                redFilteredTeams = redFiltered,
                 blueTeam = blue,
                 redTeam = red,
             )
@@ -132,7 +164,76 @@ class DraftClientViewModel(
     }
 
     fun selectLeague(league: String?) {
-        // No-op or kept for backwards compatibility
+        selectBlueLeague(league)
+    }
+
+    fun selectBlueLeague(league: String?) {
+        val current = _uiState.value
+        val actualLeague = if (league.isNullOrBlank() || league.equals("ALL", ignoreCase = true) || league.equals("All Regions", ignoreCase = true) || league.equals("全部賽區", ignoreCase = true)) null else league
+        val filtered = if (actualLeague == null) {
+            current.allTeams
+        } else {
+            repository.getTeams(league = actualLeague)
+        }
+        _uiState.value = current.copy(
+            blueSelectedLeague = actualLeague,
+            blueFilteredTeams = filtered,
+            selectedLeague = actualLeague,
+            filteredTeams = filtered,
+        )
+    }
+
+    fun selectRedLeague(league: String?) {
+        val current = _uiState.value
+        val actualLeague = if (league.isNullOrBlank() || league.equals("ALL", ignoreCase = true) || league.equals("All Regions", ignoreCase = true) || league.equals("全部賽區", ignoreCase = true)) null else league
+        val filtered = if (actualLeague == null) {
+            current.allTeams
+        } else {
+            repository.getTeams(league = actualLeague)
+        }
+        _uiState.value = current.copy(
+            redSelectedLeague = actualLeague,
+            redFilteredTeams = filtered,
+        )
+    }
+
+    fun setFearlessDialogOpen(isOpen: Boolean) {
+        _uiState.value = _uiState.value.copy(isFearlessDialogOpen = isOpen)
+    }
+
+    fun addFearlessExcludedChampion(championId: String) {
+        val current = _uiState.value
+        val champEntry = current.allChampions.find { it.id.equals(championId, ignoreCase = true) || it.name.equals(championId, ignoreCase = true) }
+        val idToAdd = champEntry?.id ?: championId
+        if (current.fearlessExcludedChampionIds.any { it.equals(idToAdd, ignoreCase = true) }) return
+
+        val updated = current.fearlessExcludedChampionIds + idToAdd
+        _uiState.value = current.copy(
+            fearlessExcludedChampionIds = updated,
+            selectedChampionId = if (current.selectedChampionId.equals(idToAdd, ignoreCase = true)) null else current.selectedChampionId,
+        )
+        recalculateDraftCalculations()
+    }
+
+    fun removeFearlessExcludedChampion(championId: String) {
+        val current = _uiState.value
+        val updated = current.fearlessExcludedChampionIds.filterNot { it.equals(championId, ignoreCase = true) }.toSet()
+        _uiState.value = current.copy(fearlessExcludedChampionIds = updated)
+        recalculateDraftCalculations()
+    }
+
+    fun clearFearlessExcludedChampions() {
+        _uiState.value = _uiState.value.copy(fearlessExcludedChampionIds = emptySet())
+        recalculateDraftCalculations()
+    }
+
+    fun importCurrentPicksToFearless() {
+        val current = _uiState.value
+        val currentPicks = current.pickedChampionIds
+        if (currentPicks.isEmpty()) return
+        val updated = current.fearlessExcludedChampionIds + currentPicks
+        _uiState.value = current.copy(fearlessExcludedChampionIds = updated)
+        recalculateDraftCalculations()
     }
 
 
@@ -194,7 +295,10 @@ class DraftClientViewModel(
         val turnNum = current.currentTurnNumber
         if (turnNum > 20) return
 
-        if (current.bannedChampionIds.contains(championId) || current.pickedChampionIds.contains(championId)) {
+        if (current.bannedChampionIds.contains(championId) ||
+            current.pickedChampionIds.contains(championId) ||
+            current.fearlessExcludedChampionIds.any { it.equals(championId, ignoreCase = true) }
+        ) {
             return
         }
 
@@ -380,7 +484,7 @@ class DraftClientViewModel(
 
     private fun recalculateDraftCalculations() {
         val current = _uiState.value
-        val draftState = DraftState.fromTurns(appliedDraftTurns)
+        val draftState = DraftState.fromTurns(appliedDraftTurns).withFearlessSpent(current.fearlessExcludedChampionIds)
         val patchMeta = repository.getPatchMeta(current.selectedPatch)
 
         // 1. Eval Bar
@@ -503,7 +607,6 @@ class DraftClientViewModel(
             playerIntelService.getTeamRosterIntelligence(
                 teamId = teamId,
                 proGames = games,
-                soloQGames = emptyList(),
             )
         if (rosterIntel.isNotEmpty()) return rosterIntel
 
@@ -560,10 +663,6 @@ class DraftClientViewModel(
         return com.loldraft.data.player.PlayerIntelligenceDossier(
             playerId = intel.playerId,
             careerStats = careerStats,
-            linkedAccounts = emptyList(),
-            recentSoloQ3Days = intel.recentSoloQ7Days,
-            recentSoloQ7Days = intel.recentSoloQ7Days,
-            activeSpikeAlerts = intel.practiceSpikes,
             blindPickConfidences = emptyMap(),
         )
     }

@@ -37,6 +37,7 @@ import com.loldraft.client.compose.ui.theme.GoldAccent
 import com.loldraft.client.compose.ui.theme.RedSideColor
 import com.loldraft.client.compose.ui.theme.SurfaceDark
 import com.loldraft.client.compose.ui.theme.TextPrimary
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
 import com.loldraft.client.compose.ui.theme.TextSecondary
 import com.loldraft.data.models.Side
@@ -44,6 +45,8 @@ import com.loldraft.data.models.Side
 @Composable
 fun TopBarView(
     state: DraftClientState,
+    onSelectBlueLeague: (String?) -> Unit,
+    onSelectRedLeague: (String?) -> Unit,
     onSelectBlueTeam: (String) -> Unit,
     onSelectRedTeam: (String) -> Unit,
     onSelectPatch: (String) -> Unit,
@@ -51,6 +54,7 @@ fun TopBarView(
     onSwapTeams: () -> Unit,
     onUndo: () -> Unit,
     onReset: () -> Unit,
+    onOpenFearlessDialog: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -86,10 +90,10 @@ fun TopBarView(
             )
         }
 
-        // Middle Selectors: Patch, First Pick Side, Blue Team, Swap, Red Team
+        // Middle Selectors: Patch, First Pick Side, Blue Region, Blue Team, Swap, Red Region, Red Team, Fearless
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // Patch Dropdown (defaults to 16.17)
             DropdownSelector(
@@ -126,14 +130,29 @@ fun TopBarView(
                 )
             }
 
+            val leagueOptions = listOf("ALL") + state.availableLeagues
+
+            // Blue Region Dropdown
+            DropdownSelector(
+                label = "Blue Region",
+                selectedItem = state.blueSelectedLeague ?: "ALL",
+                items = leagueOptions,
+                accentColor = BlueSideColor,
+                onItemSelected = { selected ->
+                    onSelectBlueLeague(if (selected == "ALL") null else selected)
+                },
+            )
+
             // Blue Team Dropdown
             DropdownSelector(
                 label = "Blue Side",
                 selectedItem = state.blueTeam?.name ?: "Select Blue Team",
-                items = state.allTeams.map { it.name },
+                items = state.blueFilteredTeams.map { it.name },
                 accentColor = BlueSideColor,
                 onItemSelected = { teamName ->
-                    state.allTeams.find { it.name == teamName }?.let { onSelectBlueTeam(it.id) }
+                    val found = state.blueFilteredTeams.find { it.name == teamName }
+                        ?: state.allTeams.find { it.name == teamName }
+                    found?.let { onSelectBlueTeam(it.id) }
                 },
             )
 
@@ -151,16 +170,50 @@ fun TopBarView(
                 Text("⇄ Swap", fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
 
+            // Red Region Dropdown
+            DropdownSelector(
+                label = "Red Region",
+                selectedItem = state.redSelectedLeague ?: "ALL",
+                items = leagueOptions,
+                accentColor = RedSideColor,
+                onItemSelected = { selected ->
+                    onSelectRedLeague(if (selected == "ALL") null else selected)
+                },
+            )
+
             // Red Team Dropdown
             DropdownSelector(
                 label = "Red Side",
                 selectedItem = state.redTeam?.name ?: "Select Red Team",
-                items = state.allTeams.map { it.name },
+                items = state.redFilteredTeams.map { it.name },
                 accentColor = RedSideColor,
                 onItemSelected = { teamName ->
-                    state.allTeams.find { it.name == teamName }?.let { onSelectRedTeam(it.id) }
+                    val found = state.redFilteredTeams.find { it.name == teamName }
+                        ?: state.allTeams.find { it.name == teamName }
+                    found?.let { onSelectRedTeam(it.id) }
                 },
             )
+
+            // Fearless Draft (全局BP) Button
+            val fearlessCount = state.fearlessExcludedChampionIds.size
+            OutlinedButton(
+                onClick = onOpenFearlessDialog,
+                modifier = Modifier.height(32.dp),
+                shape = RoundedCornerShape(6.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                border = BorderStroke(1.dp, if (fearlessCount > 0) GoldAccent else BorderDark),
+                colors =
+                    ButtonDefaults.outlinedButtonColors(
+                        containerColor = if (fearlessCount > 0) GoldAccent.copy(alpha = 0.15f) else Color.Transparent,
+                        contentColor = if (fearlessCount > 0) GoldAccent else TextSecondary,
+                    ),
+            ) {
+                Text(
+                    text = if (fearlessCount == 0) "⚡ 全局BP" else "⚡ 全局BP ($fearlessCount)",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
 
         // Action Buttons: Undo & Reset

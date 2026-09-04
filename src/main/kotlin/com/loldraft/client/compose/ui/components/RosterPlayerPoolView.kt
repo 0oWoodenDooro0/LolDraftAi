@@ -59,7 +59,7 @@ fun RosterPlayerPoolView(
                 fontSize = 13.sp,
             )
             Text(
-                text = "Career & SoloQ Intel",
+                text = "Career Intel",
                 color = TextSecondary,
                 fontSize = 10.sp,
             )
@@ -82,8 +82,6 @@ fun PlayerRolePoolItem(
 ) {
     val playerName = intel?.playerId ?: "Unknown"
     val signatures = intel?.signaturePicks?.take(3) ?: emptyList()
-    val soloQ = intel?.recentSoloQ7Days?.take(2) ?: emptyList()
-    val spikes = intel?.practiceSpikes ?: emptyList()
 
     Column(
         modifier =
@@ -111,18 +109,6 @@ fun PlayerRolePoolItem(
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(playerName, color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
-
-            // Spike indicator if any
-            if (spikes.isNotEmpty()) {
-                Box(
-                    modifier =
-                        Modifier
-                            .background(OrangeWarning, RoundedCornerShape(3.dp))
-                            .padding(horizontal = 4.dp, vertical = 1.dp),
-                ) {
-                    Text("⚡ SPIKE", color = Color.Black, fontSize = 8.sp, fontWeight = FontWeight.Bold)
-                }
-            }
         }
 
         Spacer(modifier = Modifier.height(3.dp))
@@ -137,30 +123,6 @@ fun PlayerRolePoolItem(
                 signatures.forEach { sig ->
                     val wr = String.format(Locale.US, "%.0f%%", sig.winRate * 100)
                     Text("${sig.championId} (${sig.gamesPlayed}G, $wr)", color = TextSecondary, fontSize = 9.sp)
-                }
-            }
-        }
-
-        // SoloQ Heat
-        if (soloQ.isNotEmpty() || spikes.isNotEmpty()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text("SoloQ:", color = GoldAccent, fontSize = 9.sp)
-                if (spikes.isNotEmpty()) {
-                    val spk = spikes.first()
-                    Text(
-                        "${spk.championId} [${spk.recentGamesCount}G spike]",
-                        color = OrangeWarning,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                } else {
-                    soloQ.forEach { sq ->
-                        val wr = String.format(Locale.US, "%.0f%%", sq.winRate * 100)
-                        Text("${sq.championId} (${sq.gamesPlayed}G, $wr)", color = TextSecondary, fontSize = 9.sp)
-                    }
                 }
             }
         }

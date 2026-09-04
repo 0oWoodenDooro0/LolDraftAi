@@ -78,30 +78,6 @@ class PlayerIntelligenceServiceTest {
         )
     }
 
-    private fun createSoloQGame(
-        gameId: String,
-        accountId: String,
-        championId: String,
-        daysAgo: Double,
-        win: Boolean = true,
-        role: Role = Role.MID,
-        kills: Int = 5,
-        deaths: Int = 2,
-        assists: Int = 5,
-    ): SoloQGame =
-        SoloQGame(
-            gameId = gameId,
-            accountId = accountId,
-            server = SoloQServer.KR,
-            timestampEpochMs = nowMs - (daysAgo * oneDayMs).toLong(),
-            championId = championId,
-            role = role,
-            win = win,
-            kills = kills,
-            deaths = deaths,
-            assists = assists,
-        )
-
     private fun createSampleT1Games(): List<Game> {
         val games = mutableListOf<Game>()
 
@@ -278,153 +254,6 @@ class PlayerIntelligenceServiceTest {
     }
 
     @Test
-    fun `should compute 7-day and 3-day soloQ stats with winRate, KDA, and pickShare`() {
-        val games = createSampleT1Games()
-        val service = PlayerIntelligenceService(proGames = games)
-
-        service.registerSoloQAccount(
-            "Faker",
-            SoloQAccount(
-                accountId = "kr_faker",
-                summonerName = "Hide on bush",
-                server = SoloQServer.KR,
-                tier = "CHALLENGER",
-                lp = 1250,
-            ),
-        )
-
-        // Add SoloQ practice games
-        val soloQGames = mutableListOf<SoloQGame>()
-        // 4 Azir games in last 2 days (win=true, kills=6, deaths=2, assists=8 -> KDA = (6+8)/2 = 7.0)
-        for (i in 1..4) {
-            soloQGames.add(
-                createSoloQGame(
-                    gameId = "sq_azir_$i",
-                    accountId = "kr_faker",
-                    championId = "Azir",
-                    daysAgo = 0.4 * i,
-                    win = true,
-                    kills = 6,
-                    deaths = 2,
-                    assists = 8,
-                ),
-            )
-        }
-        // 2 Ahri games 5 days ago (in 7-day window, outside 3-day window)
-        for (i in 1..2) {
-            soloQGames.add(
-                createSoloQGame(
-                    gameId = "sq_ahri_$i",
-                    accountId = "kr_faker",
-                    championId = "Ahri",
-                    daysAgo = 5.0,
-                    win = i % 2 == 0,
-                    kills = 4,
-                    deaths = 4,
-                    assists = 4,
-                ),
-            )
-        }
-        service.addSoloQGames(soloQGames)
-
-        val profile = service.getPlayerProfile("Faker", Role.MID, referenceTimeMs = nowMs)
-
-        // Linked account check
-        assertEquals(1, profile.linkedAccounts.size)
-        assertEquals("Hide on bush", profile.linkedAccounts[0].summonerName)
-
-        // 3-day SoloQ: only Azir (4 games)
-        assertEquals(1, profile.recentSoloQ3Days.size)
-        val azir3d = profile.recentSoloQ3Days.first()
-        assertEquals("Azir", azir3d.championId)
-        assertEquals(4, azir3d.gamesPlayed)
-        assertEquals(4, azir3d.wins)
-        assertEquals(1.0, azir3d.winRate)
-        assertEquals(7.0, azir3d.avgKda, 0.001)
-
-        // 7-day SoloQ: Azir (4 games) + Ahri (2 games) = 6 games total
-        assertEquals(2, profile.recentSoloQ7Days.size)
-        val azir7d = profile.recentSoloQ7Days.find { it.championId == "Azir" }
-        assertNotNull(azir7d)
-        assertEquals(4, azir7d?.gamesPlayed)
-        assertEquals(4.0 / 6.0, azir7d!!.pickShare, 0.001)
-
-        val ahri7d = profile.recentSoloQ7Days.find { it.championId == "Ahri" }
-        assertNotNull(ahri7d)
-        assertEquals(2, ahri7d?.gamesPlayed)
-        assertEquals(1, ahri7d?.wins)
-        assertEquals(0.5, ahri7d?.winRate)
-    }
-
-    @Test
-    fun `should detect soloQ practice spike alerts and categorize type and severity`() {
-        val games = createSampleT1Games()
-        val service = PlayerIntelligenceService(proGames = games)
-
-        service.registerSoloQAccount(
-            "Faker",
-            SoloQAccount(
-                accountId = "kr_faker",
-                summonerName = "Hide on bush",
-                server = SoloQServer.KR,
-            ),
-        )
-
-        // Off-meta Galio surge: 0 pro games, 6 soloQ games in last 2 days with 5 wins
-        val soloQGames = mutableListOf<SoloQGame>()
-        for (i in 1..5) {
-            soloQGames.add(
-                createSoloQGame(
-                    gameId = "sq_galio_w_$i",
-                    accountId = "kr_faker",
-                    championId = "Galio",
-                    daysAgo = 0.3 * i,
-                    win = true,
-                ),
-            )
-        }
-        soloQGames.add(
-            createSoloQGame(
-                gameId = "sq_galio_l_1",
-                accountId = "kr_faker",
-                championId = "Galio",
-                daysAgo = 1.2,
-                win = false,
-            ),
-        )
-        service.addSoloQGames(soloQGames)
-
-        val profile = service.getPlayerProfile("Faker", Role.MID, referenceTimeMs = nowMs)
-
-        assertTrue(profile.activeSpikeAlerts.isNotEmpty())
-        val galioAlert = profile.activeSpikeAlerts.find { it.championId.equals("Galio", ignoreCase = true) }
-        assertNotNull(galioAlert)
-        assertEquals(SpikeAlertType.OFF_META_SURGE, galioAlert?.type)
-        assertEquals(SpikeAlertSeverity.HIGH, galioAlert?.severity)
-        assertEquals(6, galioAlert?.recentGamesCount)
-    }
-
-    @Test
-    fun `should resolve soloQ games by registered accounts and fallback to accountId`() {
-        val service = PlayerIntelligenceService(proGames = emptyList())
-
-        // Chovy has no registered SoloQAccount in accountRegistry, but games use accountId = "Chovy"
-        val chovyGames =
-            listOf(
-                createSoloQGame("sq_chovy_1", "Chovy", "Yone", daysAgo = 1.0, win = true),
-                createSoloQGame("sq_chovy_2", "Chovy", "Yone", daysAgo = 2.0, win = true),
-            )
-        service.addSoloQGames(chovyGames)
-
-        val soloQForChovy = service.getSoloQGamesForPlayer("Chovy")
-        assertEquals(2, soloQForChovy.size)
-
-        val chovyProfile = service.getPlayerProfile("Chovy", Role.MID, referenceTimeMs = nowMs)
-        assertEquals(1, chovyProfile.recentSoloQ3Days.size)
-        assertEquals("Yone", chovyProfile.recentSoloQ3Days.first().championId)
-    }
-
-    @Test
     fun `should integrate with ProMatchRepository initialized data`() {
         val games = createSampleT1Games()
         val repo = ProMatchRepository(initialGames = games)
@@ -440,7 +269,7 @@ class PlayerIntelligenceServiceTest {
     }
 
     @Test
-    fun `test getTeamRosterIntelligence returns 5 standard roles with signature and soloq data`() {
+    fun `test getTeamRosterIntelligence returns 5 standard roles with signature picks`() {
         val games = createSampleT1Games()
         val service = PlayerIntelligenceService(proGames = games)
         val rosterIntel = service.getTeamRosterIntelligence(teamId = "t1", referenceTimeMs = nowMs)
@@ -451,48 +280,5 @@ class PlayerIntelligenceServiceTest {
         assertNotNull(mid)
         assertEquals("Faker", mid?.playerId)
         assertTrue(mid!!.signaturePicks.isNotEmpty())
-    }
-
-    @Test
-    fun `test practice spike is detected and tagged in roster player intelligence`() {
-        val games = createSampleT1Games()
-        val service = PlayerIntelligenceService(proGames = games)
-        service.registerSoloQAccount(
-            "Faker",
-            SoloQAccount(
-                accountId = "kr_faker",
-                summonerName = "Hide on bush",
-                server = SoloQServer.KR,
-            ),
-        )
-        val soloQGames = mutableListOf<SoloQGame>()
-        for (i in 1..5) {
-            soloQGames.add(
-                createSoloQGame(
-                    gameId = "sq_galio_w_$i",
-                    accountId = "kr_faker",
-                    championId = "Galio",
-                    daysAgo = 0.3 * i,
-                    win = true,
-                ),
-            )
-        }
-        service.addSoloQGames(soloQGames)
-
-        val rosterIntel = service.getTeamRosterIntelligence(teamId = "t1", referenceTimeMs = nowMs)
-        val mid = rosterIntel[Role.MID]
-        assertNotNull(mid)
-        assertTrue(mid!!.practiceSpikes.isNotEmpty() || mid.recentSoloQ7Days.isNotEmpty())
-    }
-
-    @Test
-    fun `test fallback when no soloq games exist for player in roster`() {
-        val games = createSampleT1Games()
-        val service = PlayerIntelligenceService(proGames = games)
-        val rosterIntel = service.getTeamRosterIntelligence(teamId = "t1", soloQGames = emptyList(), referenceTimeMs = nowMs)
-
-        val supIntel = rosterIntel[Role.SUPPORT]
-        assertNotNull(supIntel)
-        assertEquals("Keria", supIntel?.playerId)
     }
 }

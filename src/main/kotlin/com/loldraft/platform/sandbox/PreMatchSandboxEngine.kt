@@ -13,7 +13,6 @@ import com.loldraft.data.models.Side
 import com.loldraft.data.normalization.ChampionNormalizer
 import com.loldraft.data.player.PlayerCareerStats
 import com.loldraft.data.player.PlayerIntelligenceDossier
-import com.loldraft.data.player.SpikeAlertSeverity
 import com.loldraft.data.style.AggressionLevel
 import com.loldraft.data.style.GamePace
 import com.loldraft.data.style.TacticalTag
@@ -149,8 +148,8 @@ class PreMatchSandboxEngine(
             val opponentTeamProfile = if (actingSide == Side.BLUE) request.redTeamProfile else request.blueTeamProfile
             val actingPlayerStats = if (actingSide == Side.BLUE) request.bluePlayerStats else request.redPlayerStats
             val opponentPlayerStats = if (actingSide == Side.BLUE) request.redPlayerStats else request.bluePlayerStats
-            val actingDossiers = if (actingSide == Side.BLUE) request.blueSoloQDossiers else request.redSoloQDossiers
-            val opponentDossiers = if (actingSide == Side.BLUE) request.redSoloQDossiers else request.blueSoloQDossiers
+            val actingDossiers = if (actingSide == Side.BLUE) request.bluePlayerDossiers else request.redPlayerDossiers
+            val opponentDossiers = if (actingSide == Side.BLUE) request.redPlayerDossiers else request.bluePlayerDossiers
 
             val (championId, assignedRole, rationale) =
                 selectChampionForTurn(
@@ -256,24 +255,6 @@ class PreMatchSandboxEngine(
         when (preset) {
             ScenarioPreset.TARGETED_COUNTER -> {
                 if (isBan) {
-                    // Check opponent SoloQ spike alerts
-                    val spikeTargets =
-                        opponentDossiers
-                            ?.flatMap { it.activeSpikeAlerts }
-                            ?.filter { it.severity == SpikeAlertSeverity.HIGH || it.severity == SpikeAlertSeverity.MEDIUM }
-                            ?.map { it.championId }
-                            ?.filter { ChampionNormalizer.toSlug(it) !in unavailableSlugs }
-                            .orEmpty()
-
-                    if (spikeTargets.isNotEmpty()) {
-                        val targetChamp = resolveDisplayName(spikeTargets.first())
-                        return SelectedTurnAction(
-                            championId = targetChamp,
-                            role = null,
-                            rationale = "Targeted Ban: Neutralizing opponent high-frequency SoloQ practice spike",
-                        )
-                    }
-
                     // Check opponent signature picks
                     val signatureTargets =
                         opponentPlayerStats
@@ -293,28 +274,6 @@ class PreMatchSandboxEngine(
                         )
                     }
                 } else {
-                    // In PICK: Check if acting players have signature or spike picks that fit vacant roles
-                    val playerSpikes =
-                        actingDossiers
-                            ?.flatMap { it.activeSpikeAlerts }
-                            ?.map { it.championId }
-                            ?.filter { ChampionNormalizer.toSlug(it) !in unavailableSlugs }
-                            .orEmpty()
-
-                    for (spikeChamp in playerSpikes) {
-                        val profile = tagRegistry.getProfile(spikeChamp)
-                        if (profile != null) {
-                            val matchingRole = findFittingRole(profile, vacantRoles)
-                            if (matchingRole != null) {
-                                return SelectedTurnAction(
-                                    championId = profile.displayName,
-                                    role = matchingRole,
-                                    rationale = "Pocket Pick: Leveraging confident SoloQ practice spike in $matchingRole lane",
-                                )
-                            }
-                        }
-                    }
-
                     // Check signature picks
                     val signatures =
                         actingPlayerStats
@@ -595,8 +554,8 @@ class PreMatchSandboxEngine(
             val opponentTeamProfile = if (actingSide == Side.BLUE) context.redTeamProfile else context.blueTeamProfile
             val actingPlayerStats = if (actingSide == Side.BLUE) context.bluePlayerStats else context.redPlayerStats
             val opponentPlayerStats = if (actingSide == Side.BLUE) context.redPlayerStats else context.bluePlayerStats
-            val actingDossiers = if (actingSide == Side.BLUE) context.blueSoloQDossiers else context.redSoloQDossiers
-            val opponentDossiers = if (actingSide == Side.BLUE) context.redSoloQDossiers else context.blueSoloQDossiers
+            val actingDossiers = if (actingSide == Side.BLUE) context.bluePlayerDossiers else context.redPlayerDossiers
+            val opponentDossiers = if (actingSide == Side.BLUE) context.redPlayerDossiers else context.bluePlayerDossiers
 
             val (championId, assignedRole, rationale) =
                 selectChampionForTurn(

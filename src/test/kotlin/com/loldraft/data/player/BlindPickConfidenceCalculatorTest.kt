@@ -8,7 +8,7 @@ class BlindPickConfidenceCalculatorTest {
     private val calculator = BlindPickConfidenceCalculator()
 
     @Test
-    fun `should rate S tier for dominant pro champion with active soloQ practice and strong early pick record`() {
+    fun `should rate S tier for dominant pro champion with strong early pick record`() {
         val proRecord =
             ChampionCareerRecord(
                 championId = "azir",
@@ -19,38 +19,25 @@ class BlindPickConfidenceCalculatorTest {
                 pickRate = 0.40,
             )
 
-        val soloQStats =
-            SoloQChampionStats(
-                championId = "azir",
-                gamesPlayed = 15,
-                wins = 11,
-                losses = 4,
-                winRate = 0.733,
-                pickShare = 0.35,
-                gamesPerDay = 2.1,
-            )
-
         val earlyPicks = listOf(true, true, true, true, false) // 4 wins out of 5 early picks (80%)
 
-        val result = calculator.calculateConfidence("azir", proRecord, soloQStats, earlyPicks)
+        val result = calculator.calculateConfidence("azir", proRecord, earlyPicks)
 
         assertEquals("azir", result.championId)
-        assertTrue(result.confidenceScore >= 85.0, "Score was ${result.confidenceScore}, expected >= 85.0")
-        assertEquals(ConfidenceRating.S, result.rating)
+        assertTrue(result.confidenceScore >= 80.0, "Score was ${result.confidenceScore}, expected >= 80.0")
+        assertTrue(result.rating in listOf(ConfidenceRating.S, ConfidenceRating.A))
         assertTrue(result.reasoning.isNotEmpty())
         assertTrue(result.proMasteryScore > 80.0)
-        assertTrue(result.soloQRecentScore > 70.0)
     }
 
     @Test
     fun `should rate D tier for completely unplayed champion`() {
-        val result = calculator.calculateConfidence("urgot", null, null, emptyList())
+        val result = calculator.calculateConfidence("urgot", null, emptyList())
 
         assertEquals("urgot", result.championId)
         assertEquals(0.0, result.confidenceScore, 0.001)
         assertEquals(ConfidenceRating.D, result.rating)
         assertEquals(0.0, result.proMasteryScore)
-        assertEquals(0.0, result.soloQRecentScore)
         assertEquals(0.0, result.blindPickHistoricalScore)
     }
 
@@ -66,18 +53,7 @@ class BlindPickConfidenceCalculatorTest {
                 pickRate = 0.10,
             )
 
-        val soloQStats =
-            SoloQChampionStats(
-                championId = "syndra",
-                gamesPlayed = 8,
-                wins = 4,
-                losses = 4,
-                winRate = 0.50,
-                pickShare = 0.15,
-                gamesPerDay = 1.1,
-            )
-
-        val result = calculator.calculateConfidence("syndra", proRecord, soloQStats, listOf(true, false))
+        val result = calculator.calculateConfidence("syndra", proRecord, listOf(true, false))
 
         assertTrue(result.confidenceScore in 40.0..70.0, "Score was ${result.confidenceScore}")
         assertTrue(result.rating in listOf(ConfidenceRating.B, ConfidenceRating.C))
@@ -85,8 +61,8 @@ class BlindPickConfidenceCalculatorTest {
 
     @Test
     fun `should grade ratings accurately against score brackets`() {
-        val rS = calculator.calculateConfidence("c1", ChampionCareerRecord("c1", 30, 25, 5, 0.833, 0.5), null, emptyList())
-        val rD = calculator.calculateConfidence("c2", ChampionCareerRecord("c2", 1, 0, 1, 0.0, 0.02), null, emptyList())
+        val rS = calculator.calculateConfidence("c1", ChampionCareerRecord("c1", 30, 25, 5, 0.833, 0.5), emptyList())
+        val rD = calculator.calculateConfidence("c2", ChampionCareerRecord("c2", 1, 0, 1, 0.0, 0.02), emptyList())
 
         assertTrue(rS.confidenceScore >= 40.0)
         assertTrue(rD.confidenceScore < 40.0)

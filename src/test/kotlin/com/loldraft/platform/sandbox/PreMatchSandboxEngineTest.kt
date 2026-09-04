@@ -14,11 +14,6 @@ import com.loldraft.data.player.PlayerCareerStats
 import com.loldraft.data.player.PlayerIntelligenceDossier
 import com.loldraft.data.player.SignaturePick
 import com.loldraft.data.player.SignatureTier
-import com.loldraft.data.player.SoloQAccount
-import com.loldraft.data.player.SoloQServer
-import com.loldraft.data.player.SpikeAlert
-import com.loldraft.data.player.SpikeAlertSeverity
-import com.loldraft.data.player.SpikeAlertType
 import com.loldraft.data.style.AggressionLevel
 import com.loldraft.data.style.EarlyGameMetrics
 import com.loldraft.data.style.FirstPickAnalysis
@@ -159,12 +154,10 @@ class PreMatchSandboxEngineTest {
     }
 
     @Test
-    fun testSoloQSpikesAndSignaturesIncorporated() {
+    fun testSignaturesIncorporated() {
         val response = engine.generateScenarios(sampleRequest)
         val targetedScenario = response.scenarios.first { it.preset == ScenarioPreset.TARGETED_COUNTER }
 
-        // In sampleRequest, Faker has an OFF_META_SURGE spike on "Ahri" and Chovy has a signature on "Yone"
-        // Under TARGETED_COUNTER, either Ahri or Yone should be targeted (banned or picked early)
         val selectedChampions = targetedScenario.draftState.allSelectedChampions
         val hasTargetedPickOrBan =
             selectedChampions.contains("Ahri") ||
@@ -172,7 +165,7 @@ class PreMatchSandboxEngineTest {
                 selectedChampions.contains("Azir")
         assertTrue(
             hasTargetedPickOrBan,
-            "Targeted Counter scenario should draft or ban signature / SoloQ spike champions (Ahri/Yone/Azir)",
+            "Targeted Counter scenario should draft or ban signature champions (Ahri/Yone/Azir)",
         )
     }
 
@@ -417,28 +410,6 @@ class PreMatchSandboxEngineTest {
                 PlayerIntelligenceDossier(
                     playerId = "Faker",
                     careerStats = fakerMidStats,
-                    linkedAccounts =
-                        listOf(
-                            SoloQAccount("faker_kr", "Hide on bush", SoloQServer.KR, "Challenger", "I", 1150),
-                        ),
-                    recentSoloQ3Days = emptyList(),
-                    recentSoloQ7Days = emptyList(),
-                    activeSpikeAlerts =
-                        listOf(
-                            SpikeAlert(
-                                championId = "Ahri",
-                                severity = SpikeAlertSeverity.HIGH,
-                                type = SpikeAlertType.OFF_META_SURGE,
-                                recentDays = 7,
-                                recentGamesCount = 28,
-                                recentWinRate = 0.785,
-                                baselineGamesCount = 4,
-                                baselineDays = 30,
-                                frequencyMultiplier = 7.0,
-                                careerProGames = 50,
-                                reason = "Sudden high frequency soloQ practice with 78.5% win rate",
-                            ),
-                        ),
                     blindPickConfidences = emptyMap(),
                 ),
             )
@@ -466,7 +437,7 @@ class PreMatchSandboxEngineTest {
             redTeamProfile = redProfile,
             bluePlayerStats = mapOf(Role.MID to fakerMidStats),
             redPlayerStats = mapOf(Role.MID to chovyMidStats),
-            blueSoloQDossiers = blueDossiers,
+            bluePlayerDossiers = blueDossiers,
             patchMeta = patchMeta,
         )
     }

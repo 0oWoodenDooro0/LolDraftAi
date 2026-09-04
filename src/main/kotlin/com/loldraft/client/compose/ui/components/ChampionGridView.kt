@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -60,6 +61,7 @@ fun ChampionGridView(
     currentTurnSpec: DraftTurnSpec,
     currentTurnNumber: Int,
     onLockIn: (String) -> Unit,
+    fearlessExcludedChampionIds: Set<String> = emptySet(),
     modifier: Modifier = Modifier,
 ) {
     val actingSideColor = if (currentTurnSpec.side == Side.BLUE) BlueSideColor else RedSideColor
@@ -68,16 +70,15 @@ fun ChampionGridView(
     Column(
         modifier =
             modifier
-                .fillMaxHeight()
                 .background(SurfaceDark, RoundedCornerShape(8.dp))
                 .border(1.dp, BorderDark, RoundedCornerShape(8.dp))
-                .padding(12.dp),
+                .padding(8.dp),
     ) {
-        // Search Champion Input (Full-width, default Material sizing)
+        // Search Champion Input (Default standard height)
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchChanged,
-            placeholder = { Text("Search Champion by name...", fontSize = 13.sp, color = TextMuted) },
+            placeholder = { Text("搜尋英雄名稱...", fontSize = 13.sp, color = TextMuted) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
@@ -92,35 +93,37 @@ fun ChampionGridView(
                 ),
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-        // Grid of Champions
+        // Grid of Champions (Compact adaptive cells)
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 88.dp),
-            contentPadding = PaddingValues(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            columns = GridCells.Adaptive(minSize = 72.dp),
+            contentPadding = PaddingValues(2.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.weight(1f),
         ) {
             items(champions, key = { it.id }) { champ ->
                 val isBanned = bannedChampionIds.any { it.equals(champ.id, ignoreCase = true) || it.equals(champ.name, ignoreCase = true) }
                 val isPicked = pickedChampionIds.any { it.equals(champ.id, ignoreCase = true) || it.equals(champ.name, ignoreCase = true) }
-                val isUnavailable = isBanned || isPicked
+                val isFearlessExcluded = fearlessExcludedChampionIds.any { it.equals(champ.id, ignoreCase = true) || it.equals(champ.name, ignoreCase = true) }
+                val isUnavailable = isBanned || isPicked || isFearlessExcluded
                 val isSelected = selectedChampionId?.equals(champ.id, ignoreCase = true) == true
 
                 ChampionCard(
                     champion = champ,
                     isBanned = isBanned,
                     isPicked = isPicked,
+                    isFearlessExcluded = isFearlessExcluded,
                     isSelected = isSelected,
                     onClick = { if (!isUnavailable) onChampionSelected(champ.id) },
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-        // Lock In Button
+        // Lock In Button (Compact height)
         val canLockIn = selectedChampionId != null && currentTurnNumber <= 20
         Button(
             onClick = {
@@ -129,7 +132,7 @@ fun ChampionGridView(
                 }
             },
             enabled = canLockIn,
-            modifier = Modifier.fillMaxWidth().height(44.dp),
+            modifier = Modifier.fillMaxWidth().height(38.dp),
             shape = RoundedCornerShape(6.dp),
             colors =
                 ButtonDefaults.buttonColors(
@@ -141,11 +144,11 @@ fun ChampionGridView(
         ) {
             val label =
                 if (selectedChampionId != null) {
-                    "LOCK IN $selectedChampionId (Turn $currentTurnNumber: ${currentTurnSpec.side.name} $actionName)"
+                    "LOCK IN $selectedChampionId (T$currentTurnNumber: ${currentTurnSpec.side.name} $actionName)"
                 } else {
-                    "SELECT A CHAMPION TO LOCK IN (Turn $currentTurnNumber: ${currentTurnSpec.side.name} $actionName)"
+                    "SELECT CHAMPION (T$currentTurnNumber: ${currentTurnSpec.side.name} $actionName)"
                 }
-            Text(label, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Text(label, fontWeight = FontWeight.Bold, fontSize = 12.sp)
         }
     }
 }
@@ -155,14 +158,16 @@ fun ChampionCard(
     champion: ProChampionEntry,
     isBanned: Boolean,
     isPicked: Boolean,
+    isFearlessExcluded: Boolean = false,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isUnavailable = isBanned || isPicked
+    val isUnavailable = isBanned || isPicked || isFearlessExcluded
     val borderColor =
         when {
             isSelected -> GoldAccent
+            isFearlessExcluded -> Color(0xFFFFA726)
             isBanned -> Color(0xFFFF5252)
             isPicked -> BlueSideColor
             else -> BorderDark
@@ -171,12 +176,12 @@ fun ChampionCard(
     Box(
         modifier =
             modifier
-                .height(84.dp)
+                .height(72.dp)
                 .background(CardDark, RoundedCornerShape(6.dp))
                 .border(if (isSelected) 2.dp else 1.dp, borderColor, RoundedCornerShape(6.dp))
                 .clickable(enabled = !isUnavailable) { onClick() }
                 .alpha(if (isUnavailable) 0.35f else 1.0f)
-                .padding(4.dp),
+                .padding(3.dp),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -188,36 +193,37 @@ fun ChampionCard(
             Box(
                 modifier =
                     Modifier
-                        .width(36.dp)
-                        .height(36.dp)
-                        .background(BorderDark, RoundedCornerShape(18.dp)),
+                        .size(28.dp)
+                        .background(BorderDark, RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = champion.name.take(2).uppercase(),
                     color = TextPrimary,
-                    fontSize = 11.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                 )
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
                 text = champion.name,
                 color = if (isSelected) GoldAccent else TextPrimary,
-                fontSize = 11.sp,
+                fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 textAlign = TextAlign.Center,
             )
 
-            if (isBanned) {
-                Text("BANNED", color = Color(0xFFFF5252), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            if (isFearlessExcluded) {
+                Text("全局BP", color = Color(0xFFFFA726), fontSize = 8.sp, fontWeight = FontWeight.Bold)
+            } else if (isBanned) {
+                Text("BANNED", color = Color(0xFFFF5252), fontSize = 8.sp, fontWeight = FontWeight.Bold)
             } else if (isPicked) {
-                Text("PICKED", color = BlueSideColor, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                Text("PICKED", color = BlueSideColor, fontSize = 8.sp, fontWeight = FontWeight.Bold)
             } else if (champion.primaryRole != null) {
-                Text(champion.primaryRole.name, color = TextMuted, fontSize = 9.sp)
+                Text(champion.primaryRole.name, color = TextMuted, fontSize = 8.sp)
             }
         }
     }

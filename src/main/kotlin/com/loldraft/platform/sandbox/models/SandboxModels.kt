@@ -120,8 +120,8 @@ data class MatchupSandboxRequest(
     val redTeamProfile: TeamTacticalProfile? = null,
     val bluePlayerStats: Map<Role, PlayerCareerStats>? = null,
     val redPlayerStats: Map<Role, PlayerCareerStats>? = null,
-    val blueSoloQDossiers: List<PlayerIntelligenceDossier>? = null,
-    val redSoloQDossiers: List<PlayerIntelligenceDossier>? = null,
+    val bluePlayerDossiers: List<PlayerIntelligenceDossier>? = null,
+    val redPlayerDossiers: List<PlayerIntelligenceDossier>? = null,
     val patchMeta: PatchMetaMatrix? = null,
     val initialTurns: List<DraftTurn> = emptyList(),
 )

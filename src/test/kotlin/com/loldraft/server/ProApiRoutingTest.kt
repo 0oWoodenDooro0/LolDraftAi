@@ -196,7 +196,7 @@ class ProApiRoutingTest {
         }
 
     @Test
-    fun `test get team players endpoint returns starting five profiles with career and soloQ metrics`() =
+    fun `test get team players endpoint returns starting five profiles with career metrics`() =
         testApplication {
             val repository = createSampleRepository()
             application {

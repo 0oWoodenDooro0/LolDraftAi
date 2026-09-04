@@ -45,35 +45,6 @@ data class PlayerCareerStats(
 )
 
 @Serializable
-enum class SpikeAlertType {
-    OFF_META_SURGE,
-    PRACTICE_SPIKE,
-    POCKET_PREPARATION,
-}
-
-@Serializable
-enum class SpikeAlertSeverity {
-    LOW,
-    MEDIUM,
-    HIGH,
-}
-
-@Serializable
-data class SpikeAlert(
-    val championId: String,
-    val severity: SpikeAlertSeverity,
-    val type: SpikeAlertType,
-    val recentDays: Int,
-    val recentGamesCount: Int,
-    val recentWinRate: Double,
-    val baselineGamesCount: Int,
-    val baselineDays: Int,
-    val frequencyMultiplier: Double,
-    val careerProGames: Int,
-    val reason: String,
-)
-
-@Serializable
 enum class ConfidenceRating {
     S,
     A,
@@ -88,7 +59,6 @@ data class BlindPickConfidence(
     val confidenceScore: Double,
     val rating: ConfidenceRating,
     val proMasteryScore: Double,
-    val soloQRecentScore: Double,
     val blindPickHistoricalScore: Double,
     val reasoning: List<String>,
 )
@@ -97,10 +67,6 @@ data class BlindPickConfidence(
 data class PlayerIntelligenceDossier(
     val playerId: String,
     val careerStats: PlayerCareerStats,
-    val linkedAccounts: List<SoloQAccount>,
-    val recentSoloQ3Days: List<SoloQChampionStats>,
-    val recentSoloQ7Days: List<SoloQChampionStats>,
-    val activeSpikeAlerts: List<SpikeAlert>,
     val blindPickConfidences: Map<String, BlindPickConfidence>,
 )
 
@@ -112,10 +78,6 @@ data class ProPlayerDetailedProfile(
     val proWinRate: Double,
     val careerStats: PlayerCareerStats,
     val signaturePicks: List<SignaturePick>,
-    val recentSoloQ3Days: List<SoloQChampionStats>,
-    val recentSoloQ7Days: List<SoloQChampionStats>,
-    val activeSpikeAlerts: List<SpikeAlert>,
-    val linkedAccounts: List<SoloQAccount> = emptyList(),
     val dossier: PlayerIntelligenceDossier? = null,
 ) {
     companion object {
@@ -130,10 +92,6 @@ data class ProPlayerDetailedProfile(
                 proWinRate = dossier.careerStats.winRate,
                 careerStats = dossier.careerStats,
                 signaturePicks = dossier.careerStats.signaturePicks,
-                recentSoloQ3Days = dossier.recentSoloQ3Days,
-                recentSoloQ7Days = dossier.recentSoloQ7Days,
-                activeSpikeAlerts = dossier.activeSpikeAlerts,
-                linkedAccounts = dossier.linkedAccounts,
                 dossier = dossier,
             )
     }

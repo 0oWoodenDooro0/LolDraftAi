@@ -10,6 +10,8 @@ import androidx.compose.ui.test.runDesktopComposeUiTest
 import androidx.compose.ui.unit.dp
 import com.loldraft.client.compose.ui.DraftApp
 import com.loldraft.client.compose.ui.components.AiDecisionPanelView
+import com.loldraft.client.compose.ui.components.FearlessDraftDialog
+import com.loldraft.client.compose.ui.components.NextBpPredictionView
 import com.loldraft.client.compose.viewmodel.DraftClientViewModel
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
@@ -94,6 +96,55 @@ class AiDecisionPanelViewLayoutTest {
             }
 
             // Wait for measure and layout pass
+            waitForIdle()
+        }
+
+    @Test
+    fun `test NextBpPredictionView renders candidate intent predictions cleanly`() =
+        runDesktopComposeUiTest {
+            val intentPredictions =
+                listOf(
+                    ChampionIntentCandidate(
+                        championId = "Ahri",
+                        probability = 0.55,
+                        intentScore = 0.55,
+                        predictedRole = Role.MID,
+                        rationale = "Core priority mid pick",
+                    ),
+                    ChampionIntentCandidate(
+                        championId = "Orianna",
+                        probability = 0.25,
+                        intentScore = 0.25,
+                        predictedRole = Role.MID,
+                        rationale = "Control mage meta anchor",
+                    ),
+                )
+
+            setContent {
+                NextBpPredictionView(
+                    currentTurnNumber = 1,
+                    currentTurnSpec = com.loldraft.data.models.DraftTurnSpec.forTurn(1, Side.BLUE),
+                    intentPredictions = intentPredictions,
+                )
+            }
+            waitForIdle()
+        }
+
+    @Test
+    fun `test FearlessDraftDialog renders cleanly with exclusions`() =
+        runDesktopComposeUiTest {
+            setContent {
+                FearlessDraftDialog(
+                    allChampions = emptyList(),
+                    excludedChampionIds = setOf("Ahri", "Vi"),
+                    currentPicksCount = 2,
+                    onAddChampion = {},
+                    onRemoveChampion = {},
+                    onClearAll = {},
+                    onImportCurrentPicks = {},
+                    onDismiss = {},
+                )
+            }
             waitForIdle()
         }
 }

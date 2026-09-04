@@ -32,10 +32,15 @@ data class EvalBarState(
 
 data class DraftClientState(
     val selectedLeague: String? = null,
+    val blueSelectedLeague: String? = null,
+    val redSelectedLeague: String? = null,
     val availableLeagues: List<String> = emptyList(),
     val selectedPatch: String = "16.17",
     val availablePatches: List<String> = listOf("16.17"),
     val allTeams: List<ProTeamSummary> = emptyList(),
+    val filteredTeams: List<ProTeamSummary> = emptyList(),
+    val blueFilteredTeams: List<ProTeamSummary> = emptyList(),
+    val redFilteredTeams: List<ProTeamSummary> = emptyList(),
     val blueTeam: ProTeamSummary? = null,
     val redTeam: ProTeamSummary? = null,
     val blueRosterIntelligence: Map<Role, PlayerRosterIntelligence> = emptyMap(),
@@ -55,6 +60,8 @@ data class DraftClientState(
     val selectedChampionId: String? = null,
     val bannedChampionIds: Set<String> = emptySet(),
     val pickedChampionIds: Set<String> = emptySet(),
+    val fearlessExcludedChampionIds: Set<String> = emptySet(),
+    val isFearlessDialogOpen: Boolean = false,
     val isDraftComplete: Boolean = false,
 )
 

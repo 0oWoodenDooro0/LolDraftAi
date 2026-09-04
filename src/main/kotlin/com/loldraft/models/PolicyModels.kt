@@ -14,7 +14,6 @@ data class ChampionIntentCandidate(
     val predictedRole: Role? = null,
     val metaScore: Double = 0.0,
     val playerMasteryScore: Double = 0.0,
-    val soloQScore: Double = 0.0,
     val compositionFitScore: Double = 0.0,
     val counterDenialScore: Double = 0.0,
     val playerName: String? = null,

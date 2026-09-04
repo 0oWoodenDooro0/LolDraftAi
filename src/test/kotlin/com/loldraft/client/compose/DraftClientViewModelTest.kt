@@ -116,4 +116,98 @@ class DraftClientViewModelTest {
             assertTrue(state.redRosterIntelligence.isNotEmpty(), "Red roster intelligence should be populated")
         }
     }
+
+    @Test
+    fun `test league filter reduces filtered teams list`() {
+        val allTeams = viewModel.uiState.value.allTeams
+        val leagues = viewModel.uiState.value.availableLeagues
+
+        if (leagues.isNotEmpty()) {
+            val targetLeague = leagues.first()
+            viewModel.selectLeague(targetLeague)
+
+            val state = viewModel.uiState.value
+            assertEquals(targetLeague, state.selectedLeague)
+            assertTrue(state.filteredTeams.isNotEmpty())
+            assertTrue(state.filteredTeams.all { it.league.equals(targetLeague, ignoreCase = true) })
+            assertTrue(state.filteredTeams.size <= allTeams.size)
+
+            // Select "ALL" resets back to all teams
+            viewModel.selectLeague("ALL")
+            val allState = viewModel.uiState.value
+            assertEquals(null, allState.selectedLeague)
+            assertEquals(allTeams.size, allState.filteredTeams.size)
+        }
+    }
+
+    @Test
+    fun `test dual independent league filters for blue and red sides`() {
+        val allTeams = viewModel.uiState.value.allTeams
+        val leagues = viewModel.uiState.value.availableLeagues
+
+        if (leagues.size >= 2) {
+            val leagueA = leagues[0]
+            val leagueB = leagues[1]
+
+            viewModel.selectBlueLeague(leagueA)
+            viewModel.selectRedLeague(leagueB)
+
+            val state = viewModel.uiState.value
+            assertEquals(leagueA, state.blueSelectedLeague)
+            assertEquals(leagueB, state.redSelectedLeague)
+            assertTrue(state.blueFilteredTeams.isNotEmpty())
+            assertTrue(state.redFilteredTeams.isNotEmpty())
+            assertTrue(state.blueFilteredTeams.all { it.league.equals(leagueA, ignoreCase = true) })
+            assertTrue(state.redFilteredTeams.all { it.league.equals(leagueB, ignoreCase = true) })
+
+            // Test swap teams swaps the selected leagues and lists
+            viewModel.swapTeams()
+            val swapped = viewModel.uiState.value
+            assertEquals(leagueB, swapped.blueSelectedLeague)
+            assertEquals(leagueA, swapped.redSelectedLeague)
+            assertEquals(state.redFilteredTeams, swapped.blueFilteredTeams)
+            assertEquals(state.blueFilteredTeams, swapped.redFilteredTeams)
+        }
+    }
+
+    @Test
+    fun `test fearless draft exclusion prevents lock-in and manages exclusions`() {
+        viewModel.addFearlessExcludedChampion("Aatrox")
+        assertTrue(viewModel.uiState.value.fearlessExcludedChampionIds.contains("Aatrox"))
+
+        // Attempt to lock in excluded champion Aatrox should be rejected
+        val turnBefore = viewModel.uiState.value.currentTurnNumber
+        viewModel.lockInChampion("Aatrox")
+        assertEquals(turnBefore, viewModel.uiState.value.currentTurnNumber, "Turn must not advance for fearless excluded champion")
+
+        // Remove from fearless exclusions
+        viewModel.removeFearlessExcludedChampion("Aatrox")
+        assertFalse(viewModel.uiState.value.fearlessExcludedChampionIds.contains("Aatrox"))
+
+        // Now lock-in should succeed
+        viewModel.lockInChampion("Aatrox")
+        assertEquals(turnBefore + 1, viewModel.uiState.value.currentTurnNumber, "Turn should advance once fearless exclusion is removed")
+    }
+
+    @Test
+    fun `test fearless draft importCurrentPicksToFearless and clear`() {
+        // Fast forward to picks (turns 1-6 are bans, turn 7 is first pick)
+        repeat(6) {
+            viewModel.lockInChampion("Champ$it")
+        }
+        assertEquals(7, viewModel.uiState.value.currentTurnNumber)
+        assertEquals(ActionType.PICK, viewModel.uiState.value.currentTurnSpec.actionType)
+
+        // Lock in a pick
+        viewModel.lockInChampion("Orianna")
+        assertTrue(viewModel.uiState.value.pickedChampionIds.contains("Orianna"))
+
+        // Import current picks into Fearless Draft
+        viewModel.importCurrentPicksToFearless()
+        assertTrue(viewModel.uiState.value.fearlessExcludedChampionIds.contains("Orianna"))
+
+        // Clear all fearless exclusions
+        viewModel.clearFearlessExcludedChampions()
+        assertTrue(viewModel.uiState.value.fearlessExcludedChampionIds.isEmpty())
+    }
 }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -114,9 +115,10 @@ fun DraftSlotRow(
         modifier =
             modifier
                 .fillMaxWidth()
+                .heightIn(min = 52.dp)
                 .background(if (slot.isCurrentTurn) CardDark else SurfaceDark, RoundedCornerShape(6.dp))
                 .then(borderModifier)
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -126,12 +128,12 @@ fun DraftSlotRow(
                 modifier =
                     Modifier
                         .background(if (slot.isCurrentTurn) GoldAccent else CardDark, RoundedCornerShape(4.dp))
-                        .padding(horizontal = 5.dp, vertical = 2.dp),
+                        .padding(horizontal = 6.dp, vertical = 3.dp),
             ) {
                 Text(
                     text = "T${slot.turnNumber}",
                     color = if (slot.isCurrentTurn) Color.Black else TextSecondary,
-                    fontSize = 10.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                 )
             }
@@ -150,7 +152,7 @@ fun DraftSlotRow(
                             TextMuted
                         },
                     fontWeight = if (isLocked || slot.isCurrentTurn) FontWeight.Bold else FontWeight.Normal,
-                    fontSize = 13.sp,
+                    fontSize = 14.sp,
                 )
                 if (slot.playerName != null || slot.role != null) {
                     Text(
@@ -172,7 +174,7 @@ fun DraftSlotRow(
                 Text(
                     text = slot.role.name,
                     color = sideColor,
-                    fontSize = 9.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
             }
@@ -188,29 +190,33 @@ fun BanSlotBox(
     val isLocked = slot.championId != null
     val borderModifier =
         if (slot.isCurrentTurn) {
-            Modifier.border(2.dp, GoldAccent, RoundedCornerShape(4.dp))
+            Modifier.border(2.dp, GoldAccent, RoundedCornerShape(6.dp))
         } else {
-            Modifier.border(1.dp, BorderDark, RoundedCornerShape(4.dp))
+            Modifier.border(1.dp, BorderDark, RoundedCornerShape(6.dp))
         }
 
     Box(
         modifier =
             modifier
-                .height(44.dp)
-                .background(if (slot.isCurrentTurn) CardDark else SurfaceDark, RoundedCornerShape(4.dp))
+                .height(60.dp)
+                .background(if (slot.isCurrentTurn) CardDark else SurfaceDark, RoundedCornerShape(6.dp))
                 .then(borderModifier)
-                .padding(2.dp),
+                .padding(horizontal = 2.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
             Text(
                 text = "T${slot.turnNumber}",
                 color = if (slot.isCurrentTurn) GoldAccent else TextMuted,
-                fontSize = 8.sp,
+                fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = slot.championName?.take(5) ?: if (slot.isCurrentTurn) "BAN" else "-",
+                text = slot.championName?.take(6) ?: if (slot.isCurrentTurn) "BAN" else "—",
                 color =
                     if (isLocked) {
                         Color(0xFFFF5252)
@@ -219,9 +225,18 @@ fun BanSlotBox(
                     } else {
                         TextMuted
                     },
-                fontSize = 10.sp,
+                fontSize = 11.sp,
                 fontWeight = if (isLocked) FontWeight.Bold else FontWeight.Normal,
+                maxLines = 1,
             )
+            if (isLocked) {
+                Text(
+                    text = "BAN",
+                    color = Color(0xFFFF5252).copy(alpha = 0.8f),
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
     }
 }

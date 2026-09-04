@@ -12,32 +12,22 @@ data class PlayerRosterIntelligence(
     val role: Role,
     val playerId: String,
     val signaturePicks: List<SignaturePick> = emptyList(),
-    val recentSoloQ7Days: List<SoloQChampionStats> = emptyList(),
-    val practiceSpikes: List<SpikeAlert> = emptyList(),
     val dossier: PlayerIntelligenceDossier? = null,
 )
 
 class PlayerIntelligenceService(
     val proMatchRepository: ProMatchRepository? = null,
     val proGames: List<Game>? = null,
-    val accountRegistry: PlayerAccountRegistry = PlayerAccountRegistry(),
     val careerAnalyzer: PlayerCareerAnalyzer = PlayerCareerAnalyzer(),
-    val soloQTracker: SoloQTracker = SoloQTracker(),
-    val spikeDetector: PracticeSpikeDetector = PracticeSpikeDetector(),
     val confidenceCalculator: BlindPickConfidenceCalculator = BlindPickConfidenceCalculator(),
     val playerTracker: PlayerTracker =
         PlayerTracker(
-            accountRegistry = accountRegistry,
             careerAnalyzer = careerAnalyzer,
-            soloQTracker = soloQTracker,
-            spikeDetector = spikeDetector,
             confidenceCalculator = confidenceCalculator,
         ),
-    initialSoloQGames: List<SoloQGame> = emptyList(),
 ) {
     val tracker: PlayerTracker get() = playerTracker
 
-    private val soloQGamesList = CopyOnWriteArrayList<SoloQGame>(initialSoloQGames)
     private val extraProGames = CopyOnWriteArrayList<Game>(proGames ?: emptyList())
 
     fun getAllProGames(): List<Game> {
@@ -45,38 +35,8 @@ class PlayerIntelligenceService(
         return if (extraProGames.isEmpty()) repoGames else repoGames + extraProGames
     }
 
-    fun addSoloQGames(games: Collection<SoloQGame>) {
-        soloQGamesList.addAll(games)
-    }
-
-    fun addSoloQGame(game: SoloQGame) {
-        soloQGamesList.add(game)
-    }
-
     fun addProGames(games: Collection<Game>) {
         extraProGames.addAll(games)
-    }
-
-    fun registerSoloQAccount(
-        playerId: String,
-        account: SoloQAccount,
-    ) {
-        accountRegistry.registerAccount(playerId, account)
-    }
-
-    fun registerSoloQAccounts(
-        playerId: String,
-        accounts: List<SoloQAccount>,
-    ) {
-        accountRegistry.registerAccounts(playerId, accounts)
-    }
-
-    fun getSoloQGamesForPlayer(playerId: String): List<SoloQGame> {
-        val accounts = accountRegistry.getAccountsForPlayer(playerId)
-        val registeredAccountIds = accounts.map { it.accountId.lowercase() }.toSet()
-        return soloQGamesList.filter {
-            it.accountId.lowercase() in registeredAccountIds || it.accountId.equals(playerId, ignoreCase = true)
-        }
     }
 
     fun getPlayerDossier(
@@ -85,11 +45,9 @@ class PlayerIntelligenceService(
         referenceTimeMs: Long = System.currentTimeMillis(),
     ): PlayerIntelligenceDossier {
         val allGames = getAllProGames()
-        val soloQForPlayer = getSoloQGamesForPlayer(playerId)
         return playerTracker.generateDossier(
             playerId = playerId,
             proGames = allGames,
-            soloQGames = soloQForPlayer,
             playerRole = role,
             referenceTimeMs = referenceTimeMs,
         )
@@ -163,42 +121,12 @@ class PlayerIntelligenceService(
             return profiles
         }
 
-        // 3. Otherwise check registered accounts in accountRegistry matching the team prefix
-        val registeredPlayers = accountRegistry.getAllMappings()
-        val matchingPlayers =
-            registeredPlayers.filter { (pId, accounts) ->
-                accounts.any {
-                    it.summonerName.contains(teamId, ignoreCase = true) ||
-                        it.accountId.contains(teamId, ignoreCase = true) ||
-                        isKnownTeamPlayer(teamId, pId)
-                } ||
-                    isKnownTeamPlayer(teamId, pId)
-            }
-
-        if (matchingPlayers.isNotEmpty()) {
-            val profiles = mutableListOf<ProPlayerDetailedProfile>()
-            for ((pId, _) in matchingPlayers) {
-                val playerSoloQ = getSoloQGamesForPlayer(pId)
-                val role =
-                    playerSoloQ
-                        .groupingBy { it.role }
-                        .eachCount()
-                        .maxByOrNull { it.value }
-                        ?.key
-                        ?: getKnownPlayerRole(pId)
-                        ?: Role.TOP
-                profiles.add(getPlayerProfile(pId, role, referenceTimeMs))
-            }
-            return profiles
-        }
-
         return emptyList()
     }
 
     fun getTeamRosterIntelligence(
         teamId: String,
         proGames: List<Game> = getAllProGames(),
-        soloQGames: List<SoloQGame> = soloQGamesList,
         referenceTimeMs: Long = System.currentTimeMillis(),
     ): Map<Role, PlayerRosterIntelligence> {
         val allGames = if (proGames.isNotEmpty()) proGames else getAllProGames()
@@ -226,25 +154,10 @@ class PlayerIntelligenceService(
                     ?: proMatchRepository?.getTeamRoster(teamId)?.find { it.role == role }?.playerName
                     ?: continue
 
-            val linkedAccounts = accountRegistry.getAccountsForPlayer(topPlayer)
-            val linkedAccountIds = linkedAccounts.map { it.accountId.lowercase() }.toSet()
-            val linkedSummonerNames = linkedAccounts.map { it.summonerName.lowercase() }.toSet()
-
-            val allSoloQ = if (soloQGames.isNotEmpty()) soloQGames else soloQGamesList
-            val playerSoloQ =
-                allSoloQ.filter { sq ->
-                    val accId = sq.accountId.lowercase()
-                    linkedAccountIds.contains(accId) ||
-                        linkedSummonerNames.contains(accId) ||
-                        accId.contains(topPlayer.lowercase()) ||
-                        topPlayer.lowercase().contains(accId)
-                }
-
             val dossier =
                 playerTracker.generateDossier(
                     playerId = topPlayer,
                     proGames = teamGames,
-                    soloQGames = playerSoloQ,
                     playerRole = role,
                     referenceTimeMs = referenceTimeMs,
                 )
@@ -254,8 +167,6 @@ class PlayerIntelligenceService(
                     role = role,
                     playerId = topPlayer,
                     signaturePicks = dossier.careerStats.signaturePicks,
-                    recentSoloQ7Days = dossier.recentSoloQ7Days,
-                    practiceSpikes = dossier.activeSpikeAlerts,
                     dossier = dossier,
                 )
         }
