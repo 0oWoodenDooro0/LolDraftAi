@@ -8,12 +8,14 @@ object ChampionNormalizer {
             "Akali",
             "Akshan",
             "Alistar",
+            "Ambessa",
             "Amumu",
             "Anivia",
             "Annie",
             "Aphelios",
             "Ashe",
             "Aurelion Sol",
+            "Aurora",
             "Azir",
             "Bard",
             "Bel'Veth",
@@ -82,6 +84,7 @@ object ChampionNormalizer {
             "Malzahar",
             "Maokai",
             "Master Yi",
+            "Mel",
             "Milio",
             "Miss Fortune",
             "Mordekaiser",
@@ -206,4 +209,6 @@ object ChampionNormalizer {
         val normalized = normalize(rawName)
         return cleanKey(normalized)
     }
+
+    fun getCanonicalNames(): List<String> = CANONICAL_NAMES
 }

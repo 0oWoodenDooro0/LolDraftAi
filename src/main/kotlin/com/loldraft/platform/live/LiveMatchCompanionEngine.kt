@@ -1,6 +1,7 @@
 package com.loldraft.platform.live
 
 import com.loldraft.data.meta.ChampionTagRegistry
+import com.loldraft.data.meta.PatchMetaMatrix
 import com.loldraft.data.models.ActionType
 import com.loldraft.data.models.DraftState
 import com.loldraft.data.models.DraftTurn
@@ -16,6 +17,7 @@ import com.loldraft.models.DraftIntentPredictor
 import com.loldraft.models.DraftRecommender
 import com.loldraft.models.EvalBarCalculator
 import com.loldraft.models.FiveDimensionRadarScores
+import com.loldraft.models.FlexPickAnalyzer
 import com.loldraft.models.TimeCurveCalculator
 import com.loldraft.platform.live.models.CreateLiveSessionRequest
 import com.loldraft.platform.live.models.LiveMatchSession
@@ -36,6 +38,7 @@ class LiveMatchCompanionEngine(
     val timeCurveCalculator: TimeCurveCalculator = TimeCurveCalculator(tagRegistry),
     val draftRecommender: DraftRecommender = DraftRecommender(evaluator = draftEvaluator, tagRegistry = tagRegistry),
     val intentPredictor: DraftIntentPredictor = DraftIntentPredictor(tagRegistry = tagRegistry),
+    val flexAnalyzer: FlexPickAnalyzer = FlexPickAnalyzer(tagRegistry = tagRegistry),
     val coachPickEvaluator: CoachPickEvaluator =
         CoachPickEvaluator(
             draftEvaluator = draftEvaluator,
@@ -189,7 +192,7 @@ class LiveMatchCompanionEngine(
 
         val resolvedRole =
             if (turnSpec.actionType == ActionType.PICK) {
-                role ?: deduceRole(championId, turnSpec.side, session.currentState)
+                role ?: deduceRole(championId, turnSpec.side, session.currentState, session.patchMeta)
             } else {
                 null
             }
@@ -248,22 +251,26 @@ class LiveMatchCompanionEngine(
         )
     }
 
-    private fun deduceRole(
+    fun deduceRole(
         championId: String,
         side: Side,
         draftState: DraftState,
+        patchMeta: PatchMetaMatrix? = null,
     ): Role {
         val teamPicks = if (side == Side.BLUE) draftState.bluePicks else draftState.redPicks
         val filledRoles = teamPicks.mapNotNull { it.role }.toSet()
         val vacantRoles = Role.entries.filterNot { it in filledRoles }
+        if (vacantRoles.isEmpty()) return Role.MID
+        if (vacantRoles.size == 1) return vacantRoles.first()
 
-        val profile = tagRegistry.getProfile(championId)
-        return when {
-            profile != null && profile.primaryRole in vacantRoles -> profile.primaryRole
-            profile != null && profile.secondaryRoles.any { it in vacantRoles } -> profile.secondaryRoles.first { it in vacantRoles }
-            vacantRoles.isNotEmpty() -> vacantRoles.first()
-            else -> Role.MID
-        }
+        val roleProbs =
+            flexAnalyzer.getRoleProbabilities(
+                championId = championId,
+                patchMeta = patchMeta,
+                teamExistingRoles = filledRoles,
+            )
+
+        return vacantRoles.maxByOrNull { roleProbs[it] ?: 0.0 } ?: vacantRoles.first()
     }
 
     private fun buildSnapshot(

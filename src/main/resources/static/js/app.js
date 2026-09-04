@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnExportMarkdown = document.getElementById('btnExportMarkdown');
 
     // 1. Initialize Metadata
+    initPatches();
     initLeagues();
     initChampions();
     initTurnSpecs();
@@ -177,6 +178,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function initPatches() {
+        try {
+            const res = await fetch('/api/pro/patches');
+            if (res.ok) {
+                const patches = await res.json();
+                if (patches && patches.length > 0) {
+                    const patchBadge = document.getElementById('patchBadge');
+                    if (patchBadge) {
+                        patchBadge.textContent = `Patch ${patches[0]}`;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load patches', e);
+        }
+    }
+
     async function initChampions() {
         try {
             const res = await fetch('/api/pro/champions');
@@ -206,7 +224,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const filtered = allChampions.filter(c => {
             const matchSearch = !search || c.name.toLowerCase().includes(search);
-            const matchRole = activeRoleFilter === 'ALL' || c.primaryRole === activeRoleFilter;
+            const matchRole =
+                activeRoleFilter === 'ALL' ||
+                c.primaryRole === activeRoleFilter ||
+                (Array.isArray(c.secondaryRoles) && c.secondaryRoles.includes(activeRoleFilter));
             return matchSearch && matchRole;
         });
 
