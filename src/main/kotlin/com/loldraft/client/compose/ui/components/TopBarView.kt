@@ -37,15 +37,18 @@ import com.loldraft.client.compose.ui.theme.GoldAccent
 import com.loldraft.client.compose.ui.theme.RedSideColor
 import com.loldraft.client.compose.ui.theme.SurfaceDark
 import com.loldraft.client.compose.ui.theme.TextPrimary
+import androidx.compose.foundation.layout.PaddingValues
 import com.loldraft.client.compose.ui.theme.TextSecondary
+import com.loldraft.data.models.Side
 
 @Composable
 fun TopBarView(
     state: DraftClientState,
-    onSelectLeague: (String) -> Unit,
     onSelectBlueTeam: (String) -> Unit,
     onSelectRedTeam: (String) -> Unit,
     onSelectPatch: (String) -> Unit,
+    onSetFirstPickSide: (Side) -> Unit,
+    onSwapTeams: () -> Unit,
     onUndo: () -> Unit,
     onReset: () -> Unit,
     modifier: Modifier = Modifier,
@@ -83,19 +86,11 @@ fun TopBarView(
             )
         }
 
-        // Middle Selectors: League, Patch, Blue Team, Red Team
+        // Middle Selectors: Patch, First Pick Side, Blue Team, Swap, Red Team
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // League Dropdown
-            DropdownSelector(
-                label = "League",
-                selectedItem = state.selectedLeague ?: "ALL",
-                items = state.availableLeagues,
-                onItemSelected = onSelectLeague,
-            )
-
             // Patch Dropdown (defaults to 16.17)
             DropdownSelector(
                 label = "Patch",
@@ -104,6 +99,32 @@ fun TopBarView(
                 accentColor = GoldAccent,
                 onItemSelected = { onSelectPatch(it.removePrefix("v")) },
             )
+
+            // First Pick Side Selector
+            Row(
+                modifier =
+                    Modifier
+                        .background(CardDark, RoundedCornerShape(6.dp))
+                        .border(1.dp, BorderDark, RoundedCornerShape(6.dp))
+                        .clickable {
+                            val nextSide = if (state.firstPickSide == Side.BLUE) Side.RED else Side.BLUE
+                            onSetFirstPickSide(nextSide)
+                        }
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "First Pick: ",
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                )
+                Text(
+                    text = if (state.firstPickSide == Side.BLUE) "BLUE" else "RED",
+                    color = if (state.firstPickSide == Side.BLUE) BlueSideColor else RedSideColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                )
+            }
 
             // Blue Team Dropdown
             DropdownSelector(
@@ -116,7 +137,19 @@ fun TopBarView(
                 },
             )
 
-            Text("VS", color = TextSecondary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            // Swap Teams Button
+            OutlinedButton(
+                onClick = onSwapTeams,
+                modifier = Modifier.height(32.dp),
+                shape = RoundedCornerShape(6.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                colors =
+                    ButtonDefaults.outlinedButtonColors(
+                        contentColor = GoldAccent,
+                    ),
+            ) {
+                Text("⇄ Swap", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
 
             // Red Team Dropdown
             DropdownSelector(

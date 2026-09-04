@@ -70,6 +70,8 @@ class AiDecisionPanelViewLayoutTest {
                             .verticalScroll(parentScrollState),
                 ) {
                     AiDecisionPanelView(
+                        currentTurnNumber = 1,
+                        currentTurnSpec = com.loldraft.data.models.DraftTurnSpec.forTurn(1, Side.BLUE),
                         intentPredictions = intentPredictions,
                         recommendations = recommendations,
                         compositionFlaws = compositionFlaws,

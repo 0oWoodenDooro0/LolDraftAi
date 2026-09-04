@@ -190,6 +190,36 @@ class ProMatchRepository(
         }
     }
 
+    fun getOpponentBansAgainstTeam(teamId: String): List<com.loldraft.data.style.OpponentBanRecord> {
+        ensureInitialized()
+        val teamGames = games.filter { matchesTeam(it.blueTeam, teamId) || matchesTeam(it.redTeam, teamId) }
+        if (teamGames.isEmpty()) return emptyList()
+
+        val banCounts = mutableMapOf<String, Int>()
+        for (game in teamGames) {
+            val isBlue = matchesTeam(game.blueTeam, teamId)
+            val opponentBans = if (isBlue) game.draftState.redBans else game.draftState.blueBans
+            for (ban in opponentBans) {
+                if (ban.isNotBlank()) {
+                    val normalized = ChampionNormalizer.normalize(ban)
+                    banCounts[normalized] = (banCounts[normalized] ?: 0) + 1
+                }
+            }
+        }
+
+        val totalGames = teamGames.size
+        return banCounts.map { (champ, count) ->
+            val rate = count.toDouble() / totalGames
+            com.loldraft.data.style.OpponentBanRecord(
+                championId = champ,
+                banCount = count,
+                totalGames = totalGames,
+                banRate = Math.round(rate * 10000.0) / 10000.0,
+            )
+        }.sortedWith(compareByDescending<com.loldraft.data.style.OpponentBanRecord> { it.banRate }.thenByDescending { it.banCount })
+    }
+
+
     fun getPatches(): List<String> {
         ensureInitialized()
         return games

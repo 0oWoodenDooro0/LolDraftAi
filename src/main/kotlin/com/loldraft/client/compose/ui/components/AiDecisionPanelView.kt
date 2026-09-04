@@ -7,17 +7,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.loldraft.client.compose.ui.theme.BlueSideColor
@@ -26,10 +30,14 @@ import com.loldraft.client.compose.ui.theme.CardDark
 import com.loldraft.client.compose.ui.theme.GoldAccent
 import com.loldraft.client.compose.ui.theme.GreenAccent
 import com.loldraft.client.compose.ui.theme.OrangeWarning
+import com.loldraft.client.compose.ui.theme.RedSideColor
 import com.loldraft.client.compose.ui.theme.SurfaceDark
 import com.loldraft.client.compose.ui.theme.TextMuted
 import com.loldraft.client.compose.ui.theme.TextPrimary
 import com.loldraft.client.compose.ui.theme.TextSecondary
+import com.loldraft.data.models.ActionType
+import com.loldraft.data.models.DraftTurnSpec
+import com.loldraft.data.models.Side
 import com.loldraft.models.ChampionIntentCandidate
 import com.loldraft.models.CompositionFlaw
 import com.loldraft.models.FlawSeverity
@@ -38,96 +46,202 @@ import java.util.Locale
 
 @Composable
 fun AiDecisionPanelView(
+    currentTurnNumber: Int,
+    currentTurnSpec: DraftTurnSpec,
     intentPredictions: List<ChampionIntentCandidate>,
     recommendations: List<PickRecommendation>,
     compositionFlaws: List<CompositionFlaw>,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    val isBan = currentTurnSpec.actionType == ActionType.BAN
+    val actingSideColor = if (currentTurnSpec.side == Side.BLUE) BlueSideColor else RedSideColor
+    val actingSideName = currentTurnSpec.side.name
+    val actionName = if (isBan) "BAN" else "PICK"
+
+    Box(
         modifier =
             modifier
+                .fillMaxWidth()
                 .background(SurfaceDark, RoundedCornerShape(8.dp))
                 .border(1.dp, BorderDark, RoundedCornerShape(8.dp))
-                .padding(12.dp),
+                .padding(10.dp),
     ) {
-        // Section 1: Intent Prediction
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
+        Row(
+            modifier = Modifier.fillMaxWidth().height(195.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            // Section 1: Intent Prediction for acting team
+            Column(
                 modifier =
                     Modifier
-                        .background(GoldAccent, RoundedCornerShape(3.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                        .weight(1.15f)
+                        .fillMaxHeight()
+                        .background(CardDark, RoundedCornerShape(6.dp))
+                        .border(1.dp, BorderDark, RoundedCornerShape(6.dp))
+                        .padding(8.dp),
             ) {
-                Text("AI INTENT", color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Enemy Next Action Predictions", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-        }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .background(GoldAccent, RoundedCornerShape(3.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        Text("AI INTENT", color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Turn $currentTurnNumber: $actingSideName $actionName Prediction",
+                        color = TextPrimary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
 
-        Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
-        if (intentPredictions.isEmpty()) {
-            Text("Calculating opponent intent...", color = TextMuted, fontSize = 11.sp)
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                intentPredictions.take(3).forEachIndexed { index, candidate ->
-                    IntentPredictionCard(rank = index + 1, candidate = candidate)
+                if (intentPredictions.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+                        Text("Draft is complete or calculating intent...", color = TextMuted, fontSize = 11.sp)
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        intentPredictions.take(3).forEachIndexed { index, candidate ->
+                            IntentPredictionCard(rank = index + 1, candidate = candidate)
+                        }
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Section 2: Counter & Win Rate Recommendations
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
+            // Section 2: Tactical Recommendations (Bans or Counter Picks)
+            Column(
                 modifier =
                     Modifier
-                        .background(BlueSideColor, RoundedCornerShape(3.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                        .weight(1.15f)
+                        .fillMaxHeight()
+                        .background(CardDark, RoundedCornerShape(6.dp))
+                        .border(1.dp, BorderDark, RoundedCornerShape(6.dp))
+                        .padding(8.dp),
             ) {
-                Text("RECOMMEND", color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Optimal Counter & Synergy Picks", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-        }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val badgeColor = if (isBan) RedSideColor else BlueSideColor
+                    val badgeText = if (isBan) "RECOMMEND BAN" else "RECOMMEND PICK"
+                    val titleText = if (isBan) "Target & Priority Bans ($actingSideName)" else "Optimal Synergy & Counter ($actingSideName)"
 
-        Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier =
+                            Modifier
+                                .background(badgeColor, RoundedCornerShape(3.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        Text(badgeText, color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = titleText,
+                        color = TextPrimary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
 
-        if (recommendations.isEmpty()) {
-            Text("Calculating counter recommendations...", color = TextMuted, fontSize = 11.sp)
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                recommendations.take(3).forEach { rec ->
-                    CounterRecommendationCard(rec = rec)
+                Spacer(modifier = Modifier.height(6.dp))
+
+                if (recommendations.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+                        Text("Calculating tactical recommendations...", color = TextMuted, fontSize = 11.sp)
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        recommendations.take(3).forEach { rec ->
+                            TacticalRecommendationCard(rec = rec, isBan = isBan, sideColor = actingSideColor)
+                        }
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Section 3: Composition Warnings
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
+            // Section 3: Composition Synergy & Flaws
+            Column(
                 modifier =
                     Modifier
-                        .background(OrangeWarning, RoundedCornerShape(3.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                        .weight(0.9f)
+                        .fillMaxHeight()
+                        .background(CardDark, RoundedCornerShape(6.dp))
+                        .border(1.dp, BorderDark, RoundedCornerShape(6.dp))
+                        .padding(8.dp),
             ) {
-                Text("FLAWS", color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Composition Warnings", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-        }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .background(OrangeWarning, RoundedCornerShape(3.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        Text("COMPOSITION", color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Synergy & Flaw Alerts",
+                        color = TextPrimary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
 
-        Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
-        if (compositionFlaws.isEmpty()) {
-            Text("No critical composition flaws detected.", color = GreenAccent, fontSize = 11.sp)
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                compositionFlaws.forEach { flaw ->
-                    CompositionFlawCard(flaw = flaw)
+                if (compositionFlaws.isEmpty()) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .background(SurfaceDark, RoundedCornerShape(4.dp))
+                                .padding(8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("✓ Balanced Synergy", color = GreenAccent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "No critical composition flaws or engage voids detected.",
+                                color = TextSecondary,
+                                fontSize = 10.sp,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        compositionFlaws.take(3).forEach { flaw ->
+                            CompositionFlawCard(flaw = flaw)
+                        }
+                    }
                 }
             }
         }
@@ -146,9 +260,9 @@ fun IntentPredictionCard(
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(CardDark, RoundedCornerShape(6.dp))
-                .border(1.dp, BorderDark, RoundedCornerShape(6.dp))
-                .padding(8.dp),
+                .background(SurfaceDark, RoundedCornerShape(4.dp))
+                .border(1.dp, BorderDark, RoundedCornerShape(4.dp))
+                .padding(horizontal = 6.dp, vertical = 4.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -157,67 +271,75 @@ fun IntentPredictionCard(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("#$rank", color = GoldAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(candidate.championId, color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(candidate.championId, color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 if (candidate.predictedRole != null) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("(${candidate.predictedRole.name})", color = TextSecondary, fontSize = 10.sp)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("(${candidate.predictedRole.name})", color = TextSecondary, fontSize = 9.sp)
                 }
             }
 
-            Text(probPercent, color = GoldAccent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Text(probPercent, color = GoldAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         // Probability bar
         Box(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(4.dp)
+                    .height(3.dp)
                     .background(BorderDark, RoundedCornerShape(2.dp)),
         ) {
             Box(
                 modifier =
                     Modifier
                         .fillMaxWidth(candidate.probability.toFloat().coerceIn(0f, 1f))
-                        .height(4.dp)
+                        .height(3.dp)
                         .background(GoldAccent, RoundedCornerShape(2.dp)),
             )
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
-        // Rationale text (includes player career & SoloQ spike!)
+        // Rationale text
         Text(
             text = candidate.rationale,
             color = TextSecondary,
-            fontSize = 10.sp,
-            lineHeight = 13.sp,
+            fontSize = 9.sp,
+            lineHeight = 11.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
 @Composable
-fun CounterRecommendationCard(
+fun TacticalRecommendationCard(
     rec: PickRecommendation,
+    isBan: Boolean,
+    sideColor: Color,
     modifier: Modifier = Modifier,
 ) {
-    val gainText =
-        if (rec.winRateGain >= 0) {
-            String.format(Locale.US, "+%.1f%% ΔWR", rec.winRateGain * 100)
+    val scoreText =
+        if (isBan) {
+            String.format(Locale.US, "%.1f%% Threat", rec.winRateGain * 100)
         } else {
-            String.format(Locale.US, "%.1f%% ΔWR", rec.winRateGain * 100)
+            if (rec.winRateGain >= 0) {
+                String.format(Locale.US, "+%.1f%% ΔWR", rec.winRateGain * 100)
+            } else {
+                String.format(Locale.US, "%.1f%% ΔWR", rec.winRateGain * 100)
+            }
         }
 
     Column(
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(CardDark, RoundedCornerShape(6.dp))
-                .border(1.dp, BorderDark, RoundedCornerShape(6.dp))
-                .padding(8.dp),
+                .background(SurfaceDark, RoundedCornerShape(4.dp))
+                .border(1.dp, BorderDark, RoundedCornerShape(4.dp))
+                .padding(horizontal = 6.dp, vertical = 4.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -225,20 +347,23 @@ fun CounterRecommendationCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(rec.championId, color = BlueSideColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("(${rec.recommendedRole.name})", color = TextSecondary, fontSize = 10.sp)
+                Text(rec.championId, color = sideColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.width(5.dp))
+                Text("(${rec.recommendedRole.name})", color = TextSecondary, fontSize = 9.sp)
             }
 
-            Text(gainText, color = GreenAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text(scoreText, color = GreenAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
         }
 
         if (rec.reasons.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = rec.reasons.first(),
                 color = TextSecondary,
-                fontSize = 10.sp,
+                fontSize = 9.sp,
+                lineHeight = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -260,23 +385,36 @@ fun CompositionFlawCard(
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(CardDark, RoundedCornerShape(6.dp))
-                .border(1.dp, BorderDark, RoundedCornerShape(6.dp))
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .background(SurfaceDark, RoundedCornerShape(4.dp))
+                .border(1.dp, BorderDark, RoundedCornerShape(4.dp))
+                .padding(horizontal = 6.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier =
                 Modifier
-                    .background(color, RoundedCornerShape(3.dp))
-                    .padding(horizontal = 5.dp, vertical = 2.dp),
+                    .background(color, RoundedCornerShape(2.dp))
+                    .padding(horizontal = 4.dp, vertical = 1.dp),
         ) {
-            Text(flaw.severity.name, color = Color.Black, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+            Text(flaw.severity.name, color = Color.Black, fontSize = 7.sp, fontWeight = FontWeight.Bold)
         }
-        Spacer(modifier = Modifier.width(8.dp))
-        Column {
-            Text(flaw.title, color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            Text(flaw.suggestion, color = TextSecondary, fontSize = 9.sp)
+        Spacer(modifier = Modifier.width(6.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = flaw.title,
+                color = TextPrimary,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = flaw.suggestion,
+                color = TextSecondary,
+                fontSize = 8.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }

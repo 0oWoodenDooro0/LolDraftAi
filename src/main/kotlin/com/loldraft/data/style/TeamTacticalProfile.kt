@@ -106,6 +106,14 @@ data class TeamStyleFilter(
 )
 
 @Serializable
+data class OpponentBanRecord(
+    val championId: String,
+    val banCount: Int,
+    val totalGames: Int,
+    val banRate: Double,
+)
+
+@Serializable
 data class TeamTacticalProfile(
     val team: Team,
     val totalGamesAnalyzed: Int,
@@ -115,3 +123,4 @@ data class TeamTacticalProfile(
     val firstPickAnalysis: FirstPickAnalysis,
     val tags: Set<TacticalTag>,
 )
+

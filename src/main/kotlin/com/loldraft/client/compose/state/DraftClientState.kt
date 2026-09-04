@@ -41,7 +41,8 @@ data class DraftClientState(
     val blueRosterIntelligence: Map<Role, PlayerRosterIntelligence> = emptyMap(),
     val redRosterIntelligence: Map<Role, PlayerRosterIntelligence> = emptyMap(),
     val currentTurnNumber: Int = 1,
-    val currentTurnSpec: DraftTurnSpec = DraftTurnSpec.forTurn(1),
+    val firstPickSide: Side = Side.BLUE,
+    val currentTurnSpec: DraftTurnSpec = DraftTurnSpec.forTurn(1, Side.BLUE),
     val boardSlots: List<BoardSlot> = emptyList(),
     val evalBar: EvalBarState = EvalBarState(),
     val intentPredictions: List<ChampionIntentCandidate> = emptyList(),
@@ -56,3 +57,4 @@ data class DraftClientState(
     val pickedChampionIds: Set<String> = emptySet(),
     val isDraftComplete: Boolean = false,
 )
+

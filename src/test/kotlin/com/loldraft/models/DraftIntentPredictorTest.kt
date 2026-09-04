@@ -278,5 +278,26 @@ class DraftIntentPredictorTest {
             assertFalse(candidateIds.contains("Renekton"), "Renekton 已被禁，不可被預測")
             assertFalse(candidateIds.contains("Orianna"), "Orianna 已被禁，不可被預測")
         }
+
+        @Test
+        @DisplayName("預測清單中絕不應出現重複英雄 (包含大小寫或別名)")
+        fun `test predictions never contain duplicate champions`() {
+            val patchMeta =
+                PatchMetaMatrix(
+                    patch = "14.15",
+                    totalGames = 100,
+                    championStats =
+                        mapOf(
+                            "ahri" to ChampionMetaStats("Ahri", "14.15", picks = 50, bans = 40, presenceRate = 0.9, winRate = 0.6, tier = MetaTier.T0),
+                            "Ahri" to ChampionMetaStats("Ahri", "14.15", picks = 50, bans = 40, presenceRate = 0.9, winRate = 0.6, tier = MetaTier.T0),
+                            "leblanc" to ChampionMetaStats("Leblanc", "14.15", picks = 50, bans = 40, presenceRate = 0.85, winRate = 0.58, tier = MetaTier.T0),
+                            "LeBlanc" to ChampionMetaStats("LeBlanc", "14.15", picks = 50, bans = 40, presenceRate = 0.85, winRate = 0.58, tier = MetaTier.T0),
+                        ),
+                )
+            val draft = DraftState.empty()
+            val result = predictor.predictNextAction(draftState = draft, patchMeta = patchMeta, topN = 5)
+            val slugs = result.predictions.map { com.loldraft.data.normalization.ChampionNormalizer.toSlug(it.championId) }
+            assertEquals(slugs.distinct().size, slugs.size, "預測英雄清單絕不可包含重複英雄: ${result.predictions.map { it.championId }}")
+        }
     }
 }

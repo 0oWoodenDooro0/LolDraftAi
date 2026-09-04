@@ -53,8 +53,6 @@ fun ChampionGridView(
     champions: List<ProChampionEntry>,
     searchQuery: String,
     onSearchChanged: (String) -> Unit,
-    selectedRoleFilter: Role?,
-    onRoleFilterSelected: (Role?) -> Unit,
     selectedChampionId: String?,
     onChampionSelected: (String) -> Unit,
     bannedChampionIds: Set<String>,
@@ -75,41 +73,24 @@ fun ChampionGridView(
                 .border(1.dp, BorderDark, RoundedCornerShape(8.dp))
                 .padding(12.dp),
     ) {
-        // Search & Role Filter Header
-        Row(
+        // Search Champion Input (Full-width, default Material sizing)
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = onSearchChanged,
+            placeholder = { Text("Search Champion by name...", fontSize = 13.sp, color = TextMuted) },
+            singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // Search Input
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchChanged,
-                placeholder = { Text("Search Champion...", fontSize = 12.sp, color = TextMuted) },
-                singleLine = true,
-                modifier = Modifier.weight(1f).height(46.dp),
-                shape = RoundedCornerShape(6.dp),
-                colors =
-                    OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = GoldAccent,
-                        unfocusedBorderColor = BorderDark,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedContainerColor = CardDark,
-                        unfocusedContainerColor = CardDark,
-                    ),
-            )
-
-            // Role Filter Chips
-            RoleFilterChip(name = "ALL", isSelected = selectedRoleFilter == null, onClick = { onRoleFilterSelected(null) })
-            Role.entries.forEach { role ->
-                RoleFilterChip(
-                    name = role.name,
-                    isSelected = selectedRoleFilter == role,
-                    onClick = { onRoleFilterSelected(role) },
-                )
-            }
-        }
+            shape = RoundedCornerShape(8.dp),
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = GoldAccent,
+                    unfocusedBorderColor = BorderDark,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    focusedContainerColor = CardDark,
+                    unfocusedContainerColor = CardDark,
+                ),
+        )
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -166,30 +147,6 @@ fun ChampionGridView(
                 }
             Text(label, fontWeight = FontWeight.Bold, fontSize = 13.sp)
         }
-    }
-}
-
-@Composable
-fun RoleFilterChip(
-    name: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier =
-            Modifier
-                .background(if (isSelected) GoldAccent else CardDark, RoundedCornerShape(4.dp))
-                .border(1.dp, if (isSelected) GoldAccent else BorderDark, RoundedCornerShape(4.dp))
-                .clickable { onClick() }
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = name,
-            color = if (isSelected) Color.Black else TextSecondary,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-        )
     }
 }
 

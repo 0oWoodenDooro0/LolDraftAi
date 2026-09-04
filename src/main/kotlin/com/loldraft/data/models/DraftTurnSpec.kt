@@ -40,8 +40,15 @@ data class DraftTurnSpec(
 
         private val SPECS_MAP: Map<Int, DraftTurnSpec> = SPECS.associateBy { it.turnNumber }
 
-        fun forTurn(turnNumber: Int): DraftTurnSpec =
-            SPECS_MAP[turnNumber]
-                ?: throw IllegalArgumentException("Turn number $turnNumber out of bounds (1..20)")
+        fun forTurn(turnNumber: Int, firstPickSide: Side = Side.BLUE): DraftTurnSpec {
+            val base =
+                SPECS_MAP[turnNumber]
+                    ?: throw IllegalArgumentException("Turn number $turnNumber out of bounds (1..20)")
+            return if (firstPickSide == Side.BLUE) base else base.copy(side = base.side.opposite)
+        }
+
+        fun specsFor(firstPickSide: Side = Side.BLUE): List<DraftTurnSpec> =
+            SPECS.map { if (firstPickSide == Side.BLUE) it else it.copy(side = it.side.opposite) }
     }
 }
+

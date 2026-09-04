@@ -45,10 +45,11 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
             // Top Navigation & Configuration Bar
             TopBarView(
                 state = state,
-                onSelectLeague = viewModel::selectLeague,
                 onSelectBlueTeam = viewModel::selectBlueTeam,
                 onSelectRedTeam = viewModel::selectRedTeam,
                 onSelectPatch = viewModel::selectPatch,
+                onSetFirstPickSide = viewModel::setFirstPickSide,
+                onSwapTeams = viewModel::swapTeams,
                 onUndo = viewModel::undoLastTurn,
                 onReset = viewModel::resetDraft,
             )
@@ -62,7 +63,7 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
                     Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .padding(10.dp),
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 // Left Column: Blue Side BP Slots + Blue Roster Intelligence Pool
@@ -86,13 +87,11 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
                     )
                 }
 
-                // Middle Column: Champion Selection Grid & Filter
+                // Middle Column: Champion Selection Grid & Search
                 ChampionGridView(
                     champions = state.filteredChampions,
                     searchQuery = state.searchQuery,
                     onSearchChanged = viewModel::setSearchQuery,
-                    selectedRoleFilter = state.selectedRoleFilter,
-                    onRoleFilterSelected = viewModel::setRoleFilter,
                     selectedChampionId = state.selectedChampionId,
                     onChampionSelected = viewModel::selectChampion,
                     bannedChampionIds = state.bannedChampionIds,
@@ -103,11 +102,11 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
                     modifier = Modifier.weight(1f),
                 )
 
-                // Right Column: Red Side BP Slots + AI Intelligence Decision Panel + Red Roster
+                // Right Column: Red Side BP Slots + Red Roster Intelligence Pool
                 Column(
                     modifier =
                         Modifier
-                            .width(340.dp)
+                            .width(310.dp)
                             .verticalScroll(rightScrollState),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
@@ -117,12 +116,6 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
                         slots = state.boardSlots,
                     )
 
-                    AiDecisionPanelView(
-                        intentPredictions = state.intentPredictions,
-                        recommendations = state.counterRecommendations,
-                        compositionFlaws = state.compositionFlaws,
-                    )
-
                     RosterPlayerPoolView(
                         teamName = state.redTeam?.name ?: "Red Team",
                         sideColor = RedSideColor,
@@ -130,6 +123,19 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
                     )
                 }
             }
+
+            // Bottom Panel: AI Intelligence Decision Panel
+            AiDecisionPanelView(
+                currentTurnNumber = state.currentTurnNumber,
+                currentTurnSpec = state.currentTurnSpec,
+                intentPredictions = state.intentPredictions,
+                recommendations = state.counterRecommendations,
+                compositionFlaws = state.compositionFlaws,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
+            )
         }
     }
 }
