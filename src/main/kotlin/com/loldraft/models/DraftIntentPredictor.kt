@@ -506,9 +506,11 @@ class DraftIntentPredictor(
                     reasons.add("Target ban vs $matchedOpponentPlayer")
                 }
                 if (metaStats?.tier == MetaTier.T0) {
-                    reasons.add("T0 meta ban priority (${(metaStats.presenceRate * 100).toInt()}% presence)")
+                    reasons.add("Tier-0 (OP) meta ban priority (${(metaStats.presenceRate * 100).toInt()}% presence)")
                 } else if (metaStats?.tier == MetaTier.T1) {
-                    reasons.add("T1 meta ban")
+                    reasons.add("Tier-1 priority meta ban")
+                } else if (metaStats?.tier == MetaTier.T2) {
+                    reasons.add("Tier-2 meta ban")
                 }
                 if (reasons.isEmpty()) {
                     reasons.add("High priority meta ban")
@@ -565,9 +567,11 @@ class DraftIntentPredictor(
                 }
 
                 if (metaStats?.tier == MetaTier.T0) {
-                    reasons.add("T0 meta priority (${(metaStats.presenceRate * 100).toInt()}% presence)")
+                    reasons.add("Tier-0 (OP) meta priority (${(metaStats.presenceRate * 100).toInt()}% presence)")
                 } else if (metaStats?.tier == MetaTier.T1) {
-                    reasons.add("T1 meta pick")
+                    reasons.add("Tier-1 priority meta pick")
+                } else if (metaStats?.tier == MetaTier.T2) {
+                    reasons.add("Tier-2 meta pick")
                 }
 
                 if (needsAp && (profile?.damageProfile?.magicRatio ?: 0.0) >= 0.65) reasons.add("Fills critical AP damage deficit")

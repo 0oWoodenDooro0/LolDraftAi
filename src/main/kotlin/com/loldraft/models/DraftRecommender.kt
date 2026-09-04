@@ -119,9 +119,11 @@ class DraftRecommender(
                 reasons.add("Denies $matchedOppPlayer's $matchedTierName pick")
             }
             if (metaStats?.tier == com.loldraft.data.meta.MetaTier.T0) {
-                reasons.add("Removes T0 high-presence power pick (${(metaStats.presenceRate * 100).toInt()}% presence)")
+                reasons.add("Removes Tier-0 (OP) high-presence power pick (${(metaStats.presenceRate * 100).toInt()}% presence)")
             } else if (metaStats?.tier == com.loldraft.data.meta.MetaTier.T1) {
-                reasons.add("Removes T1 priority meta threat")
+                reasons.add("Removes Tier-1 priority meta threat")
+            } else if (metaStats?.tier == com.loldraft.data.meta.MetaTier.T2) {
+                reasons.add("Removes Tier-2 standard meta threat")
             }
             if (reasons.isEmpty()) {
                 reasons.add("Neutralizes high threat meta candidate")
