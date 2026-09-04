@@ -80,29 +80,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 6. Lock In Button
-    btnLockIn.addEventListener('click', () => {
-        if (!selectedChampionId || !ws || ws.readyState !== WebSocket.OPEN) return;
+    btnLockIn.addEventListener('click', async () => {
+        if (!selectedChampionId) return;
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            await startMatchSession();
+            setTimeout(() => {
+                if (ws && ws.readyState === WebSocket.OPEN && selectedChampionId) {
+                    sendTurn(selectedChampionId);
+                }
+            }, 300);
+            return;
+        }
+        sendTurn(selectedChampionId);
+    });
+
+    function sendTurn(championId) {
         const msg = {
-            type: 'com.loldraft.platform.live.models.LiveWsClientMessage.ApplyTurn',
-            championId: selectedChampionId
+            type: 'apply_turn',
+            championId: championId
         };
         ws.send(JSON.stringify(msg));
         selectedChampionId = null;
         selectedChampName.textContent = 'None';
-        btnLockIn.disabled = true;
-    });
+        updateLockInButton();
+    }
 
     // 7. Undo Button
     btnUndo.addEventListener('click', () => {
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        const msg = { type: 'com.loldraft.platform.live.models.LiveWsClientMessage.Undo' };
+        const msg = { type: 'undo' };
         ws.send(JSON.stringify(msg));
     });
 
     // 8. Reset Button
     btnReset.addEventListener('click', () => {
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        const msg = { type: 'com.loldraft.platform.live.models.LiveWsClientMessage.Reset' };
+        const msg = { type: 'reset' };
         ws.send(JSON.stringify(msg));
     });
 
@@ -128,7 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (leagues.length > 0) {
                     const defaultLeague = leagues.includes('LCK') ? 'LCK' : leagues[0];
                     leagueSelect.value = defaultLeague;
-                    loadTeamsForLeague(defaultLeague);
+                    await loadTeamsForLeague(defaultLeague);
+                    startMatchSession();
                 }
             }
         } catch (e) {
@@ -187,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             (d.redBans || []).forEach(c => usedChamps.add(c.toLowerCase()));
             (d.bluePicks || []).forEach(p => usedChamps.add(p.championId.toLowerCase()));
             (d.redPicks || []).forEach(p => usedChamps.add(p.championId.toLowerCase()));
+            (d.turns || []).forEach(t => usedChamps.add(t.championId.toLowerCase()));
         }
 
         const filtered = allChampions.filter(c => {
@@ -218,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.classList.add('selected');
                 selectedChampionId = champ.name;
                 selectedChampName.textContent = champ.name;
-                btnLockIn.disabled = false;
+                updateLockInButton();
             });
 
             championGrid.appendChild(card);
@@ -271,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ws.onopen = () => {
             setConnected(true);
             // send initial ping
-            ws.send(JSON.stringify({ type: 'com.loldraft.platform.live.models.LiveWsClientMessage.Ping' }));
+            ws.send(JSON.stringify({ type: 'ping' }));
         };
 
         ws.onmessage = (event) => {
@@ -302,14 +317,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleServerMessage(msg) {
-        if (msg.type?.includes('SessionSnapshot')) {
+        const type = (msg.type || '').toLowerCase();
+        if (type === 'session_snapshot' || type.includes('sessionsnapshot')) {
             updateDashboard(msg.latestSnapshot);
-        } else if (msg.type?.includes('TurnApplied')) {
+        } else if (type === 'turn_applied' || type.includes('turnapplied')) {
             updateDashboard(msg.snapshot);
-        } else if (msg.type?.includes('TurnUndone')) {
+        } else if (type === 'turn_undone' || type.includes('turnundone')) {
             updateDashboard(msg.snapshot);
-        } else if (msg.type?.includes('Error')) {
-            alert(`Draft Action Error: ${msg.message}`);
+        } else if (type === 'session_reset' || type.includes('sessionreset')) {
+            updateDashboard(msg.snapshot);
+        } else if (type === 'error' || type.includes('error')) {
+            alert(`Draft Action Error: ${msg.message || msg.code || 'Action failed'}`);
         }
     }
 
@@ -317,45 +335,67 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!snapshot) return;
         latestSnapshot = snapshot;
 
-        // 1. Update Turn Tracker & Indicator
-        const turnNum = snapshot.turnNumber || 0;
-        const currentTurnNumber = turnNum + 1;
+        try {
+            // 1. Update Turn Tracker & Indicator
+            const turnNum = snapshot.turnNumber || 0;
+            const currentTurnNumber = turnNum + 1;
 
-        if (currentTurnNumber <= 20) {
-            const spec = turnSpecs[currentTurnNumber - 1];
-            turnPhaseText.textContent = `TURN ${currentTurnNumber} OF 20`;
-            turnActionText.textContent = `${spec.side} TEAM ${spec.actionType}`;
-        } else {
-            turnPhaseText.textContent = 'DRAFT COMPLETE';
-            turnActionText.textContent = 'ALL 20 TURNS COMPLETED';
+            if (currentTurnNumber <= 20) {
+                const spec = turnSpecs[currentTurnNumber - 1];
+                turnPhaseText.textContent = `TURN ${currentTurnNumber} OF 20`;
+                turnActionText.textContent = `${spec.side} TEAM ${spec.actionType}`;
+            } else {
+                turnPhaseText.textContent = 'DRAFT COMPLETE';
+                turnActionText.textContent = 'ALL 20 TURNS COMPLETED';
+            }
+
+            // 2. Update Eval Bar
+            if (snapshot.evalBar) {
+                const bPct = typeof snapshot.evalBar.blueBarPercentage === 'number'
+                    ? snapshot.evalBar.blueBarPercentage
+                    : (snapshot.evalBar.blueWinRate ? snapshot.evalBar.blueWinRate * 100 : 50.0);
+                const rPct = typeof snapshot.evalBar.redBarPercentage === 'number'
+                    ? snapshot.evalBar.redBarPercentage
+                    : (snapshot.evalBar.redWinRate ? snapshot.evalBar.redWinRate * 100 : 50.0);
+
+                const bWr = bPct.toFixed(1);
+                const rWr = rPct.toFixed(1);
+                blueWinRateText.textContent = `${bWr}%`;
+                redWinRateText.textContent = `${rWr}%`;
+                evalBarBlue.style.width = `${bWr}%`;
+                evalBarRed.style.width = `${rWr}%`;
+
+                const score = typeof snapshot.evalBar.score === 'number'
+                    ? snapshot.evalBar.score
+                    : (typeof snapshot.evalBar.evalScore === 'number' ? snapshot.evalBar.evalScore : 0.0);
+                const sign = score > 0 ? '+' : '';
+                const formatted = snapshot.evalBar.formattedScore || `${sign}${score.toFixed(2)}`;
+                const adv = score > 0.05 ? 'Blue Adv' : (score < -0.05 ? 'Red Adv' : 'Even');
+                evalScoreBadge.textContent = `${formatted} (${adv})`;
+                evalExplanation.textContent = snapshot.evalBar.leadCategory
+                    ? `Composition evaluation: ${snapshot.evalBar.leadCategory.replace(/_/g, ' ')}`
+                    : 'Real-time composition evaluation.';
+            }
+
+            // 3. Update Slots
+            updateSlots(snapshot.draftState, currentTurnNumber);
+
+            // 4. Update AI Predictions
+            const predictions = snapshot.aiIntentPredictions || snapshot.predictedEnemyPicks || [];
+            updateIntentPredictions(predictions);
+
+            const recommendations = snapshot.aiRecommendations || snapshot.recommendations || [];
+            updateRecommendations(recommendations);
+
+            updateFlaws(snapshot);
+            updateCurvesAndRadar(snapshot);
+
+            // 5. Refresh grid disabled state & lock-in button
+            renderChampionGrid();
+            updateLockInButton();
+        } catch (err) {
+            console.error('Error in updateDashboard', err);
         }
-
-        // 2. Update Eval Bar
-        if (snapshot.evalBar) {
-            const bWr = (snapshot.evalBar.blueWinRate * 100).toFixed(1);
-            const rWr = (snapshot.evalBar.redWinRate * 100).toFixed(1);
-            blueWinRateText.textContent = `${bWr}%`;
-            redWinRateText.textContent = `${rWr}%`;
-            evalBarBlue.style.width = `${bWr}%`;
-            evalBarRed.style.width = `${rWr}%`;
-
-            const score = snapshot.evalBar.evalScore;
-            const sign = score > 0 ? '+' : '';
-            evalScoreBadge.textContent = `${sign}${score.toFixed(2)} (${score >= 0 ? 'Blue Adv' : 'Red Adv'})`;
-            evalExplanation.textContent = snapshot.evalBar.explanation || 'Real-time composition evaluation.';
-        }
-
-        // 3. Update Slots
-        updateSlots(snapshot.draftState, currentTurnNumber);
-
-        // 4. Update AI Predictions
-        updateIntentPredictions(snapshot.predictedEnemyPicks);
-        updateRecommendations(snapshot.recommendations);
-        updateFlaws(snapshot.compositionFlaws);
-        updateCurvesAndRadar(snapshot.timeCurves, snapshot.radar);
-
-        // 5. Refresh grid disabled state
-        renderChampionGrid();
     }
 
     function updateSlots(draftState, activeTurn) {
@@ -365,21 +405,67 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.bp-slot').forEach(slot => {
             const turn = parseInt(slot.dataset.turn, 10);
             const nameEl = slot.querySelector('.champ-name');
+            const playerEl = slot.querySelector('.player-name');
             slot.classList.remove('active-turn', 'filled');
 
             if (turn === activeTurn) {
                 slot.classList.add('active-turn');
             }
 
-            // Check if filled from turns
+            // 1. First check if filled from turns
+            let champ = null;
+            let roleOrPlayer = null;
+
             const turnAction = (draftState.turns || []).find(t => t.turnNumber === turn);
             if (turnAction && turnAction.championId) {
-                slot.classList.add('filled');
-                nameEl.textContent = turnAction.championId;
+                champ = turnAction.championId;
+                roleOrPlayer = turnAction.player || turnAction.role || '';
             } else {
-                nameEl.textContent = '-';
+                // Fallback check from bans/picks lists by index
+                champ = getFallbackChampForSlot(draftState, turn);
+            }
+
+            if (champ) {
+                slot.classList.add('filled');
+                if (nameEl) nameEl.textContent = champ;
+                if (playerEl && roleOrPlayer) playerEl.textContent = roleOrPlayer;
+            } else {
+                if (nameEl) nameEl.textContent = '-';
+                if (playerEl) playerEl.textContent = '';
             }
         });
+    }
+
+    function getFallbackChampForSlot(d, turn) {
+        if (!d) return null;
+        const blueBans = d.blueBans || [];
+        const redBans = d.redBans || [];
+        const bluePicks = d.bluePicks || [];
+        const redPicks = d.redPicks || [];
+
+        switch (turn) {
+            case 1: return blueBans[0] || null;
+            case 2: return redBans[0] || null;
+            case 3: return blueBans[1] || null;
+            case 4: return redBans[1] || null;
+            case 5: return blueBans[2] || null;
+            case 6: return redBans[2] || null;
+            case 7: return bluePicks[0]?.championId || null;
+            case 8: return redPicks[0]?.championId || null;
+            case 9: return redPicks[1]?.championId || null;
+            case 10: return bluePicks[1]?.championId || null;
+            case 11: return bluePicks[2]?.championId || null;
+            case 12: return redPicks[2]?.championId || null;
+            case 13: return redBans[3] || null;
+            case 14: return blueBans[3] || null;
+            case 15: return redBans[4] || null;
+            case 16: return blueBans[4] || null;
+            case 17: return redPicks[3]?.championId || null;
+            case 18: return bluePicks[3]?.championId || null;
+            case 19: return bluePicks[4]?.championId || null;
+            case 20: return redPicks[4]?.championId || null;
+            default: return null;
+        }
     }
 
     function updateIntentPredictions(predictions) {
@@ -391,11 +477,18 @@ document.addEventListener('DOMContentLoaded', () => {
         predictions.slice(0, 3).forEach(p => {
             const item = document.createElement('div');
             item.className = 'intel-item';
-            const prob = (p.predictedProbability * 100).toFixed(1);
+            item.style.cursor = 'pointer';
+            item.title = `Click to select ${p.championId}`;
+            const probVal = typeof p.probability === 'number'
+                ? p.probability
+                : (typeof p.predictedProbability === 'number' ? p.predictedProbability : 0);
+            const prob = (probVal * 100).toFixed(1);
+            const role = p.predictedRole || p.suggestedRole || 'Flex';
             item.innerHTML = `
-                <span class="name">${p.championId} <small>(${p.suggestedRole || 'Flex'})</small></span>
+                <span class="name">${p.championId} <small>(${role})</small></span>
                 <span class="score">${prob}% Pick Prob</span>
             `;
+            item.addEventListener('click', () => selectChampionByName(p.championId));
             intentPredictionList.appendChild(item);
         });
     }
@@ -409,28 +502,38 @@ document.addEventListener('DOMContentLoaded', () => {
         recoms.slice(0, 3).forEach(r => {
             const item = document.createElement('div');
             item.className = 'intel-item';
-            const delta = (r.expectedWinRateGain * 100).toFixed(1);
+            item.style.cursor = 'pointer';
+            item.title = `Click to select ${r.championId}`;
+            const gain = typeof r.winRateGain === 'number'
+                ? r.winRateGain
+                : (typeof r.expectedWinRateGain === 'number' ? r.expectedWinRateGain : 0);
+            const delta = (gain * 100).toFixed(1);
+            const role = r.recommendedRole ? ` (${r.recommendedRole})` : '';
             item.innerHTML = `
-                <span class="name">⭐ ${r.championId}</span>
+                <span class="name">⭐ ${r.championId}<small>${role}</small></span>
                 <span class="score">+${delta}% WR</span>
             `;
+            item.addEventListener('click', () => selectChampionByName(r.championId));
             recommendationsList.appendChild(item);
         });
     }
 
-    function updateFlaws(flaws) {
+    function updateFlaws(snapshot) {
         flawsContainer.innerHTML = '';
-        if (!flaws || (flaws.blueSideFlaws.length === 0 && flaws.redSideFlaws.length === 0)) {
+        const bFlaws = snapshot.blueFlaws || snapshot.compositionFlaws?.blueSideFlaws || [];
+        const rFlaws = snapshot.redFlaws || snapshot.compositionFlaws?.redSideFlaws || [];
+
+        if (bFlaws.length === 0 && rFlaws.length === 0) {
             flawsContainer.innerHTML = '<div class="no-flaws">No structural composition defects detected.</div>';
             return;
         }
-        (flaws.blueSideFlaws || []).forEach(f => {
+        bFlaws.forEach(f => {
             const el = document.createElement('div');
             el.className = 'flaw-alert';
             el.textContent = `[BLUE] ${f.title}: ${f.description}`;
             flawsContainer.appendChild(el);
         });
-        (flaws.redSideFlaws || []).forEach(f => {
+        rFlaws.forEach(f => {
             const el = document.createElement('div');
             el.className = 'flaw-alert';
             el.textContent = `[RED] ${f.title}: ${f.description}`;
@@ -438,20 +541,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function updateCurvesAndRadar(curves, radar) {
+    function updateCurvesAndRadar(snapshot) {
+        const curves = snapshot.timeCurve || snapshot.timeCurves;
         if (curves) {
-            earlyBar.style.width = `${(curves.earlyWinRate * 100).toFixed(0)}%`;
-            midBar.style.width = `${(curves.midWinRate * 100).toFixed(0)}%`;
-            lateBar.style.width = `${(curves.lateWinRate * 100).toFixed(0)}%`;
+            const early = typeof curves.earlyGameWinRate === 'number' ? curves.earlyGameWinRate : (curves.earlyWinRate || 0.5);
+            const mid = typeof curves.midGameWinRate === 'number' ? curves.midGameWinRate : (curves.midWinRate || 0.5);
+            const late = typeof curves.lateGameWinRate === 'number' ? curves.lateGameWinRate : (curves.lateWinRate || 0.5);
+            earlyBar.style.width = `${Math.round(early * 100)}%`;
+            midBar.style.width = `${Math.round(mid * 100)}%`;
+            lateBar.style.width = `${Math.round(late * 100)}%`;
         }
-        if (radar) {
-            const b = radar.blueScores;
-            const r = radar.redScores;
-            document.getElementById('radarDamage').textContent = `${b.damage.toFixed(1)} vs ${r.damage.toFixed(1)}`;
-            document.getElementById('radarTank').textContent = `${b.tankiness.toFixed(1)} vs ${r.tankiness.toFixed(1)}`;
-            document.getElementById('radarCc').textContent = `${b.cc.toFixed(1)} vs ${r.cc.toFixed(1)}`;
-            document.getElementById('radarMobility').textContent = `${b.mobility.toFixed(1)} vs ${r.mobility.toFixed(1)}`;
-            document.getElementById('radarWaveclear').textContent = `${b.waveclear.toFixed(1)} vs ${r.waveclear.toFixed(1)}`;
+
+        const b = snapshot.blueRadar || snapshot.radar?.blueScores;
+        const r = snapshot.redRadar || snapshot.radar?.redScores;
+        if (b && r) {
+            const dEl = document.getElementById('radarDamage');
+            const tEl = document.getElementById('radarTank');
+            const cEl = document.getElementById('radarCc');
+            const mEl = document.getElementById('radarMobility');
+            const wEl = document.getElementById('radarWaveclear');
+
+            const bLaning = (b.laning ?? 5.0).toFixed(1);
+            const rLaning = (r.laning ?? 5.0).toFixed(1);
+            const bEngage = (b.engage ?? 5.0).toFixed(1);
+            const rEngage = (r.engage ?? 5.0).toFixed(1);
+            const bDmg = (b.damageBalance ?? b.damage ?? 5.0).toFixed(1);
+            const rDmg = (r.damageBalance ?? r.damage ?? 5.0).toFixed(1);
+            const bScaling = (b.lateScaling ?? 5.0).toFixed(1);
+            const rScaling = (r.lateScaling ?? 5.0).toFixed(1);
+            const bWave = (b.waveclear ?? 5.0).toFixed(1);
+            const rWave = (r.waveclear ?? 5.0).toFixed(1);
+
+            if (tEl) tEl.textContent = `${bLaning} vs ${rLaning}`;
+            if (cEl) cEl.textContent = `${bEngage} vs ${rEngage}`;
+            if (dEl) dEl.textContent = `${bDmg} vs ${rDmg}`;
+            if (mEl) mEl.textContent = `${bScaling} vs ${rScaling}`;
+            if (wEl) wEl.textContent = `${bWave} vs ${rWave}`;
         }
     }
 
@@ -548,5 +673,46 @@ document.addEventListener('DOMContentLoaded', () => {
             { turnNumber: 19, side: 'BLUE', actionType: 'PICK' },
             { turnNumber: 20, side: 'RED', actionType: 'PICK' },
         ];
+        updateLockInButton();
+    }
+
+    function updateLockInButton() {
+        const turnNum = latestSnapshot ? (latestSnapshot.turnNumber || 0) : 0;
+        const currentTurnNumber = turnNum + 1;
+        if (currentTurnNumber > 20) {
+            btnLockIn.textContent = 'Draft Complete';
+            btnLockIn.disabled = true;
+            btnLockIn.classList.remove('ban-mode', 'pick-mode');
+            return;
+        }
+
+        const spec = turnSpecs[currentTurnNumber - 1];
+        const isBan = spec ? spec.actionType === 'BAN' : true;
+
+        if (isBan) {
+            btnLockIn.classList.add('ban-mode');
+            btnLockIn.classList.remove('pick-mode');
+        } else {
+            btnLockIn.classList.add('pick-mode');
+            btnLockIn.classList.remove('ban-mode');
+        }
+
+        if (selectedChampionId) {
+            btnLockIn.textContent = `${isBan ? 'Ban' : 'Pick'} ${selectedChampionId}`;
+            btnLockIn.disabled = false;
+        } else {
+            btnLockIn.textContent = isBan ? 'Select Champion to Ban' : 'Select Champion to Pick';
+            btnLockIn.disabled = true;
+        }
+    }
+
+    function selectChampionByName(champName) {
+        selectedChampionId = champName;
+        selectedChampName.textContent = champName;
+        champSearch.value = champName;
+        activeRoleFilter = 'ALL';
+        roleBtns.forEach(b => b.classList.toggle('active', b.dataset.role === 'ALL'));
+        renderChampionGrid();
+        updateLockInButton();
     }
 });
