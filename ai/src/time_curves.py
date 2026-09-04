@@ -45,27 +45,29 @@ def predict_time_curve(
     durability_delta: float = 0.0,
     cc_delta: float = 0.0,
     scale: float = DEFAULT_SCALE,
+    early_inflection_minute: float = 15.5,
+    late_inflection_minute: float = 28.5,
 ) -> Dict[str, Any]:
     safe_base = max(0.01, min(0.99, baseline_blue_win_rate))
     base_logit = math.log(safe_base / (1.0 - safe_base))
 
     early_signal = (
-        laning_delta * 0.12
-        + early_bully_delta * 0.10
+        laning_delta * 0.08
+        + early_bully_delta * 0.06
         + early_dominance_delta * 0.04
         + matchup_delta * 0.08
     )
     late_signal = (
-        late_scaling_delta * 0.12
-        + hyper_carry_delta * 0.10
-        + durability_delta * 0.03
-        + cc_delta * 0.03
+        late_scaling_delta * 0.08
+        + hyper_carry_delta * 0.06
+        + durability_delta * 0.02
+        + cc_delta * 0.02
     )
 
     points = []
     for minute in TIME_INTERVALS:
-        w_early = 1.0 / (1.0 + math.exp((minute - 16.0) / 4.0))
-        w_late = 1.0 / (1.0 + math.exp(-(minute - 27.0) / 4.5))
+        w_early = 1.0 / (1.0 + math.exp((minute - early_inflection_minute) / 4.0))
+        w_late = 1.0 / (1.0 + math.exp(-(minute - late_inflection_minute) / 4.5))
 
         shift = early_signal * (w_early - 0.35) + late_signal * (w_late - 0.35)
         logit = base_logit + shift

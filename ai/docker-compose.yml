@@ -6,6 +6,13 @@ services:
     working_dir: /workspace/ai
     volumes:
       - ..:/workspace
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     command: python src/train_draft_value.py
 
   exporter:
@@ -15,6 +22,13 @@ services:
     working_dir: /workspace/ai
     volumes:
       - ..:/workspace
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     command: python src/export_onnx.py
 
   evaluator:
@@ -24,4 +38,11 @@ services:
     working_dir: /workspace/ai
     volumes:
       - ..:/workspace
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     command: python src/evaluate.py

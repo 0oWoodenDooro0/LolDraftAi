@@ -339,4 +339,34 @@ class DraftFeatureExtractorTest {
         assertTrue(features.blueArchetypes["marksman"] ?: 0 >= 1)
         assertTrue(features.redArchetypes["marksman"] ?: 0 >= 1)
     }
+
+    @Test
+    fun `partial draft should use role prior imputation to prevent stat distortion`() {
+        // Poppy is an extreme tank (durability 8.8). In a 1-pick partial draft without imputation,
+        // team durability was 8.8. With prior imputation (4 unpicked slots imputed with ~5.8 prior),
+        // the team durability should stay balanced between 6.0 and 7.0.
+        val singleTankDraft = DraftState(
+            bluePicks = listOf(PickSelection("Poppy", Role.TOP)),
+            redPicks = emptyList(),
+        )
+
+        val features = extractor.extract(singleTankDraft)
+
+        // Durability of 1 tank + 4 priors should not blow up to 8.8
+        assertTrue(
+            features.blueDurability in 6.0..7.2,
+            "Blue durability for 1 pick should be mitigated by prior imputation (expected 6.0..7.2), was: ${features.blueDurability}"
+        )
+        // Red with 0 picks should sit at prior baseline (~5.8)
+        assertTrue(
+            features.redDurability in 5.5..6.2,
+            "Red durability with 0 picks should sit near baseline prior (expected 5.5..6.2), was: ${features.redDurability}"
+        )
+        // Delta durability should be reasonable (~0.6), not massive (> 3.0)
+        assertTrue(
+            features.values[23] < 1.5f,
+            "Delta durability for 1 tank should be moderated by remaining slots, was: ${features.values[23]}"
+        )
+    }
 }
+

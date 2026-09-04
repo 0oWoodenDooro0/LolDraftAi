@@ -11,6 +11,7 @@ import java.io.InputStream
 import java.nio.FloatBuffer
 import kotlin.math.abs
 import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.math.roundToInt
 
 interface DraftEvaluator : AutoCloseable {
@@ -87,8 +88,8 @@ class AnalyticalDraftEvaluator(
         }
 
         // 2. Durability & CC contribution
-        val durabilityImpact = (features.values[23] * 0.04).toDouble() // delta_durability
-        val ccImpact = (features.values[26] * 0.05).toDouble() // delta_cc_score
+        val durabilityImpact = (features.durabilityDelta * 0.04)
+        val ccImpact = (features.ccDelta * 0.05)
         val defenseCcImpact = durabilityImpact + ccImpact
         if (abs(defenseCcImpact) > 0.01) {
             factorContributions.add(
@@ -102,8 +103,8 @@ class AnalyticalDraftEvaluator(
         }
 
         // 3. Patch Meta contribution
-        val metaTierImpact = (features.values[29] * 0.15).toDouble() // delta_meta_tier
-        val metaWinRateImpact = (features.values[32] * 1.5).toDouble() // delta_meta_winrate
+        val metaTierImpact = (features.metaTierDelta * 0.15)
+        val metaWinRateImpact = (features.metaWinRateDelta * 1.5)
         val totalMetaImpact = metaTierImpact + metaWinRateImpact
         if (abs(totalMetaImpact) > 0.01) {
             factorContributions.add(
@@ -252,6 +253,9 @@ class DraftValueEvaluator(
         this.session = sess
     }
 
+    val isOnnxLoaded: Boolean
+        get() = session != null
+
     override fun evaluate(
         draftState: DraftState,
         patchMeta: PatchMetaMatrix?,
@@ -265,8 +269,9 @@ class DraftValueEvaluator(
 
         if (currentSession != null && currentEnv != null) {
             try {
-                val inputBuffer = FloatBuffer.wrap(features.values)
-                val shape = longArrayOf(1, DraftFeatures.FEATURE_COUNT.toLong())
+                val inputFloats = if (features.empiricalValues.isNotEmpty()) features.empiricalValues else features.values
+                val inputBuffer = FloatBuffer.wrap(inputFloats)
+                val shape = longArrayOf(1, inputFloats.size.toLong())
                 val tensor = OnnxTensor.createTensor(currentEnv, inputBuffer, shape)
 
                 tensor.use { onnxTensor ->
@@ -274,10 +279,19 @@ class DraftValueEvaluator(
                     val results = currentSession.run(mapOf(inputName to onnxTensor))
 
                     results.use { ortResults ->
-                        val outputValue = ortResults.get(0).value
+                        val outputValue = if (ortResults.size() > 1) ortResults.get(1).value else ortResults.get(0).value
                         val prob = extractProbability(outputValue)
                         if (prob != null) {
-                            val blueWinRate = prob.coerceIn(0.01, 0.99)
+                            val boundedProb = prob.coerceIn(0.01, 0.99)
+                            val baseLogit = ln(boundedProb / (1.0 - boundedProb))
+
+                            val metaTierImpact = if (patchMeta != null) (features.metaTierDelta * 0.15) else 0.0
+                            val metaWinRateImpact = if (patchMeta != null) (features.metaWinRateDelta * 1.5) else 0.0
+                            val teamRatingImpact = if (blueTeamProfile != null || redTeamProfile != null) (features.teamRatingDelta * 0.25) else 0.0
+                            val earlyDominanceImpact = if (blueTeamProfile != null || redTeamProfile != null) (features.earlyDominanceDelta * 0.03) else 0.0
+
+                            val totalLogit = baseLogit + metaTierImpact + metaWinRateImpact + teamRatingImpact + earlyDominanceImpact
+                            val blueWinRate = (1.0 / (1.0 + exp(-totalLogit))).coerceIn(0.01, 0.99)
                             val redWinRate = 1.0 - blueWinRate
                             val evalBar = EvalBarCalculator.calculate(blueWinRate)
                             val evalScore = evalBar.score
@@ -346,14 +360,17 @@ class DraftValueEvaluator(
                     draftStates.map {
                         featureExtractor.extract(it, patchMeta, blueTeamProfile, redTeamProfile)
                     }
-                val totalFloats = batchSize * DraftFeatures.FEATURE_COUNT
+                val sampleFloats = allFeatures.first().let { if (it.empiricalValues.isNotEmpty()) it.empiricalValues else it.values }
+                val featureDim = sampleFloats.size
+                val totalFloats = batchSize * featureDim
                 val inputBuffer = FloatBuffer.allocate(totalFloats)
                 for (feat in allFeatures) {
-                    inputBuffer.put(feat.values)
+                    val arr = if (feat.empiricalValues.isNotEmpty()) feat.empiricalValues else feat.values
+                    inputBuffer.put(arr)
                 }
                 inputBuffer.flip()
 
-                val shape = longArrayOf(batchSize.toLong(), DraftFeatures.FEATURE_COUNT.toLong())
+                val shape = longArrayOf(batchSize.toLong(), featureDim.toLong())
                 val tensor = OnnxTensor.createTensor(currentEnv, inputBuffer, shape)
 
                 tensor.use { onnxTensor ->
@@ -361,13 +378,22 @@ class DraftValueEvaluator(
                     val results = currentSession.run(mapOf(inputName to onnxTensor))
 
                     results.use { ortResults ->
-                        val outputValue = ortResults.get(0).value
+                        val outputValue = if (ortResults.size() > 1) ortResults.get(1).value else ortResults.get(0).value
                         val probs = extractBatchProbabilities(outputValue, batchSize)
                         if (probs != null && probs.size == batchSize) {
                             return draftStates.indices.map { i ->
                                 val draft = draftStates[i]
                                 val features = allFeatures[i]
-                                val blueWinRate = probs[i].coerceIn(0.01, 0.99)
+                                val boundedProb = probs[i].coerceIn(0.01, 0.99)
+                                val baseLogit = ln(boundedProb / (1.0 - boundedProb))
+
+                                val metaTierImpact = if (patchMeta != null) (features.metaTierDelta * 0.15) else 0.0
+                                val metaWinRateImpact = if (patchMeta != null) (features.metaWinRateDelta * 1.5) else 0.0
+                                val teamRatingImpact = if (blueTeamProfile != null || redTeamProfile != null) (features.teamRatingDelta * 0.25) else 0.0
+                                val earlyDominanceImpact = if (blueTeamProfile != null || redTeamProfile != null) (features.earlyDominanceDelta * 0.03) else 0.0
+
+                                val totalLogit = baseLogit + metaTierImpact + metaWinRateImpact + teamRatingImpact + earlyDominanceImpact
+                                val blueWinRate = (1.0 / (1.0 + exp(-totalLogit))).coerceIn(0.01, 0.99)
                                 val redWinRate = 1.0 - blueWinRate
                                 val evalBar = EvalBarCalculator.calculate(blueWinRate)
                                 val evalScore = evalBar.score
@@ -434,15 +460,17 @@ class DraftValueEvaluator(
         when (outputValue) {
             is Array<*> -> {
                 when (val first = outputValue.firstOrNull()) {
-                    is FloatArray -> first.getOrNull(0)?.toDouble()
-                    is DoubleArray -> first.getOrNull(0)
-                    is Array<*> -> (first.firstOrNull() as? Number)?.toDouble()
+                    is FloatArray -> if (first.size >= 2) first[1].toDouble() else first.getOrNull(0)?.toDouble()
+                    is DoubleArray -> if (first.size >= 2) first[1] else first.getOrNull(0)
+                    is Array<*> -> {
+                        if (first.size >= 2) (first[1] as? Number)?.toDouble() else (first.firstOrNull() as? Number)?.toDouble()
+                    }
                     is Number -> first.toDouble()
                     else -> null
                 }
             }
-            is FloatArray -> outputValue.getOrNull(0)?.toDouble()
-            is DoubleArray -> outputValue.getOrNull(0)
+            is FloatArray -> if (outputValue.size >= 2) outputValue[1].toDouble() else outputValue.getOrNull(0)?.toDouble()
+            is DoubleArray -> if (outputValue.size >= 2) outputValue[1] else outputValue.getOrNull(0)
             is Number -> outputValue.toDouble()
             else -> null
         }
@@ -451,25 +479,25 @@ class DraftValueEvaluator(
         outputValue: Any?,
         batchSize: Int,
     ): List<Double>? {
-        if (outputValue is FloatArray && outputValue.size == batchSize) {
-            return outputValue.map { it.toDouble() }
-        }
-        if (outputValue is DoubleArray && outputValue.size == batchSize) {
-            return outputValue.toList()
-        }
         if (outputValue is Array<*>) {
             val list = mutableListOf<Double>()
             for (row in outputValue) {
                 val prob =
                     when (row) {
-                        is FloatArray -> row.getOrNull(0)?.toDouble()
-                        is DoubleArray -> row.getOrNull(0)
+                        is FloatArray -> if (row.size >= 2) row[1].toDouble() else row.getOrNull(0)?.toDouble()
+                        is DoubleArray -> if (row.size >= 2) row[1] else row.getOrNull(0)
                         is Number -> row.toDouble()
                         else -> null
                     } ?: return null
                 list.add(prob)
             }
             return if (list.size == batchSize) list else null
+        }
+        if (outputValue is FloatArray && outputValue.size == batchSize) {
+            return outputValue.map { it.toDouble() }
+        }
+        if (outputValue is DoubleArray && outputValue.size == batchSize) {
+            return outputValue.toList()
         }
         return null
     }

@@ -17,10 +17,13 @@ RUN pip install --upgrade pip setuptools wheel && \
     "scipy>=1.12.0" \
     "pandas>=2.2.0" \
     "scikit-learn>=1.5.0" \
+    "lightgbm>=4.3.0" \
+    "onnxmltools>=1.16.0" \
     "skl2onnx>=1.17.0" \
     "onnx>=1.16.0" \
     "onnxruntime>=1.19.0" \
-    "pytest>=8.0.0"
+    "pytest>=8.0.0" && \
+    pip install "torch>=2.2.0" --index-url https://download.pytorch.org/whl/cu124
 
 COPY . /workspace/ai
 

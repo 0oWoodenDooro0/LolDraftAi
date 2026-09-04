@@ -110,6 +110,36 @@ _load_champion_profiles()
 
 DEFAULT_CHAMP = {"laning": 6.5, "engage": 6.0, "disengage": 5.5, "waveclear": 6.5, "late": 7.0, "phys": 0.5, "magic": 0.5, "true": 0.0, "durability": 6.0, "tankiness_tier": "BRUISER", "cc": 1.0, "tags": []}
 
+ROLE_PRIORS = {
+    "top": {"laning": 7.8, "engage": 6.8, "disengage": 5.0, "waveclear": 6.8, "late": 7.2, "phys": 0.75, "magic": 0.25, "true": 0.0, "durability": 7.5, "cc": 2.0},
+    "jungle": {"laning": 6.8, "engage": 8.2, "disengage": 5.5, "waveclear": 6.2, "late": 7.0, "phys": 0.65, "magic": 0.35, "true": 0.0, "durability": 7.2, "cc": 2.8},
+    "mid": {"laning": 7.5, "engage": 6.8, "disengage": 6.5, "waveclear": 8.2, "late": 8.2, "phys": 0.20, "magic": 0.80, "true": 0.0, "durability": 4.5, "cc": 2.0},
+    "bot": {"laning": 7.2, "engage": 5.5, "disengage": 5.5, "waveclear": 7.8, "late": 8.8, "phys": 0.85, "magic": 0.15, "true": 0.0, "durability": 3.8, "cc": 1.0},
+    "support": {"laning": 6.8, "engage": 7.8, "disengage": 7.8, "waveclear": 4.5, "late": 6.8, "phys": 0.15, "magic": 0.85, "true": 0.0, "durability": 6.0, "cc": 3.2},
+}
+
+DEFAULT_PRIOR = {
+    "laning": 7.22, "engage": 7.02, "disengage": 6.06, "waveclear": 6.70, "late": 7.60,
+    "phys": 0.52, "magic": 0.48, "true": 0.0,
+    "durability": 5.8, "cc": 2.2, "tankiness_tier": "BRUISER", "tags": []
+}
+
+def _get_missing_priors(champs, roles=None):
+    missing_count = max(0, 5 - len(champs))
+    if missing_count == 0:
+        return []
+    all_roles = ["top", "jungle", "mid", "bot", "support"]
+    taken_roles = [r.lower() for r in (roles or []) if r]
+    untaken_roles = [r for r in all_roles if r not in taken_roles]
+    priors = []
+    for _ in range(missing_count):
+        if untaken_roles:
+            role = untaken_roles.pop(0)
+            priors.append(ROLE_PRIORS.get(role, DEFAULT_PRIOR))
+        else:
+            priors.append(DEFAULT_PRIOR)
+    return priors
+
 def get_champion_profile(name: str):
     if not name:
         return DEFAULT_CHAMP
@@ -122,26 +152,48 @@ def get_champion_profile(name: str):
         return CHAMPION_PROFILES.get("wukong", DEFAULT_CHAMP)
     return DEFAULT_CHAMP
 
-def extract_features(blue_champs, red_champs, blue_winrate=0.5, red_winrate=0.5, blue_bias=0.03):
+def extract_features(
+    blue_champs,
+    red_champs,
+    blue_winrate=0.5,
+    red_winrate=0.5,
+    blue_bias=0.03,
+    meta_stats=None,
+    synergies=None,
+    matchups=None,
+    blue_roles=None,
+    red_roles=None,
+    blue_dominance=5.0,
+    red_dominance=5.0,
+):
     """
     Extracts the exact 52-dimensional feature vector aligned with Kotlin DraftFeatureExtractor.
+    Supports Role Prior Imputation for partial drafts and dynamic meta/synergy/matchup inputs.
     """
     b_profs = [get_champion_profile(c) for c in blue_champs]
     r_profs = [get_champion_profile(c) for c in red_champs]
     
+    b_priors = _get_missing_priors(blue_champs, blue_roles)
+    r_priors = _get_missing_priors(red_champs, red_roles)
+    
+    b_all = b_profs + b_priors
+    r_all = r_profs + r_priors
+    b_slots = max(1, len(b_all))
+    r_slots = max(1, len(r_all))
+    
     # 0..4 Blue radar
-    b_laning = np.mean([p["laning"] for p in b_profs]) if b_profs else 5.0
-    b_engage = np.mean([p["engage"] for p in b_profs]) if b_profs else 5.0
-    b_disengage = np.mean([p["disengage"] for p in b_profs]) if b_profs else 5.0
-    b_waveclear = np.mean([p["waveclear"] for p in b_profs]) if b_profs else 5.0
-    b_late = np.mean([p["late"] for p in b_profs]) if b_profs else 5.0
+    b_laning = np.mean([p["laning"] for p in b_all])
+    b_engage = np.mean([p["engage"] for p in b_all])
+    b_disengage = np.mean([p["disengage"] for p in b_all])
+    b_waveclear = np.mean([p["waveclear"] for p in b_all])
+    b_late = np.mean([p["late"] for p in b_all])
     
     # 5..9 Red radar
-    r_laning = np.mean([p["laning"] for p in r_profs]) if r_profs else 5.0
-    r_engage = np.mean([p["engage"] for p in r_profs]) if r_profs else 5.0
-    r_disengage = np.mean([p["disengage"] for p in r_profs]) if r_profs else 5.0
-    r_waveclear = np.mean([p["waveclear"] for p in r_profs]) if r_profs else 5.0
-    r_late = np.mean([p["late"] for p in r_profs]) if r_profs else 5.0
+    r_laning = np.mean([p["laning"] for p in r_all])
+    r_engage = np.mean([p["engage"] for p in r_all])
+    r_disengage = np.mean([p["disengage"] for p in r_all])
+    r_waveclear = np.mean([p["waveclear"] for p in r_all])
+    r_late = np.mean([p["late"] for p in r_all])
     
     # 10..14 Radar delta
     d_laning = b_laning - r_laning
@@ -151,46 +203,82 @@ def extract_features(blue_champs, red_champs, blue_winrate=0.5, red_winrate=0.5,
     d_late = b_late - r_late
     
     # 15..17 Blue damage
-    b_phys = np.mean([p["phys"] for p in b_profs]) if b_profs else 0.5
-    b_magic = np.mean([p["magic"] for p in b_profs]) if b_profs else 0.5
-    b_true = np.mean([p["true"] for p in b_profs]) if b_profs else 0.0
+    b_phys = sum(p["phys"] for p in b_all) / b_slots
+    b_magic = sum(p["magic"] for p in b_all) / b_slots
+    b_true = sum(p.get("true", 0.0) for p in b_all) / b_slots
     
     # 18..20 Red damage
-    r_phys = np.mean([p["phys"] for p in r_profs]) if r_profs else 0.5
-    r_magic = np.mean([p["magic"] for p in r_profs]) if r_profs else 0.5
-    r_true = np.mean([p["true"] for p in r_profs]) if r_profs else 0.0
+    r_phys = sum(p["phys"] for p in r_all) / r_slots
+    r_magic = sum(p["magic"] for p in r_all) / r_slots
+    r_true = sum(p.get("true", 0.0) for p in r_all) / r_slots
     
     # 21..23 Durability
-    b_dur = np.mean([p["durability"] for p in b_profs]) if b_profs else 5.0
-    r_dur = np.mean([p["durability"] for p in r_profs]) if r_profs else 5.0
+    b_dur = sum(p["durability"] for p in b_all) / b_slots
+    r_dur = sum(p["durability"] for p in r_all) / r_slots
     d_dur = b_dur - r_dur
     
     # 24..26 CC Score
-    b_cc = np.sum([p["cc"] for p in b_profs]) if b_profs else 0.0
-    r_cc = np.sum([p["cc"] for p in r_profs]) if r_profs else 0.0
+    b_cc = sum(p["cc"] for p in b_all)
+    r_cc = sum(p["cc"] for p in r_all)
     d_cc = b_cc - r_cc
     
-    # 27..29 Meta Tier (Default neutral 2.0)
-    b_tier = 2.0
-    r_tier = 2.0
-    d_tier = 0.0
-    
-    # 30..32 Meta Winrate
-    b_mwr = 0.50
-    r_mwr = 0.50
-    d_mwr = 0.0
+    # 27..29 Meta Tier & 30..32 Meta Winrate
+    def calc_meta(champs):
+        if not champs or not meta_stats:
+            return 2.0, 0.50
+        tiers, wrs = [], []
+        for c in champs:
+            slug = _slugify(c)
+            st = meta_stats.get(slug, {})
+            tiers.append(float(st.get("tier", 2.0)))
+            wrs.append(float(st.get("winrate", 0.50)))
+        return (float(np.mean(tiers)) if tiers else 2.0), (float(np.mean(wrs)) if wrs else 0.50)
+
+    b_tier, b_mwr = calc_meta(blue_champs)
+    r_tier, r_mwr = calc_meta(red_champs)
+    d_tier = b_tier - r_tier
+    d_mwr = b_mwr - r_mwr
     
     # 33..35 Synergy
-    b_syn = 0.0
-    r_syn = 0.0
-    d_syn = 0.0
+    def calc_synergy(champs):
+        if not champs or not synergies or len(champs) < 2:
+            return 0.0
+        total_syn = 0.0
+        slugs = [_slugify(c) for c in champs]
+        for i in range(len(slugs)):
+            for j in range(i + 1, len(slugs)):
+                s1, s2 = slugs[i], slugs[j]
+                syn = synergies.get((s1, s2), synergies.get((s2, s1), 0.0))
+                total_syn += syn
+        return float(total_syn)
+
+    b_syn = calc_synergy(blue_champs)
+    r_syn = calc_synergy(red_champs)
+    d_syn = b_syn - r_syn
     
     # 36 Matchup Counter
     d_matchup = 0.0
+    if matchups:
+        if blue_roles and red_roles and len(blue_champs) == len(blue_roles) and len(red_champs) == len(red_roles):
+            role_to_red = {_slugify(r): _slugify(c) for c, r in zip(red_champs, red_roles)}
+            for bc, br in zip(blue_champs, blue_roles):
+                rc = role_to_red.get(_slugify(br))
+                if rc:
+                    bslug = _slugify(bc)
+                    score = matchups.get((bslug, rc), -matchups.get((rc, bslug), 0.0))
+                    d_matchup += score
+        else:
+            for bc in blue_champs:
+                for rc in red_champs:
+                    bslug, rslug = _slugify(bc), _slugify(rc)
+                    if (bslug, rslug) in matchups:
+                        d_matchup += matchups[(bslug, rslug)]
+                    elif (rslug, bslug) in matchups:
+                        d_matchup -= matchups[(rslug, bslug)]
     
     # 37..38 Team Rating & Dominance Delta
     d_team = blue_winrate - red_winrate
-    d_dom = 0.0
+    d_dom = blue_dominance - red_dominance
     
     # 39..41 Side Advantage
     side_bias = blue_bias
@@ -235,4 +323,5 @@ def extract_features(blue_champs, red_champs, blue_winrate=0.5, red_winrate=0.5,
         b_arch["tank"], b_arch["marksman"], b_arch["mage"], b_arch["assassin"], b_arch["enchanter"],
         r_arch["tank"], r_arch["marksman"], r_arch["mage"], r_arch["assassin"], r_arch["enchanter"]
     ]
+    return np.array(vec, dtype=np.float32)
     return np.array(vec, dtype=np.float32)

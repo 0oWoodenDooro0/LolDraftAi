@@ -7,15 +7,72 @@ import com.loldraft.data.meta.FiveDimensionRadar
 import com.loldraft.data.meta.MetaTier
 import com.loldraft.data.meta.PatchMetaMatrix
 import com.loldraft.data.meta.TankinessTier
+import com.loldraft.data.meta.DamageProfile
+import com.loldraft.data.meta.DamageType
 import com.loldraft.data.models.DraftState
 import com.loldraft.data.models.PickSelection
+import com.loldraft.data.models.Role
 import com.loldraft.data.normalization.ChampionNormalizer
 import com.loldraft.data.style.TeamTacticalProfile
+
+import com.loldraft.data.meta.ChampionEmpiricalRegistry
+import com.loldraft.data.meta.ChampionEmpiricalStats
+
+data class RolePrior(
+    val durability: Double,
+    val cc: Double,
+    val radar: FiveDimensionRadar,
+    val physDmg: Double,
+    val magicDmg: Double,
+    val trueDmg: Double = 0.0,
+)
 
 class DraftFeatureExtractor(
     val tagRegistry: ChampionTagRegistry = ChampionTagRegistry.createDefault(),
     val blueSideAdvantageBias: Double = 0.03,
+    val empiricalRegistry: ChampionEmpiricalRegistry = ChampionEmpiricalRegistry.createDefault(),
 ) {
+    companion object {
+        const val TEAM_SIZE = 5
+
+        val ROLE_PRIORS: Map<Role, RolePrior> =
+            mapOf(
+                Role.TOP to RolePrior(durability = 7.5, cc = 2.0, radar = FiveDimensionRadar(7.8, 6.8, 5.0, 6.8, 7.2), physDmg = 0.75, magicDmg = 0.25),
+                Role.JUNGLE to RolePrior(durability = 7.2, cc = 2.8, radar = FiveDimensionRadar(6.8, 8.2, 5.5, 6.2, 7.0), physDmg = 0.65, magicDmg = 0.35),
+                Role.MID to RolePrior(durability = 4.5, cc = 2.0, radar = FiveDimensionRadar(7.5, 6.8, 6.5, 8.2, 8.2), physDmg = 0.20, magicDmg = 0.80),
+                Role.BOT to RolePrior(durability = 3.8, cc = 1.0, radar = FiveDimensionRadar(7.2, 5.5, 5.5, 7.8, 8.8), physDmg = 0.85, magicDmg = 0.15),
+                Role.SUPPORT to RolePrior(durability = 6.0, cc = 3.2, radar = FiveDimensionRadar(6.8, 7.8, 7.8, 4.5, 6.8), physDmg = 0.15, magicDmg = 0.85),
+            )
+
+        val DEFAULT_PRIOR =
+            RolePrior(
+                durability = 5.8,
+                cc = 2.2,
+                radar = FiveDimensionRadar(7.22, 7.02, 6.06, 6.70, 7.60),
+                physDmg = 0.52,
+                magicDmg = 0.48,
+            )
+    }
+
+    private fun getMissingPriors(selections: List<PickSelection>): List<RolePrior> {
+        val missingCount = (TEAM_SIZE - selections.size).coerceAtLeast(0)
+        if (missingCount == 0) return emptyList()
+
+        val takenRoles = selections.mapNotNull { it.role }.toSet()
+        val untakenRoles = Role.entries.filter { it !in takenRoles }.toMutableList()
+
+        val priors = mutableListOf<RolePrior>()
+        for (i in 0 until missingCount) {
+            if (untakenRoles.isNotEmpty()) {
+                val role = untakenRoles.removeAt(0)
+                priors.add(ROLE_PRIORS[role] ?: DEFAULT_PRIOR)
+            } else {
+                priors.add(DEFAULT_PRIOR)
+            }
+        }
+        return priors
+    }
+
     fun extract(
         draftState: DraftState,
         patchMeta: PatchMetaMatrix? = null,
@@ -58,9 +115,14 @@ class DraftFeatureExtractor(
         val blueProfiles = blueChamps.mapNotNull { tagRegistry.getProfile(it) }
         val redProfiles = redChamps.mapNotNull { tagRegistry.getProfile(it) }
 
+        val bluePriors = getMissingPriors(blueSelections)
+        val redPriors = getMissingPriors(redSelections)
+
         // 1. Five Dimension Radar (0..4, 5..9, 10..14)
-        val blueRadar = tagRegistry.calculateTeamRadar(blueChamps)
-        val redRadar = tagRegistry.calculateTeamRadar(redChamps)
+        val blueRadarList = blueProfiles.map { it.radar } + bluePriors.map { it.radar }
+        val blueRadar = if (blueRadarList.isEmpty()) FiveDimensionRadar.average(emptyList()) else FiveDimensionRadar.average(blueRadarList)
+        val redRadarList = redProfiles.map { it.radar } + redPriors.map { it.radar }
+        val redRadar = if (redRadarList.isEmpty()) FiveDimensionRadar.average(emptyList()) else FiveDimensionRadar.average(redRadarList)
         val radarDelta =
             FiveDimensionRadar(
                 laningStrength = blueRadar.laningStrength - redRadar.laningStrength,
@@ -71,25 +133,32 @@ class DraftFeatureExtractor(
             )
 
         // 2. Damage Profiles (15..17, 18..20)
-        val blueDamage = tagRegistry.calculateTeamDamageSplit(blueChamps)
-        val redDamage = tagRegistry.calculateTeamDamageSplit(redChamps)
+        val blueSlots = (blueProfiles.size + bluePriors.size).coerceAtLeast(1)
+        val bluePhys = (blueProfiles.sumOf { it.damageProfile.physicalRatio } + bluePriors.sumOf { it.physDmg }) / blueSlots
+        val blueMagic = (blueProfiles.sumOf { it.damageProfile.magicRatio } + bluePriors.sumOf { it.magicDmg }) / blueSlots
+        val blueTrue = (blueProfiles.sumOf { it.damageProfile.trueRatio } + bluePriors.sumOf { it.trueDmg }) / blueSlots
+        val blueDamage = DamageProfile(bluePhys, blueMagic, blueTrue, DamageType.MIXED)
+
+        val redSlots = (redProfiles.size + redPriors.size).coerceAtLeast(1)
+        val redPhys = (redProfiles.sumOf { it.damageProfile.physicalRatio } + redPriors.sumOf { it.physDmg }) / redSlots
+        val redMagic = (redProfiles.sumOf { it.damageProfile.magicRatio } + redPriors.sumOf { it.magicDmg }) / redSlots
+        val redTrue = (redProfiles.sumOf { it.damageProfile.trueRatio } + redPriors.sumOf { it.trueDmg }) / redSlots
+        val redDamage = DamageProfile(redPhys, redMagic, redTrue, DamageType.MIXED)
 
         // 3. Durability (21..23)
-        val blueDurability =
-            if (blueProfiles.isEmpty()) 5.0 else blueProfiles.sumOf { it.durability.durabilityScore } / blueProfiles.size
-        val redDurability =
-            if (redProfiles.isEmpty()) 5.0 else redProfiles.sumOf { it.durability.durabilityScore } / redProfiles.size
+        val blueDurability = (blueProfiles.sumOf { it.durability.durabilityScore } + bluePriors.sumOf { it.durability }) / blueSlots
+        val redDurability = (redProfiles.sumOf { it.durability.durabilityScore } + redPriors.sumOf { it.durability }) / redSlots
         val deltaDurability = blueDurability - redDurability
 
         // 4. CC Score (24..26)
         val blueCcScore =
             blueProfiles.sumOf {
                 it.ccRating.hardCcDurationSeconds + if (it.ccRating.hasReliableHardCc) 1.0 else 0.0
-            }
+            } + bluePriors.sumOf { it.cc }
         val redCcScore =
             redProfiles.sumOf {
                 it.ccRating.hardCcDurationSeconds + if (it.ccRating.hasReliableHardCc) 1.0 else 0.0
-            }
+            } + redPriors.sumOf { it.cc }
         val deltaCcScore = blueCcScore - redCcScore
 
         // 5. Patch Meta Tiers & Win Rates (27..29, 30..32)
@@ -194,6 +263,78 @@ class DraftFeatureExtractor(
         values[50] = (redArchetypes["assassin"] ?: 0).toFloat()
         values[51] = (redArchetypes["enchanter"] ?: 0).toFloat()
 
+        // Compute 21-dimensional objective empirical vector for Hybrid ONNX model
+        val empiricalValues = FloatArray(DraftFeatures.EMPIRICAL_FEATURE_COUNT)
+        for (i in 0 until 5) {
+            val c = blueChamps.getOrNull(i)
+            empiricalValues[i] = empiricalRegistry.getChampId(c).toFloat()
+        }
+        for (i in 0 until 5) {
+            val c = redChamps.getOrNull(i)
+            empiricalValues[5 + i] = empiricalRegistry.getChampId(c).toFloat()
+        }
+
+        val blueEmpStats = blueChamps.mapNotNull { empiricalRegistry.getStats(it) }
+        val redEmpStats = redChamps.mapNotNull { empiricalRegistry.getStats(it) }
+
+        fun avgEmp(list: List<ChampionEmpiricalStats>, default: Double, selector: (ChampionEmpiricalStats) -> Double): Double =
+            if (list.isEmpty()) default else list.map(selector).average()
+
+        val bWr = avgEmp(blueEmpStats, 0.5) { it.smoothedWinRate }
+        val rWr = avgEmp(redEmpStats, 0.5) { it.smoothedWinRate }
+        empiricalValues[10] = (bWr - rWr).toFloat()
+
+        val bGd = avgEmp(blueEmpStats, 0.0) { it.smoothedGd15 }
+        val rGd = avgEmp(redEmpStats, 0.0) { it.smoothedGd15 }
+        empiricalValues[11] = (bGd - rGd).toFloat()
+
+        val bCsd = avgEmp(blueEmpStats, 0.0) { it.smoothedCsd15 }
+        val rCsd = avgEmp(redEmpStats, 0.0) { it.smoothedCsd15 }
+        empiricalValues[12] = (bCsd - rCsd).toFloat()
+
+        val bDpm = avgEmp(blueEmpStats, 500.0) { it.smoothedDpm }
+        val rDpm = avgEmp(redEmpStats, 500.0) { it.smoothedDpm }
+        empiricalValues[13] = (bDpm - rDpm).toFloat()
+
+        val bDtpm = avgEmp(blueEmpStats, 600.0) { it.smoothedDtpm }
+        val rDtpm = avgEmp(redEmpStats, 600.0) { it.smoothedDtpm }
+        empiricalValues[14] = (bDtpm - rDtpm).toFloat()
+
+        val bDmpm = avgEmp(blueEmpStats, 600.0) { it.smoothedDmpm }
+        val rDmpm = avgEmp(redEmpStats, 600.0) { it.smoothedDmpm }
+        empiricalValues[15] = (bDmpm - rDmpm).toFloat()
+
+        val bFt = avgEmp(blueEmpStats, 0.5) { it.firstTowerRate }
+        val rFt = avgEmp(redEmpStats, 0.5) { it.firstTowerRate }
+        empiricalValues[16] = (bFt - rFt).toFloat()
+
+        val bFd = avgEmp(blueEmpStats, 0.5) { it.firstDragonRate }
+        val rFd = avgEmp(redEmpStats, 0.5) { it.firstDragonRate }
+        empiricalValues[17] = (bFd - rFd).toFloat()
+
+        fun calcEmpSynergy(picks: List<String>): Double {
+            if (picks.size < 2) return 0.5
+            val scores = mutableListOf<Double>()
+            for (i in 0 until picks.size) {
+                for (j in i + 1 until picks.size) {
+                    scores.add(empiricalRegistry.getSynergy(picks[i], picks[j]))
+                }
+            }
+            return if (scores.isEmpty()) 0.5 else scores.average()
+        }
+        empiricalValues[18] = (calcEmpSynergy(blueChamps) - calcEmpSynergy(redChamps)).toFloat()
+
+        val minEmpPicks = minOf(blueChamps.size, redChamps.size)
+        val counterWrs = mutableListOf<Double>()
+        val counterGds = mutableListOf<Double>()
+        for (i in 0 until minEmpPicks) {
+            val info = empiricalRegistry.getCounter(blueChamps[i], redChamps[i])
+            counterWrs.add(info.winRateAdvantage)
+            counterGds.add(info.gd15Advantage)
+        }
+        empiricalValues[19] = (if (counterWrs.isEmpty()) 0.0 else counterWrs.average()).toFloat()
+        empiricalValues[20] = (if (counterGds.isEmpty()) 0.0 else counterGds.average()).toFloat()
+
         return DraftFeatures(
             values = values,
             blueRadar = blueRadar,
@@ -220,6 +361,7 @@ class DraftFeatureExtractor(
             redSidePreferenceDelta = redSidePref,
             blueArchetypes = blueArchetypes,
             redArchetypes = redArchetypes,
+            empiricalValues = empiricalValues,
         )
     }
 

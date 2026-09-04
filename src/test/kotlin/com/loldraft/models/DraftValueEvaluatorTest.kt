@@ -77,6 +77,7 @@ class DraftValueEvaluatorTest {
 
     @Test
     fun `should predict win rate strictly bounded in 0 to 1 and sum to 1`() {
+        assertTrue(evaluator.isOnnxLoaded, "ONNX model should be successfully loaded from resources")
         val draft = createStrongBlueDraft()
         val result = evaluator.evaluate(draft)
 
@@ -273,13 +274,14 @@ class DraftValueEvaluatorTest {
                 redPicks = draft1.bluePicks,
             )
         val draftList = listOf(draft1, draft2)
-
-        val batchResults = evaluator.evaluateBatch(draftList)
+        val patchMeta = createSamplePatchMeta()
+        val batchResults = evaluator.evaluateBatch(draftList, patchMeta = patchMeta)
 
         assertEquals(2, batchResults.size)
         assertTrue(batchResults[0].blueWinRate in 0.0..1.0)
         assertTrue(batchResults[1].blueWinRate in 0.0..1.0)
         assertTrue(batchResults[0].blueWinRate > batchResults[1].blueWinRate)
+        assertEquals(1.0, batchResults[0].blueWinRate + batchResults[1].blueWinRate, 0.05)
     }
 
     @Test
@@ -299,4 +301,37 @@ class DraftValueEvaluatorTest {
         assertNotNull(compRadar)
         assertTrue(compRadar.blueRadar.laning in 0.0..10.0)
     }
+
+    @Test
+    fun `should have ONNX model loaded and perform pure anti-symmetric neural inference`() {
+        assertTrue(evaluator.isOnnxLoaded, "ONNX model must be successfully loaded")
+
+        val draftA = createStrongBlueDraft()
+        val draftB = DraftState(bluePicks = draftA.redPicks, redPicks = draftA.bluePicks)
+
+        val resultA = evaluator.evaluate(draftA)
+        val resultB = evaluator.evaluate(draftB)
+
+        assertTrue(resultA.blueWinRate in 0.01..0.99)
+        assertTrue(resultB.blueWinRate in 0.01..0.99)
+        // Anti-symmetry: when blue and red swap, win rates swap
+        assertEquals(1.0, resultA.blueWinRate + resultB.blueWinRate, 0.05, "Win rates must be anti-symmetric")
+    }
+
+    @Test
+    fun `should extract 21-dimensional empirical features matching hybrid ONNX schema`() {
+        val draft = createStrongBlueDraft()
+        val features = evaluator.featureExtractor.extract(draft)
+
+        assertEquals(21, features.empiricalValues.size)
+        // Slots 0..4: Blue champ IDs > 0
+        for (i in 0 until 5) {
+            assertTrue(features.empiricalValues[i] > 0f, "Blue champ ID at $i must be > 0")
+        }
+        // Slots 5..9: Red champ IDs > 0
+        for (i in 5 until 10) {
+            assertTrue(features.empiricalValues[i] > 0f, "Red champ ID at $i must be > 0")
+        }
+    }
 }
+

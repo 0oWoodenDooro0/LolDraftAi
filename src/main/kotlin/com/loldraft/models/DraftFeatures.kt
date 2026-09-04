@@ -31,7 +31,13 @@ data class DraftFeatures(
     val redSidePreferenceDelta: Double,
     val blueArchetypes: Map<String, Int> = emptyMap(),
     val redArchetypes: Map<String, Int> = emptyMap(),
+    val empiricalValues: FloatArray = FloatArray(EMPIRICAL_FEATURE_COUNT),
 ) {
+    val durabilityDelta: Double get() = blueDurability - redDurability
+    val ccDelta: Double get() = blueCcScore - redCcScore
+    val metaTierDelta: Double get() = blueMetaTierScore - redMetaTierScore
+    val metaWinRateDelta: Double get() = blueMetaWinRate - redMetaWinRate
+
     fun toFloatArray(): FloatArray = values.copyOf()
 
     fun toDoubleArray(): DoubleArray = DoubleArray(values.size) { values[it].toDouble() }
@@ -47,13 +53,36 @@ data class DraftFeatures(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
         other as DraftFeatures
-        return values.contentEquals(other.values)
+        return values.contentEquals(other.values) && empiricalValues.contentEquals(other.empiricalValues)
     }
 
-    override fun hashCode(): Int = values.contentHashCode()
+    override fun hashCode(): Int {
+        var result = values.contentHashCode()
+        result = 31 * result + empiricalValues.contentHashCode()
+        return result
+    }
 
     companion object {
         const val FEATURE_COUNT: Int = 52
+        const val EMPIRICAL_FEATURE_COUNT: Int = 21
+
+        val EMPIRICAL_FEATURE_NAMES: List<String> =
+            listOf(
+                "blue_champ_1", "blue_champ_2", "blue_champ_3", "blue_champ_4", "blue_champ_5",
+                "red_champ_1", "red_champ_2", "red_champ_3", "red_champ_4", "red_champ_5",
+                "delta_win_rate",
+                "delta_gd15",
+                "delta_csd15",
+                "delta_dpm",
+                "delta_dtpm",
+                "delta_dmpm",
+                "delta_first_tower",
+                "delta_first_dragon",
+                "delta_synergy",
+                "delta_counter_winrate",
+                "delta_counter_gd15",
+            )
+
 
         val FEATURE_NAMES: List<String> =
             listOf(

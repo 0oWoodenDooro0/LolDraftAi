@@ -42,6 +42,18 @@ data class TimeCurve(
 class TimeCurveCalculator(
     val tagRegistry: ChampionTagRegistry = ChampionTagRegistry.createDefault(),
     val evalBarScale: Double = EvalBarCalculator.DEFAULT_SCALE,
+    val earlyInflectionMinute: Double = 15.5,
+    val lateInflectionMinute: Double = 28.5,
+    val earlyInflectionSlope: Double = 4.0,
+    val lateInflectionSlope: Double = 4.5,
+    val weightLaning: Double = 0.08,
+    val weightEarlyBully: Double = 0.06,
+    val weightDominance: Double = 0.04,
+    val weightMatchup: Double = 0.08,
+    val weightLateScaling: Double = 0.08,
+    val weightHyperCarry: Double = 0.06,
+    val weightDurability: Double = 0.02,
+    val weightCc: Double = 0.02,
 ) {
     companion object {
         val TIME_INTERVALS: List<Int> = listOf(10, 15, 20, 25, 30, 35, 40)
@@ -90,26 +102,26 @@ class TimeCurveCalculator(
         val deltaLateScaling = features.radarDelta.lateGameScaling
         val deltaDominance = features.earlyDominanceDelta
         val deltaMatchup = features.matchupDelta
-        val deltaDurability = features.values[23].toDouble()
-        val deltaCc = features.values[26].toDouble()
+        val deltaDurability = features.durabilityDelta
+        val deltaCc = features.ccDelta
 
         val earlySignal =
-            deltaLaning * 0.12 +
-                deltaEarlyBully * 0.10 +
-                deltaDominance * 0.04 +
-                deltaMatchup * 0.08
+            deltaLaning * weightLaning +
+                deltaEarlyBully * weightEarlyBully +
+                deltaDominance * weightDominance +
+                deltaMatchup * weightMatchup
 
         val lateSignal =
-            deltaLateScaling * 0.12 +
-                deltaHyperCarry * 0.10 +
-                deltaDurability * 0.03 +
-                deltaCc * 0.03
+            deltaLateScaling * weightLateScaling +
+                deltaHyperCarry * weightHyperCarry +
+                deltaDurability * weightDurability +
+                deltaCc * weightCc
 
         val points = mutableListOf<TimePointWinRate>()
 
         for (minute in TIME_INTERVALS) {
-            val wEarly = 1.0 / (1.0 + exp((minute - 16.0) / 4.0))
-            val wLate = 1.0 / (1.0 + exp(-(minute - 27.0) / 4.5))
+            val wEarly = 1.0 / (1.0 + exp((minute - earlyInflectionMinute) / earlyInflectionSlope))
+            val wLate = 1.0 / (1.0 + exp(-(minute - lateInflectionMinute) / lateInflectionSlope))
 
             val shift = earlySignal * (wEarly - 0.35) + lateSignal * (wLate - 0.35)
             val logit = baseLogit + shift
