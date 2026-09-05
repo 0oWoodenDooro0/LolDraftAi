@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     working_dir: /workspace/ai
+    environment:
+      - PYTHONPATH=/workspace/ai
     volumes:
       - ..:/workspace
     deploy:
@@ -20,6 +22,8 @@ services:
       context: .
       dockerfile: Dockerfile
     working_dir: /workspace/ai
+    environment:
+      - PYTHONPATH=/workspace/ai
     volumes:
       - ..:/workspace
     deploy:
@@ -36,6 +40,8 @@ services:
       context: .
       dockerfile: Dockerfile
     working_dir: /workspace/ai
+    environment:
+      - PYTHONPATH=/workspace/ai
     volumes:
       - ..:/workspace
     deploy:

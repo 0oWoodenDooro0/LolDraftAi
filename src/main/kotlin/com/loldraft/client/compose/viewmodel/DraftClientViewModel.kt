@@ -14,8 +14,6 @@ import com.loldraft.data.player.PlayerRosterIntelligence
 import com.loldraft.models.AnalyticalDraftEvaluator
 import com.loldraft.models.BpPredictionAlgorithm
 import com.loldraft.models.CompositionFlawDetector
-import com.loldraft.models.EmpiricalPolicyPredictor
-import com.loldraft.models.DeepPolicyPredictor
 import com.loldraft.models.DraftEvaluator
 import com.loldraft.models.DraftIntentPredictor
 import com.loldraft.models.DraftRecommender
@@ -38,7 +36,6 @@ class DraftClientViewModel(
     private val repository: ProMatchRepository = ProMatchRepository(),
     private val playerIntelService: PlayerIntelligenceService = PlayerIntelligenceService(),
     private val intentPredictor: DraftIntentPredictor = DraftIntentPredictor(),
-    private val empiricalPolicyPredictor: EmpiricalPolicyPredictor = EmpiricalPolicyPredictor(),
     private val recommender: DraftRecommender = DraftRecommender(),
     private val evaluator: DraftEvaluator = AnalyticalDraftEvaluator(),
     private val flawDetector: CompositionFlawDetector = CompositionFlawDetector(),
@@ -780,42 +777,26 @@ class DraftClientViewModel(
                     }
 
                 val predictions =
-                    if (current.selectedAlgorithm == BpPredictionAlgorithm.EMPIRICAL_BEHAVIORAL) {
-                        val actingTeam = if (actingSide == Side.BLUE) current.blueTeam else current.redTeam
-                        val targetTeam = if (isBan) opponentTeam else actingTeam
-                        val league = if (actingSide == Side.BLUE) current.blueSelectedLeague else current.redSelectedLeague
-                        empiricalPolicyPredictor.predictNextAction(
-                            draftState = draftState,
-                            patchMeta = patchMeta,
-                            league = league,
-                            targetTeamName = targetTeam?.name,
-                            playerProfilesByRole = actingProfiles,
-                            opponentPlayerProfilesByRole = oppProfiles,
-                            firstPickSide = current.firstPickSide,
-                            topN = 5,
-                        ).predictions
+                    if (isBan) {
+                        intentPredictor
+                            .predictNextAction(
+                                draftState = draftState,
+                                patchMeta = patchMeta,
+                                opponentPlayerProfilesByRole = oppProfiles,
+                                opponentBansAgainstTargetTeam = opponentBans,
+                                targetTeamName = opponentTeam?.name,
+                                firstPickSide = current.firstPickSide,
+                                topN = 5,
+                            ).predictions
                     } else {
-                        if (isBan) {
-                            intentPredictor
-                                .predictNextAction(
-                                    draftState = draftState,
-                                    patchMeta = patchMeta,
-                                    opponentPlayerProfilesByRole = oppProfiles,
-                                    opponentBansAgainstTargetTeam = opponentBans,
-                                    targetTeamName = opponentTeam?.name,
-                                    firstPickSide = current.firstPickSide,
-                                    topN = 5,
-                                ).predictions
-                        } else {
-                            intentPredictor
-                                .predictNextAction(
-                                    draftState = draftState,
-                                    patchMeta = patchMeta,
-                                    playerProfilesByRole = actingProfiles,
-                                    firstPickSide = current.firstPickSide,
-                                    topN = 5,
-                                ).predictions
-                        }
+                        intentPredictor
+                            .predictNextAction(
+                                draftState = draftState,
+                                patchMeta = patchMeta,
+                                playerProfilesByRole = actingProfiles,
+                                firstPickSide = current.firstPickSide,
+                                topN = 5,
+                            ).predictions
                     }
 
                 // 3. Recommendations: Best Bans during Ban phase, Best Picks during Pick phase

@@ -95,7 +95,7 @@ fun TopBarView(
             )
         }
 
-        // Middle Selectors: Patch, First Pick Side, Blue Region, Blue Team, Swap, Red Region, Red Team, Fearless, Algorithm Switcher
+        // Middle Selectors: Patch, First Pick Side, Blue Region, Blue Team, Swap, Red Region, Red Team, Fearless
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -216,52 +216,6 @@ fun TopBarView(
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                 )
-            }
-
-            // Algorithm Switcher (啟發式 vs 經驗統計)
-            Row(
-                modifier =
-                    Modifier
-                        .background(CardDark, RoundedCornerShape(6.dp))
-                        .border(1.dp, BorderDark, RoundedCornerShape(6.dp))
-                        .padding(2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                val isHeuristic = state.selectedAlgorithm == BpPredictionAlgorithm.HEURISTIC_EXPERT
-                Box(
-                    modifier =
-                        Modifier
-                            .background(
-                                if (isHeuristic) GoldAccent.copy(alpha = 0.2f) else Color.Transparent,
-                                RoundedCornerShape(4.dp),
-                            )
-                            .clickable { onSelectAlgorithm(BpPredictionAlgorithm.HEURISTIC_EXPERT) }
-                            .padding(horizontal = 8.dp, vertical = 5.dp),
-                ) {
-                    Text(
-                        text = "啟發式",
-                        color = if (isHeuristic) GoldAccent else TextSecondary,
-                        fontWeight = if (isHeuristic) FontWeight.Bold else FontWeight.Normal,
-                        fontSize = 11.sp,
-                    )
-                }
-                Box(
-                    modifier =
-                        Modifier
-                            .background(
-                                if (!isHeuristic) GoldAccent.copy(alpha = 0.2f) else Color.Transparent,
-                                RoundedCornerShape(4.dp),
-                            )
-                            .clickable { onSelectAlgorithm(BpPredictionAlgorithm.EMPIRICAL_BEHAVIORAL) }
-                            .padding(horizontal = 8.dp, vertical = 5.dp),
-                ) {
-                    Text(
-                        text = "⚡ 經驗統計",
-                        color = if (!isHeuristic) GoldAccent else TextSecondary,
-                        fontWeight = if (!isHeuristic) FontWeight.Bold else FontWeight.Normal,
-                        fontSize = 11.sp,
-                    )
-                }
             }
         }
 

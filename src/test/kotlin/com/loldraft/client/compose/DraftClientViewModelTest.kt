@@ -415,19 +415,10 @@ class DraftClientViewModelTest {
     }
 
     @Test
-    fun `test selectPredictionAlgorithm switches between heuristic and empirical behavioral`() {
+    fun `test default prediction algorithm is heuristic expert`() {
         assertEquals(BpPredictionAlgorithm.HEURISTIC_EXPERT, viewModel.uiState.value.selectedAlgorithm)
         viewModel.awaitCalculations()
         val heuristicPredictions = viewModel.uiState.value.intentPredictions
         assertTrue(heuristicPredictions.isNotEmpty())
-
-        // Switch to Deep Learning
-        viewModel.selectPredictionAlgorithm(BpPredictionAlgorithm.DEEP_LEARNING_POLICY)
-        assertEquals(BpPredictionAlgorithm.DEEP_LEARNING_POLICY, viewModel.uiState.value.selectedAlgorithm)
-        viewModel.awaitCalculations()
-
-        val dlPredictions = viewModel.uiState.value.intentPredictions
-        assertTrue(dlPredictions.isNotEmpty())
-        assertTrue(dlPredictions.first().rationale.contains("[Empirical Policy]"))
     }
 }
