@@ -67,7 +67,17 @@ class DraftClientViewModel(
         repository.initialize()
         val patches = repository.getPatches().ifEmpty { listOf("16.17") }
         val defaultPatch = repository.getDefaultPatch()
-        val leagues = repository.getLeagues()
+        val allLeagues = repository.getLeagues()
+        // 5大頂級賽區 (LCK, LPL, LEC, LCS, LCP) + 世界賽 (Worlds, MSI, EWC)
+        val majorOrder = listOf("LCK", "LPL", "LEC", "LCS", "LCP", "Worlds", "MSI", "EWC")
+        val filteredMajor = majorOrder.filter { major ->
+            allLeagues.any { it.equals(major, ignoreCase = true) || it.contains("World", ignoreCase = true) }
+        }.map { major ->
+            allLeagues.firstOrNull { it.equals(major, ignoreCase = true) }
+                ?: allLeagues.firstOrNull { it.contains(major, ignoreCase = true) }
+                ?: major
+        }.distinct()
+        val leagues = if (filteredMajor.isNotEmpty()) filteredMajor else allLeagues
         val teams = repository.getTeams()
 
         val blue = teams.find { it.name.contains("T1", ignoreCase = true) } ?: teams.firstOrNull()
@@ -118,6 +128,10 @@ class DraftClientViewModel(
             )
 
         recalculateDraftCalculations()
+
+        coroutineScope.launch(Dispatchers.IO) {
+            com.loldraft.client.compose.image.DdragonVersionService.refreshLatestVersion()
+        }
     }
 
     fun awaitCalculations() {
@@ -216,7 +230,7 @@ class DraftClientViewModel(
         selectBlueLeague(league)
     }
 
-    fun selectBlueLeague(league: String?) {
+    fun selectBlueLeague(league: String?, syncRed: Boolean = true) {
         val current = _uiState.value
         val actualLeague =
             if (league.isNullOrBlank() ||
@@ -234,13 +248,52 @@ class DraftClientViewModel(
             } else {
                 repository.getTeams(league = actualLeague)
             }
-        _uiState.value =
-            current.copy(
-                blueSelectedLeague = actualLeague,
-                blueFilteredTeams = filtered,
-                selectedLeague = actualLeague,
-                filteredTeams = filtered,
-            )
+
+        val newBlueTeam =
+            if (filtered.any { it.id == current.blueTeam?.id }) {
+                current.blueTeam
+            } else {
+                filtered.firstOrNull()
+            }
+
+        val newBlueRoster =
+            if (newBlueTeam != null) computeRosterIntelligence(newBlueTeam.id) else emptyMap()
+
+        if (syncRed) {
+            val newRedTeam =
+                if (filtered.any { it.id == current.redTeam?.id && it.id != newBlueTeam?.id }) {
+                    current.redTeam
+                } else {
+                    filtered.find { it.id != newBlueTeam?.id } ?: filtered.firstOrNull()
+                }
+            val newRedRoster =
+                if (newRedTeam != null) computeRosterIntelligence(newRedTeam.id) else emptyMap()
+
+            _uiState.value =
+                current.copy(
+                    blueSelectedLeague = actualLeague,
+                    blueFilteredTeams = filtered,
+                    selectedLeague = actualLeague,
+                    filteredTeams = filtered,
+                    blueTeam = newBlueTeam,
+                    blueRosterIntelligence = newBlueRoster,
+                    redSelectedLeague = actualLeague,
+                    redFilteredTeams = filtered,
+                    redTeam = newRedTeam,
+                    redRosterIntelligence = newRedRoster,
+                )
+        } else {
+            _uiState.value =
+                current.copy(
+                    blueSelectedLeague = actualLeague,
+                    blueFilteredTeams = filtered,
+                    selectedLeague = actualLeague,
+                    filteredTeams = filtered,
+                    blueTeam = newBlueTeam,
+                    blueRosterIntelligence = newBlueRoster,
+                )
+        }
+        recalculateDraftCalculations()
     }
 
     fun selectRedLeague(league: String?) {
@@ -261,11 +314,25 @@ class DraftClientViewModel(
             } else {
                 repository.getTeams(league = actualLeague)
             }
+
+        val newRedTeam =
+            if (filtered.any { it.id == current.redTeam?.id }) {
+                current.redTeam
+            } else {
+                filtered.find { it.id != current.blueTeam?.id } ?: filtered.firstOrNull()
+            }
+
+        val newRedRoster =
+            if (newRedTeam != null) computeRosterIntelligence(newRedTeam.id) else emptyMap()
+
         _uiState.value =
             current.copy(
                 redSelectedLeague = actualLeague,
                 redFilteredTeams = filtered,
+                redTeam = newRedTeam,
+                redRosterIntelligence = newRedRoster,
             )
+        recalculateDraftCalculations()
     }
 
     fun selectPredictionAlgorithm(algorithm: BpPredictionAlgorithm) {

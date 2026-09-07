@@ -176,7 +176,7 @@ fun ChampionCard(
     Box(
         modifier =
             modifier
-                .height(72.dp)
+                .height(76.dp)
                 .background(CardDark, RoundedCornerShape(6.dp))
                 .border(if (isSelected) 2.dp else 1.dp, borderColor, RoundedCornerShape(6.dp))
                 .clickable(enabled = !isUnavailable) { onClick() }
@@ -189,23 +189,16 @@ fun ChampionCard(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize(),
         ) {
-            // Champion Avatar Placeholder
-            Box(
-                modifier =
-                    Modifier
-                        .size(28.dp)
-                        .background(BorderDark, RoundedCornerShape(14.dp)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = champion.name.take(2).uppercase(),
-                    color = TextPrimary,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
+            // Champion Avatar
+            ChampionAvatar(
+                championNameOrId = champion.name,
+                avatarSize = 32.dp,
+                shape = RoundedCornerShape(4.dp),
+                isBanned = isBanned,
+                isPicked = isPicked,
+            )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(3.dp))
 
             Text(
                 text = champion.name,

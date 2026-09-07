@@ -60,17 +60,45 @@ fun PlayersGridView(viewModel: AnalyticsViewModel) {
                 DataGridColumn<PlayerAnalyticsRow>("player", "選手姓名", 110.dp) { item ->
                     Text(item.playerName, color = GoldAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 },
-                DataGridColumn("team", "所屬戰隊", 90.dp) { item ->
-                    Text(item.teamName, color = TextPrimary, fontSize = 12.sp)
+                DataGridColumn("team", "所屬戰隊", 130.dp) { item ->
+                    Text(
+                        text = item.teamName,
+                        color = TextPrimary,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 },
-                DataGridColumn("league", "賽區/賽事", 80.dp) { item ->
-                    Text(item.league, color = BlueSideColor, fontSize = 12.sp)
+                DataGridColumn("league", "賽區/賽事", 90.dp) { item ->
+                    Text(
+                        text = item.league,
+                        color = BlueSideColor,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 },
-                DataGridColumn("split", "賽期", 75.dp) { item ->
-                    Text(item.split ?: "-", color = TextSecondary, fontSize = 11.sp)
+                DataGridColumn("split", "賽期", 80.dp) { item ->
+                    Text(
+                        text = item.split ?: "-",
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 },
-                DataGridColumn("role", "定位", 60.dp, TextAlign.Center) { item ->
-                    Text(item.role.name, color = TextSecondary, fontSize = 11.sp, textAlign = TextAlign.Center)
+                DataGridColumn("role", "定位", 85.dp, TextAlign.Center) { item ->
+                    Text(
+                        text = item.role.name,
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        softWrap = false,
+                    )
                 },
                 DataGridColumn("games", "場次", 60.dp, TextAlign.End) { item ->
                     Text("${item.games}", color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End)

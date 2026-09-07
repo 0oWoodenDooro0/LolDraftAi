@@ -83,6 +83,33 @@ class ChampionNormalizerTest {
     }
 
     @Test
+    fun `should convert champion names to correct Data Dragon image keys`() {
+        assertEquals("MonkeyKing", ChampionNormalizer.toDdragonKey("Wukong"))
+        assertEquals("MonkeyKing", ChampionNormalizer.toDdragonKey("MonkeyKing"))
+        assertEquals("Leblanc", ChampionNormalizer.toDdragonKey("LeBlanc"))
+        assertEquals("Leblanc", ChampionNormalizer.toDdragonKey("leblanc"))
+        assertEquals("Nunu", ChampionNormalizer.toDdragonKey("Nunu & Willump"))
+        assertEquals("Nunu", ChampionNormalizer.toDdragonKey("nunu"))
+        assertEquals("Renata", ChampionNormalizer.toDdragonKey("Renata Glasc"))
+        assertEquals("Renata", ChampionNormalizer.toDdragonKey("renata"))
+        assertEquals("Belveth", ChampionNormalizer.toDdragonKey("Bel'Veth"))
+        assertEquals("Chogath", ChampionNormalizer.toDdragonKey("Cho'Gath"))
+        assertEquals("Kaisa", ChampionNormalizer.toDdragonKey("Kai'Sa"))
+        assertEquals("Khazix", ChampionNormalizer.toDdragonKey("Kha'Zix"))
+        assertEquals("Velkoz", ChampionNormalizer.toDdragonKey("Vel'Koz"))
+        assertEquals("KSante", ChampionNormalizer.toDdragonKey("K'Sante"))
+        assertEquals("DrMundo", ChampionNormalizer.toDdragonKey("Dr. Mundo"))
+        assertEquals("JarvanIV", ChampionNormalizer.toDdragonKey("Jarvan IV"))
+        assertEquals("LeeSin", ChampionNormalizer.toDdragonKey("Lee Sin"))
+        assertEquals("TwistedFate", ChampionNormalizer.toDdragonKey("Twisted Fate"))
+        assertEquals("AurelionSol", ChampionNormalizer.toDdragonKey("Aurelion Sol"))
+        assertEquals("Ambessa", ChampionNormalizer.toDdragonKey("Ambessa"))
+        assertEquals("Mel", ChampionNormalizer.toDdragonKey("Mel"))
+        assertEquals("", ChampionNormalizer.toDdragonKey(null))
+        assertEquals("", ChampionNormalizer.toDdragonKey("None"))
+    }
+
+    @Test
     fun `should identify empty or none bans`() {
         assertTrue(ChampionNormalizer.isNoneOrEmpty(null))
         assertTrue(ChampionNormalizer.isNoneOrEmpty(""))

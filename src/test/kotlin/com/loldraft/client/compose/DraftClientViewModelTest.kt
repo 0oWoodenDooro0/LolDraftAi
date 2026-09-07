@@ -140,6 +140,35 @@ class DraftClientViewModelTest {
     }
 
     @Test
+    fun `test available leagues only retain major regions and world tournaments`() {
+        val state = viewModel.uiState.value
+        val allowedMajorAndWorlds = setOf("LCK", "LPL", "LEC", "LCS", "LCP", "WORLDS", "WLD", "MSI", "EWC")
+        assertTrue(state.availableLeagues.isNotEmpty(), "Available leagues should not be empty")
+        assertTrue(
+            state.availableLeagues.all { league ->
+                league.uppercase() in allowedMajorAndWorlds || league.contains("World", ignoreCase = true)
+            },
+            "Available leagues should only retain major regions and world tournaments"
+        )
+        assertFalse(state.availableLeagues.any { it.equals("PCS", ignoreCase = true) }, "PCS must not be in 5 major regions")
+    }
+
+    @Test
+    fun `test selecting first region dropdown synchronizes second region dropdown`() {
+        val leagues = viewModel.uiState.value.availableLeagues
+        if (leagues.isNotEmpty()) {
+            val targetLeague = leagues.first()
+            viewModel.selectBlueLeague(targetLeague)
+
+            val state = viewModel.uiState.value
+            assertEquals(targetLeague, state.blueSelectedLeague, "Blue region should be updated")
+            assertEquals(targetLeague, state.redSelectedLeague, "Red region should be synchronized when first dropdown changes")
+            assertTrue(state.blueFilteredTeams.all { it.league == targetLeague })
+            assertTrue(state.redFilteredTeams.all { it.league == targetLeague })
+        }
+    }
+
+    @Test
     fun `test dual independent league filters for blue and red sides`() {
         val leagues = repository.getLeagues()
         if (leagues.size >= 2) {

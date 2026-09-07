@@ -170,7 +170,7 @@ fun NextBpPredictionView(
                                 }
                                 .padding(horizontal = 10.dp, vertical = 8.dp),
                     ) {
-                        // Top row: Rank, Champ Name, Role badge, Status and Probability
+                        // Top row: Rank, Avatar, Champ Name, Role badge, Status and Probability
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -193,6 +193,16 @@ fun NextBpPredictionView(
                                         fontWeight = FontWeight.Bold,
                                     )
                                 }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                ChampionAvatar(
+                                    championNameOrId = candidate.championId,
+                                    avatarSize = 32.dp,
+                                    shape = RoundedCornerShape(4.dp),
+                                    borderColor = if (isSelected || index == 0) GoldAccent else BorderDark,
+                                    borderWidth = if (isSelected || index == 0) 1.5.dp else 1.dp,
+                                    isBanned = isBanned,
+                                    isPicked = isPicked,
+                                )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = candidate.championId,

@@ -192,6 +192,19 @@ object ChampionNormalizer {
             map
         }
 
+    private val DDRAGON_KEY_OVERRIDES: Map<String, String> =
+        mapOf(
+            "Bel'Veth" to "Belveth",
+            "Cho'Gath" to "Chogath",
+            "Kai'Sa" to "Kaisa",
+            "Kha'Zix" to "Khazix",
+            "LeBlanc" to "Leblanc",
+            "Nunu & Willump" to "Nunu",
+            "Renata Glasc" to "Renata",
+            "Vel'Koz" to "Velkoz",
+            "Wukong" to "MonkeyKing",
+        )
+
     fun isNoneOrEmpty(rawName: String?): Boolean {
         if (rawName.isNullOrBlank()) return true
         val lower = rawName.trim().lowercase()
@@ -209,6 +222,18 @@ object ChampionNormalizer {
         if (isNoneOrEmpty(rawName)) return ""
         val normalized = normalize(rawName)
         return cleanKey(normalized)
+    }
+
+    fun toDdragonKey(rawName: String?): String {
+        if (isNoneOrEmpty(rawName)) return ""
+        val normalized = normalize(rawName)
+        DDRAGON_KEY_OVERRIDES[normalized]?.let { return it }
+        return normalized
+            .replace(" ", "")
+            .replace("'", "")
+            .replace(".", "")
+            .replace("&", "")
+            .replace("-", "")
     }
 
     fun getCanonicalNames(): List<String> = CANONICAL_NAMES

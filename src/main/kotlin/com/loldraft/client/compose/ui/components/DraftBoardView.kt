@@ -133,10 +133,10 @@ fun DraftSlotRow(
         modifier =
             modifier
                 .fillMaxWidth()
-                .heightIn(min = 52.dp)
+                .heightIn(min = 54.dp)
                 .background(if (slot.isCurrentTurn) CardDark else SurfaceDark, RoundedCornerShape(6.dp))
                 .then(borderModifier)
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -155,6 +155,16 @@ fun DraftSlotRow(
                     fontWeight = FontWeight.Bold,
                 )
             }
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Champion Avatar
+            ChampionAvatar(
+                championNameOrId = slot.championName ?: slot.championId,
+                avatarSize = 38.dp,
+                shape = RoundedCornerShape(6.dp),
+                borderColor = if (isLocked) sideColor else if (slot.isCurrentTurn) GoldAccent else BorderDark,
+                borderWidth = if (isLocked || slot.isCurrentTurn) 1.5.dp else 1.dp,
+            )
             Spacer(modifier = Modifier.width(8.dp))
 
             // Champion Name & Role
@@ -284,10 +294,10 @@ fun BanSlotBox(
     Box(
         modifier =
             modifier
-                .height(60.dp)
+                .height(68.dp)
                 .background(if (slot.isCurrentTurn) CardDark else SurfaceDark, RoundedCornerShape(6.dp))
                 .then(borderModifier)
-                .padding(horizontal = 2.dp, vertical = 4.dp),
+                .padding(horizontal = 2.dp, vertical = 3.dp),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -301,6 +311,17 @@ fun BanSlotBox(
                 fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.height(2.dp))
+
+            ChampionAvatar(
+                championNameOrId = slot.championName ?: slot.championId,
+                avatarSize = 28.dp,
+                shape = RoundedCornerShape(4.dp),
+                isBanned = isLocked,
+                borderColor = if (isLocked) Color(0xFFFF5252).copy(alpha = 0.6f) else BorderDark,
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
             Text(
                 text = slot.championName?.take(6) ?: if (slot.isCurrentTurn) "BAN" else "—",
                 color =
@@ -311,18 +332,10 @@ fun BanSlotBox(
                     } else {
                         TextMuted
                     },
-                fontSize = 11.sp,
+                fontSize = 10.sp,
                 fontWeight = if (isLocked) FontWeight.Bold else FontWeight.Normal,
                 maxLines = 1,
             )
-            if (isLocked) {
-                Text(
-                    text = "BAN",
-                    color = Color(0xFFFF5252).copy(alpha = 0.8f),
-                    fontSize = 8.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
         }
     }
 }

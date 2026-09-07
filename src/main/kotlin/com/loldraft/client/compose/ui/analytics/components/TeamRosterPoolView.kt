@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import com.loldraft.analytics.model.PlayerChampionStats
 import com.loldraft.analytics.model.RosterRoleSlot
 import com.loldraft.analytics.model.SortDirection
+import com.loldraft.client.compose.ui.components.ChampionAvatar
 import com.loldraft.client.compose.ui.theme.BlueSideColor
 import com.loldraft.client.compose.ui.theme.BlueSideDark
 import com.loldraft.client.compose.ui.theme.BorderDark
@@ -396,20 +397,30 @@ private fun RolePoolCard(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .height(32.dp)
+                                .height(34.dp)
                                 .padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // Champion Name
-                        Text(
-                            text = champ.championName,
-                            color = TextPrimary,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                        // Champion Name with Avatar
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.weight(1.3f),
-                        )
+                        ) {
+                            ChampionAvatar(
+                                championNameOrId = champ.championName,
+                                avatarSize = 20.dp,
+                                shape = RoundedCornerShape(3.dp),
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = champ.championName,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
 
                         // Games Played
                         Text(
@@ -585,7 +596,6 @@ private fun TournamentFilterChip(
         )
     }
 }
-
 
 @Composable
 private fun SplitDropdownSelector(

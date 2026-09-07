@@ -55,8 +55,9 @@ import com.loldraft.platform.pro.api.ProChampionEntry
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FearlessDraftDialog(
-    allChampions: List<ProChampionEntry>,
+    isOpen: Boolean = true,
     excludedChampionIds: Set<String>,
+    allChampions: List<ProChampionEntry>,
     currentPicksCount: Int,
     onAddChampion: (String) -> Unit,
     onRemoveChampion: (String) -> Unit,
@@ -64,18 +65,24 @@ fun FearlessDraftDialog(
     onImportCurrentPicks: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    if (!isOpen) return
+
     var searchQuery by remember { mutableStateOf("") }
-    val candidateChampions = remember(searchQuery, excludedChampionIds, allChampions) {
-        val q = searchQuery.trim().lowercase()
-        if (q.isEmpty()) {
-            emptyList()
-        } else {
-            allChampions.filter { champ ->
-                !excludedChampionIds.any { it.equals(champ.id, ignoreCase = true) || it.equals(champ.name, ignoreCase = true) } &&
-                    (champ.name.lowercase().contains(q) || champ.id.lowercase().contains(q))
-            }.take(8)
+
+    val candidateChampions =
+        remember(searchQuery, allChampions, excludedChampionIds) {
+            if (searchQuery.isBlank()) {
+                emptyList()
+            } else {
+                val q = searchQuery.trim().lowercase()
+                allChampions
+                    .filter { champ ->
+                        !excludedChampionIds.any { it.equals(champ.id, ignoreCase = true) || it.equals(champ.name, ignoreCase = true) } &&
+                            (champ.name.lowercase().contains(q) || champ.id.lowercase().contains(q))
+                    }
+                    .take(8)
+            }
         }
-    }
 
     // Modal Backdrop overlay
     Box(
@@ -194,11 +201,19 @@ fun FearlessDraftDialog(
                                         onAddChampion(champ.id)
                                         searchQuery = ""
                                     }
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                    .padding(horizontal = 10.dp, vertical = 5.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
-                            Text(champ.name, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                ChampionAvatar(
+                                    championNameOrId = champ.name,
+                                    avatarSize = 22.dp,
+                                    shape = RoundedCornerShape(3.dp),
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(champ.name, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                            }
                             Text("+ 排除", color = GoldAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
@@ -264,9 +279,15 @@ fun FearlessDraftDialog(
                                     Modifier
                                         .background(SurfaceDark, RoundedCornerShape(4.dp))
                                         .border(1.dp, GoldAccent.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
-                                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                                        .padding(horizontal = 6.dp, vertical = 3.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
+                                ChampionAvatar(
+                                    championNameOrId = champName,
+                                    avatarSize = 18.dp,
+                                    shape = RoundedCornerShape(2.dp),
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = champName,
                                     color = TextPrimary,
