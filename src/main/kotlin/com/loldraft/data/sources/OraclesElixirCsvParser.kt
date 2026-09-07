@@ -54,6 +54,12 @@ class OraclesElixirCsvParser(
         val killsIdx = colIndex["teamkills"] ?: colIndex["kills"]
         val deathsIdx = colIndex["teamdeaths"] ?: colIndex["deaths"]
         val towersIdx = colIndex["towers"]
+        val playerKillsIdx = colIndex["kills"]
+        val playerDeathsIdx = colIndex["deaths"]
+        val assistsIdx = colIndex["assists"]
+        val dpmIdx = colIndex["dpm"]
+        val vspmIdx = colIndex["vspm"]
+        val cspmIdx = colIndex["cspm"]
 
         val maxIdx =
             listOfNotNull(
@@ -84,6 +90,12 @@ class OraclesElixirCsvParser(
                 killsIdx,
                 deathsIdx,
                 towersIdx,
+                playerKillsIdx,
+                playerDeathsIdx,
+                assistsIdx,
+                dpmIdx,
+                vspmIdx,
+                cspmIdx,
             ).maxOrNull() ?: gameIdIdx
         val colLimit = maxIdx + 1
 
@@ -254,11 +266,26 @@ class OraclesElixirCsvParser(
                 if (position != "team" && !champion.isNullOrBlank()) {
                     val normalizedChamp = championNormalizer.normalize(champion)
                     val role = mapRole(position)
+                    val pKills = playerKillsIdx?.let { row.getOrNull(it)?.trim()?.toIntOrNull() }
+                    val pDeaths = playerDeathsIdx?.let { row.getOrNull(it)?.trim()?.toIntOrNull() }
+                    val pAssists = assistsIdx?.let { row.getOrNull(it)?.trim()?.toIntOrNull() }
+                    val pDpm = dpmIdx?.let { row.getOrNull(it)?.trim()?.toDoubleOrNull() }
+                    val pVspm = vspmIdx?.let { row.getOrNull(it)?.trim()?.toDoubleOrNull() }
+                    val pCspm = cspmIdx?.let { row.getOrNull(it)?.trim()?.toDoubleOrNull() }
+                    val pGd15 = gd15Idx?.let { row.getOrNull(it)?.trim()?.toDoubleOrNull() }
+
                     val selection =
                         PickSelection(
                             championId = normalizedChamp,
                             role = role,
                             playerId = playerName,
+                            kills = pKills,
+                            deaths = pDeaths,
+                            assists = pAssists,
+                            dpm = pDpm,
+                            vspm = pVspm,
+                            cspm = pCspm,
+                            goldDiffAt15 = pGd15,
                         )
                     if (isBlue) {
                         bluePicks.add(selection)
@@ -287,38 +314,29 @@ class OraclesElixirCsvParser(
                     redBans = redBans,
                     bluePicks = bluePicks,
                     redPicks = redPicks,
-                    turns = emptyList(),
                 )
 
             val blueStats =
-                if (blueFb != null || blueFd != null || blueGd15 != null || blueKills != null) {
-                    TeamGameStats(
-                        teamId = blueTeam.id,
-                        firstBlood = blueFb,
-                        firstDragon = blueFd,
-                        goldDiffAt15 = blueGd15,
-                        kills = blueKills,
-                        deaths = blueDeaths,
-                        towers = blueTowers,
-                    )
-                } else {
-                    null
-                }
+                TeamGameStats(
+                    teamId = blueTeam.id,
+                    firstBlood = blueFb,
+                    firstDragon = blueFd,
+                    goldDiffAt15 = blueGd15,
+                    kills = blueKills,
+                    deaths = blueDeaths,
+                    towers = blueTowers,
+                )
 
             val redStats =
-                if (redFb != null || redFd != null || redGd15 != null || redKills != null) {
-                    TeamGameStats(
-                        teamId = redTeam.id,
-                        firstBlood = redFb,
-                        firstDragon = redFd,
-                        goldDiffAt15 = redGd15,
-                        kills = redKills,
-                        deaths = redDeaths,
-                        towers = redTowers,
-                    )
-                } else {
-                    null
-                }
+                TeamGameStats(
+                    teamId = redTeam.id,
+                    firstBlood = redFb,
+                    firstDragon = redFd,
+                    goldDiffAt15 = redGd15,
+                    kills = redKills,
+                    deaths = redDeaths,
+                    towers = redTowers,
+                )
 
             Game(
                 id = gameId,
@@ -340,11 +358,11 @@ class OraclesElixirCsvParser(
     }
 
     private fun mapRole(position: String): Role? =
-        when (position.lowercase().trim()) {
+        when (position.lowercase()) {
             "top" -> Role.TOP
             "jng", "jungle" -> Role.JUNGLE
             "mid", "middle" -> Role.MID
-            "bot", "bottom", "adc" -> Role.BOT
+            "bot", "bottom" -> Role.BOT
             "sup", "support" -> Role.SUPPORT
             else -> null
         }
@@ -353,24 +371,33 @@ class OraclesElixirCsvParser(
         line: String,
         limit: Int = Int.MAX_VALUE,
     ): List<String> {
-        val result = mutableListOf<String>()
+        val result = ArrayList<String>()
         val current = StringBuilder()
         var inQuotes = false
+        var i = 0
 
-        for (ch in line) {
+        while (i < line.length && result.size < limit) {
+            val c = line[i]
             when {
-                ch == '\"' -> inQuotes = !inQuotes
-                ch == ',' && !inQuotes -> {
-                    result.add(current.toString())
-                    current.clear()
-                    if (result.size >= limit) {
-                        return result
+                c == '"' -> {
+                    if (inQuotes && i + 1 < line.length && line[i + 1] == '"') {
+                        current.append('"')
+                        i++
+                    } else {
+                        inQuotes = !inQuotes
                     }
                 }
-                else -> current.append(ch)
+                c == ',' && !inQuotes -> {
+                    result.add(current.toString())
+                    current.clear()
+                }
+                else -> current.append(c)
             }
+            i++
         }
-        result.add(current.toString())
+        if (result.size < limit) {
+            result.add(current.toString())
+        }
         return result
     }
 }

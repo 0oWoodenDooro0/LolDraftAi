@@ -61,6 +61,7 @@ fun DraftApp(viewModel: DraftClientViewModel = remember { DraftClientViewModel()
                     onUndo = viewModel::undoLastTurn,
                     onReset = viewModel::resetDraft,
                     onOpenFearlessDialog = { viewModel.setFearlessDialogOpen(true) },
+                    onOpenAnalytics = viewModel::openAnalyticsWindow,
                     onSelectAlgorithm = viewModel::selectPredictionAlgorithm,
                 )
 

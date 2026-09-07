@@ -59,6 +59,7 @@ fun TopBarView(
     onUndo: () -> Unit,
     onReset: () -> Unit,
     onOpenFearlessDialog: () -> Unit = {},
+    onOpenAnalytics: () -> Unit = {},
     onSelectAlgorithm: (BpPredictionAlgorithm) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -248,6 +249,20 @@ fun TopBarView(
                     ),
             ) {
                 Text("Reset", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Button(
+                onClick = onOpenAnalytics,
+                modifier = Modifier.height(36.dp),
+                shape = RoundedCornerShape(6.dp),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = CardDark,
+                        contentColor = GoldAccent,
+                    ),
+                border = BorderStroke(1.dp, GoldAccent.copy(alpha = 0.6f)),
+            ) {
+                Text("📊 數據中心", fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
         }
     }

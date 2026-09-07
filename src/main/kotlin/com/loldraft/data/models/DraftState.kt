@@ -8,6 +8,13 @@ data class PickSelection(
     val championId: String,
     val role: Role? = null,
     val playerId: String? = null,
+    val kills: Int? = null,
+    val deaths: Int? = null,
+    val assists: Int? = null,
+    val dpm: Double? = null,
+    val vspm: Double? = null,
+    val cspm: Double? = null,
+    val goldDiffAt15: Double? = null,
 )
 
 @Serializable
@@ -39,7 +46,6 @@ data class DraftState(
 
     fun withFearlessSpent(spent: Set<String>): DraftState =
         copy(seriesContext = (seriesContext ?: SeriesDraftContext()).copy(spentChampions = spent))
-
 
     fun applyTurn(turn: DraftTurn): DraftState {
         val updatedTurns = turns + turn

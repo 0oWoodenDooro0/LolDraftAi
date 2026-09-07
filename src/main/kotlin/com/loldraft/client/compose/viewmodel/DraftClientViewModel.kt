@@ -19,6 +19,7 @@ import com.loldraft.models.DraftIntentPredictor
 import com.loldraft.models.DraftRecommender
 import com.loldraft.models.EvalBarCalculator
 import com.loldraft.server.ProMatchRepository
+import com.loldraft.analytics.service.EsportsAnalyticsService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -46,6 +47,21 @@ class DraftClientViewModel(
     val uiState: StateFlow<DraftClientState> = _uiState.asStateFlow()
 
     private var calculationJob: Job? = null
+
+    val analyticsViewModel: AnalyticsViewModel by lazy {
+        AnalyticsViewModel(analyticsService = EsportsAnalyticsService(repository = repository))
+    }
+
+    private val _isAnalyticsWindowOpen = MutableStateFlow(false)
+    val isAnalyticsWindowOpen: StateFlow<Boolean> = _isAnalyticsWindowOpen.asStateFlow()
+
+    fun openAnalyticsWindow() {
+        _isAnalyticsWindowOpen.value = true
+    }
+
+    fun closeAnalyticsWindow() {
+        _isAnalyticsWindowOpen.value = false
+    }
 
     init {
         repository.initialize()
@@ -913,4 +929,5 @@ class DraftClientViewModel(
             blindPickConfidences = emptyMap(),
         )
     }
+
 }
