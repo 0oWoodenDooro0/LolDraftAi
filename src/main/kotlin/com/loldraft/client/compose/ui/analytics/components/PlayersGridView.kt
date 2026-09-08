@@ -58,7 +58,7 @@ fun PlayersGridView(viewModel: AnalyticsViewModel) {
         remember {
             listOf(
                 DataGridColumn<PlayerAnalyticsRow>("player", "選手姓名", 110.dp) { item ->
-                    Text(item.playerName, color = GoldAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(item.playerName, color = GoldAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("team", "所屬戰隊", 130.dp) { item ->
                     Text(
@@ -101,35 +101,35 @@ fun PlayersGridView(viewModel: AnalyticsViewModel) {
                     )
                 },
                 DataGridColumn("games", "場次", 60.dp, TextAlign.End) { item ->
-                    Text("${item.games}", color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text("${item.games}", color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("wins", "勝-負", 60.dp, TextAlign.Center) { item ->
-                    Text("${item.wins}-${item.losses}", color = TextSecondary, fontSize = 11.sp, textAlign = TextAlign.Center)
+                    Text("${item.wins}-${item.losses}", color = TextSecondary, fontSize = 11.sp, textAlign = TextAlign.Center, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("winrate", "勝率%", 70.dp, TextAlign.End) { item ->
                     val wrStr = String.format(Locale.US, "%.1f%%", item.winRate * 100)
                     val color = if (item.winRate >= 0.60) GreenAccent else if (item.winRate <= 0.40) RedSideColor else TextPrimary
-                    Text(wrStr, color = color, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text(wrStr, color = color, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("kda", "KDA", 65.dp, TextAlign.End) { item ->
                     val kdaStr = String.format(Locale.US, "%.2f", item.kda)
-                    Text(kdaStr, color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text(kdaStr, color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("dpm", "DPM", 70.dp, TextAlign.End) { item ->
                     val dpmStr = if (item.avgDpm > 0) String.format(Locale.US, "%.0f", item.avgDpm) else "-"
-                    Text(dpmStr, color = TextSecondary, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text(dpmStr, color = TextSecondary, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("cspm", "CSPM", 65.dp, TextAlign.End) { item ->
                     val cspmStr = if (item.avgCspm > 0) String.format(Locale.US, "%.1f", item.avgCspm) else "-"
-                    Text(cspmStr, color = TextSecondary, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text(cspmStr, color = TextSecondary, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("gd15", "GD@15", 70.dp, TextAlign.End) { item ->
                     val gdStr = if (item.avgGoldDiffAt15 != 0.0) String.format(Locale.US, "%+.0f", item.avgGoldDiffAt15) else "-"
                     val color = if (item.avgGoldDiffAt15 > 0) GreenAccent else if (item.avgGoldDiffAt15 < 0) RedSideColor else TextSecondary
-                    Text(gdStr, color = color, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text(gdStr, color = color, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("champions", "英雄池數", 75.dp, TextAlign.End) { item ->
-                    Text("${item.championPoolCount}", color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text("${item.championPoolCount}", color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
 
             )

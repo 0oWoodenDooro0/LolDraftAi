@@ -3,9 +3,10 @@ package com.loldraft.analytics.model
 import com.loldraft.data.models.Role
 
 enum class AnalyticsTab(val title: String) {
-    TEAM_ROSTER_MATRIX("戰隊英雄池看板 (Roster & Pool)"),
-    PLAYERS_GRID("選手總表 (Players Grid)"),
-    TEAMS_GRID("戰隊總表 (Teams Grid)"),
+    TEAM_ROSTER_MATRIX("戰隊英雄池看板"),
+    PLAYERS_GRID("選手數據總表"),
+    TEAMS_GRID("戰隊數據總表"),
+    SOLOQ_TRACKER("選手天梯情報"),
 }
 
 enum class SortDirection {

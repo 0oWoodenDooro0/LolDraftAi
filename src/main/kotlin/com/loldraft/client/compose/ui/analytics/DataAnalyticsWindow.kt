@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.loldraft.analytics.model.AnalyticsTab
 import com.loldraft.client.compose.ui.analytics.components.PlayersGridView
+import com.loldraft.client.compose.ui.analytics.components.SoloQIntelligenceView
 import com.loldraft.client.compose.ui.analytics.components.TeamRosterPoolView
 import com.loldraft.client.compose.ui.analytics.components.TeamsGridView
 import com.loldraft.client.compose.ui.theme.BgDark
@@ -145,7 +146,7 @@ fun DataAnalyticsApp(viewModel: AnalyticsViewModel) {
                                     contentColor = TextPrimary,
                                 ),
                         ) {
-                            Text("⎘ 複製表格 (Excel)", fontSize = 12.sp)
+                            Text("⎘ 複製表格", fontSize = 12.sp)
                         }
 
                         Button(
@@ -169,6 +170,7 @@ fun DataAnalyticsApp(viewModel: AnalyticsViewModel) {
                         AnalyticsTab.TEAM_ROSTER_MATRIX -> TeamRosterPoolView(viewModel)
                         AnalyticsTab.PLAYERS_GRID -> PlayersGridView(viewModel)
                         AnalyticsTab.TEAMS_GRID -> TeamsGridView(viewModel)
+                        AnalyticsTab.SOLOQ_TRACKER -> SoloQIntelligenceView(viewModel)
                     }
 
                     // Floating Notification Snackbar

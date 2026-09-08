@@ -112,6 +112,7 @@ fun <T> ExcelDataGrid(
                                 fontWeight = if (isSorted) FontWeight.Bold else FontWeight.SemiBold,
                                 fontSize = 12.sp,
                                 maxLines = 1,
+                                softWrap = false,
                                 overflow = TextOverflow.Ellipsis,
                                 textAlign = col.alignment,
                             )

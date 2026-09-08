@@ -1,8 +1,8 @@
 package com.loldraft.client.compose
 
 import com.loldraft.analytics.model.AnalyticsTab
-import com.loldraft.analytics.model.SortDirection
 import com.loldraft.analytics.service.EsportsAnalyticsService
+import com.loldraft.analytics.service.SoloQIntelligenceService
 import com.loldraft.client.compose.viewmodel.AnalyticsViewModel
 import com.loldraft.data.models.DraftState
 import com.loldraft.data.models.Game
@@ -10,15 +10,19 @@ import com.loldraft.data.models.PickSelection
 import com.loldraft.data.models.Role
 import com.loldraft.data.models.Side
 import com.loldraft.data.models.Team
+import com.loldraft.data.soloq.repository.SoloQRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AnalyticsViewModelTest {
@@ -134,8 +138,18 @@ class AnalyticsViewModelTest {
             val testDispatcher = StandardTestDispatcher(testScheduler)
             val testScope = TestScope(testDispatcher)
 
+            val tempConfig = File.createTempFile("vm_test_accounts", ".json")
+            tempConfig.deleteOnExit()
+
+            val soloQRepo = SoloQRepository(accountsStorageFile = tempConfig)
+            val soloQService = SoloQIntelligenceService(soloQRepository = soloQRepo, gamesSupplier = ::createSampleGames)
             val service = EsportsAnalyticsService(gamesSupplier = ::createSampleGames)
-            val viewModel = AnalyticsViewModel(analyticsService = service, coroutineScope = testScope)
+            val viewModel =
+                AnalyticsViewModel(
+                    analyticsService = service,
+                    soloQService = soloQService,
+                    coroutineScope = testScope,
+                )
 
             advanceUntilIdle()
 
@@ -195,5 +209,57 @@ class AnalyticsViewModelTest {
             assertEquals(AnalyticsTab.TEAMS_GRID, viewModel.uiState.value.currentTab)
             val teamRows = viewModel.uiState.value.teamRows
             assertTrue(teamRows.any { it.teamName == "T1" })
+
+            // Switch to SoloQ tracker tab (Tab 4)
+            viewModel.selectTab(AnalyticsTab.SOLOQ_TRACKER)
+            assertEquals(AnalyticsTab.SOLOQ_TRACKER, viewModel.uiState.value.currentTab)
+            advanceUntilIdle()
+
+            // Verify Tab 4: No fake accounts, no fake data initially
+            val soloQState = viewModel.uiState.value
+            assertEquals("Faker", soloQState.selectedSoloQPlayer)
+            // Not bound yet
+            assertNull(soloQState.selectedSoloQAccount)
+            assertNull(soloQState.soloQIntelligence)
+
+            // User manually binds Faker
+            viewModel.openAddPlayerDialog(true, "Faker")
+            viewModel.setAddPlayerFields(
+                league = "LCK",
+                team = "T1",
+                name = "Faker",
+                role = Role.MID,
+                gameName = "Hide on bush",
+                tagLine = "KR1",
+                platform = "KR",
+                region = "asia",
+            )
+            viewModel.savePlayerAccount()
+            advanceUntilIdle()
+
+            val boundAccount = viewModel.uiState.value.selectedSoloQAccount
+            assertNotNull(boundAccount)
+            assertEquals("Hide on bush", boundAccount?.gameName)
+            assertEquals("KR1", boundAccount?.tagLine)
+
+            // Verify cascading selection: Select League, Team, Player
+            viewModel.selectSoloQLeague("LCK")
+            viewModel.selectSoloQTeam("T1")
+            viewModel.selectSoloQPlayer("Faker")
+            advanceUntilIdle()
+
+            assertEquals("Faker", viewModel.uiState.value.selectedSoloQPlayer)
+
+            // Test export
+            viewModel.copyToClipboard()
+            assertNotNull(viewModel.uiState.value.notificationMessage)
+            viewModel.exportToCsv()
+            assertNotNull(viewModel.uiState.value.notificationMessage)
+
+            // Test delete player account
+            viewModel.deletePlayerAccount("Faker")
+            advanceUntilIdle()
+            assertNull(viewModel.uiState.value.selectedSoloQAccount)
+            assertNull(soloQRepo.getAccount("Faker"))
         }
 }

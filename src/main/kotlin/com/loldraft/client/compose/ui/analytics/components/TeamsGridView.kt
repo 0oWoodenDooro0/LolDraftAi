@@ -56,51 +56,51 @@ fun TeamsGridView(viewModel: AnalyticsViewModel) {
         remember {
             listOf(
                 DataGridColumn<TeamAnalyticsRow>("team", "戰隊名稱", 150.dp) { item ->
-                    Text(item.teamName, color = GoldAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(item.teamName, color = GoldAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("league", "賽區/賽事", 90.dp) { item ->
-                    Text(item.league, color = BlueSideColor, fontSize = 12.sp)
+                    Text(item.league, color = BlueSideColor, fontSize = 12.sp, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("split", "賽期", 80.dp) { item ->
-                    Text(item.split ?: "-", color = TextSecondary, fontSize = 11.sp)
+                    Text(item.split ?: "-", color = TextSecondary, fontSize = 11.sp, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("games", "總場次", 70.dp, TextAlign.End) { item ->
-                    Text("${item.games}", color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text("${item.games}", color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("wins", "勝-負", 70.dp, TextAlign.Center) { item ->
-                    Text("${item.wins}-${item.losses}", color = TextSecondary, fontSize = 11.sp, textAlign = TextAlign.Center)
+                    Text("${item.wins}-${item.losses}", color = TextSecondary, fontSize = 11.sp, textAlign = TextAlign.Center, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("winrate", "總勝率%", 80.dp, TextAlign.End) { item ->
                     val wrStr = String.format(Locale.US, "%.1f%%", item.winRate * 100)
                     val color = if (item.winRate >= 0.60) GreenAccent else if (item.winRate <= 0.40) RedSideColor else TextPrimary
-                    Text(wrStr, color = color, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text(wrStr, color = color, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("bluewinrate", "藍方勝率%", 90.dp, TextAlign.End) { item ->
-                    val bStr = if (item.blueGames > 0) String.format(Locale.US, "%.0f%% (%d)", item.blueWinRate * 100, item.blueGames) else "-"
-                    Text(bStr, color = BlueSideColor, fontSize = 11.sp, textAlign = TextAlign.End)
+                    val bStr = if (item.blueGames > 0) String.format(Locale.US, "%.0f%% · %d場", item.blueWinRate * 100, item.blueGames) else "-"
+                    Text(bStr, color = BlueSideColor, fontSize = 11.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("redwinrate", "紅方勝率%", 90.dp, TextAlign.End) { item ->
-                    val rStr = if (item.redGames > 0) String.format(Locale.US, "%.0f%% (%d)", item.redWinRate * 100, item.redGames) else "-"
-                    Text(rStr, color = RedSideColor, fontSize = 11.sp, textAlign = TextAlign.End)
+                    val rStr = if (item.redGames > 0) String.format(Locale.US, "%.0f%% · %d場", item.redWinRate * 100, item.redGames) else "-"
+                    Text(rStr, color = RedSideColor, fontSize = 11.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("firstblood", "首殺率%", 80.dp, TextAlign.End) { item ->
                     val fbStr = String.format(Locale.US, "%.1f%%", item.firstBloodRate * 100)
-                    Text(fbStr, color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text(fbStr, color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("firstdragon", "首龍率%", 80.dp, TextAlign.End) { item ->
                     val fdStr = String.format(Locale.US, "%.1f%%", item.firstDragonRate * 100)
-                    Text(fdStr, color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text(fdStr, color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("gd15", "15分經濟差", 85.dp, TextAlign.End) { item ->
                     val gdStr = if (item.avgGoldDiffAt15 != 0.0) String.format(Locale.US, "%+.0f", item.avgGoldDiffAt15) else "-"
                     val color = if (item.avgGoldDiffAt15 > 0) GreenAccent else if (item.avgGoldDiffAt15 < 0) RedSideColor else TextSecondary
-                    Text(gdStr, color = color, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text(gdStr, color = color, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
                 DataGridColumn("duration", "平均時長", 85.dp, TextAlign.End) { item ->
                     val m = item.avgGameDurationSeconds / 60
                     val s = item.avgGameDurationSeconds % 60
                     val durStr = if (item.avgGameDurationSeconds > 0) String.format(Locale.US, "%02d:%02d", m, s) else "-"
-                    Text(durStr, color = TextSecondary, fontSize = 12.sp, textAlign = TextAlign.End)
+                    Text(durStr, color = TextSecondary, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
             )
         }

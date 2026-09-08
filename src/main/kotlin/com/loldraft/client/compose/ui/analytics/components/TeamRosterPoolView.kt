@@ -308,7 +308,7 @@ private fun RolePoolCard(
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = if (isCurrent) "$player (目前選取)" else player,
+                                        text = if (isCurrent) "$player · 目前選取" else player,
                                         color = if (isCurrent) GoldAccent else TextPrimary,
                                         fontSize = 12.sp,
                                     )
@@ -428,6 +428,8 @@ private fun RolePoolCard(
                             color = TextSecondary,
                             fontSize = 12.sp,
                             textAlign = TextAlign.End,
+                            maxLines = 1,
+                            softWrap = false,
                             modifier = Modifier.weight(0.9f),
                         )
 
@@ -445,6 +447,8 @@ private fun RolePoolCard(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.End,
+                            maxLines = 1,
+                            softWrap = false,
                             modifier = Modifier.weight(1.1f),
                         )
 
@@ -459,11 +463,13 @@ private fun RolePoolCard(
                         ) {
                             if (champ.opponentBans > 0) {
                                 Text(
-                                    text = "$banText (${champ.opponentBans})",
+                                    text = "$banText · ${champ.opponentBans}次",
                                     color = if (isHighBan) RedSideColor else TextSecondary,
                                     fontSize = 11.sp,
                                     fontWeight = if (isHighBan) FontWeight.Bold else FontWeight.Normal,
                                     textAlign = TextAlign.End,
+                                    maxLines = 1,
+                                    softWrap = false,
                                 )
                             } else {
                                 Text(
@@ -508,6 +514,8 @@ private fun HeaderSortCell(
             fontSize = 11.sp,
             fontWeight = if (isSorted) FontWeight.Bold else FontWeight.Normal,
             textAlign = textAlign,
+            maxLines = 1,
+            softWrap = false,
         )
     }
 }

@@ -101,3 +101,11 @@ data/cache/
 .DS_Store
 
 .kotlin/
+
+# User Config & Riot API Keys
+config/riot_api_key.txt
+config/soloq_accounts.json
+config/*.key
+config/*.token
+config/soloq_matches_cache.json
+config/soloq_cache/

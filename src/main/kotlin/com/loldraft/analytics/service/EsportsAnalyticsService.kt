@@ -115,6 +115,40 @@ class EsportsAnalyticsService(
         return names.sorted()
     }
 
+    fun getPlayersForTeam(
+        teamNameOrId: String,
+        tournament: String? = null,
+    ): List<Pair<String, Role>> {
+        val targetSlug = ChampionNormalizer.toSlug(teamNameOrId)
+        var teamGames =
+            getGames().filter { g ->
+                ChampionNormalizer.toSlug(g.blueTeam.name) == targetSlug ||
+                    ChampionNormalizer.toSlug(g.blueTeam.id) == targetSlug ||
+                    ChampionNormalizer.toSlug(g.redTeam.name) == targetSlug ||
+                    ChampionNormalizer.toSlug(g.redTeam.id) == targetSlug
+            }
+        if (!tournament.isNullOrBlank()) {
+            teamGames = teamGames.filter { it.tournament.equals(tournament, ignoreCase = true) }
+        }
+        val playersWithRoles = mutableMapOf<String, MutableMap<Role, Int>>()
+        for (g in teamGames) {
+            val isBlue = ChampionNormalizer.toSlug(g.blueTeam.name) == targetSlug || ChampionNormalizer.toSlug(g.blueTeam.id) == targetSlug
+            val picks = if (isBlue) g.draftState.bluePicks else g.draftState.redPicks
+            for (p in picks) {
+                val pName = p.playerId?.trim()
+                if (!pName.isNullOrBlank()) {
+                    val roleCounts = playersWithRoles.getOrPut(pName) { mutableMapOf() }
+                    val r = p.role ?: Role.MID
+                    roleCounts[r] = (roleCounts[r] ?: 0) + 1
+                }
+            }
+        }
+        return playersWithRoles.map { (pName, roles) ->
+            val mostFrequentRole = roles.maxByOrNull { it.value }?.key ?: Role.MID
+            Pair(pName, mostFrequentRole)
+        }.sortedWith(compareBy({ it.second.ordinal }, { it.first }))
+    }
+
     fun getTeamRosterMatrix(
         teamNameOrId: String,
         tournament: String? = null,
