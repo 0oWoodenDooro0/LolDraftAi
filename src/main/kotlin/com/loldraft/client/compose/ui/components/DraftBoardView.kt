@@ -141,20 +141,12 @@ fun DraftSlotRow(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Turn badge
-            Box(
-                modifier =
-                    Modifier
-                        .background(if (slot.isCurrentTurn) GoldAccent else CardDark, RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 3.dp),
-            ) {
-                Text(
-                    text = "T${slot.turnNumber}",
-                    color = if (slot.isCurrentTurn) Color.Black else TextSecondary,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
+            Text(
+                text = "T${slot.turnNumber}",
+                color = if (slot.isCurrentTurn) GoldAccent else TextSecondary,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+            )
             Spacer(modifier = Modifier.width(8.dp))
 
             // Champion Avatar
@@ -228,20 +220,6 @@ fun DraftSlotRow(
                     Role.entries.forEach { roleOption ->
                         val otherSlot = teamPickSlots.find { it.role == roleOption && it.turnNumber != slot.turnNumber && it.championId != null }
                         val isCurrentRole = slot.role == roleOption
-                        val roleLabel =
-                            when (roleOption) {
-                                Role.TOP -> "TOP 上路"
-                                Role.JUNGLE -> "JGL 打野"
-                                Role.MID -> "MID 中路"
-                                Role.BOT -> "BOT 下路"
-                                Role.SUPPORT -> "SUP 輔助"
-                            }
-                        val subText =
-                            when {
-                                isCurrentRole -> "(目前位置)"
-                                otherSlot != null -> "(⇄ 與 ${otherSlot.championName ?: otherSlot.championId} 交換)"
-                                else -> "(空缺)"
-                            }
 
                         DropdownMenuItem(
                             text = {
@@ -251,24 +229,23 @@ fun DraftSlotRow(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
-                                        text = roleLabel,
+                                        text = roleOption.name,
                                         color = if (isCurrentRole) GoldAccent else TextPrimary,
-                                        fontWeight = if (isCurrentRole) FontWeight.Bold else FontWeight.Medium,
+                                        fontWeight = if (isCurrentRole) FontWeight.Bold else FontWeight.Normal,
                                         fontSize = 12.sp,
                                     )
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Text(
-                                        text = subText,
-                                        color = if (isCurrentRole) GoldAccent else TextSecondary,
-                                        fontSize = 10.sp,
-                                    )
+                                    if (otherSlot != null) {
+                                        Text(
+                                            text = "⇄ ${otherSlot.championName ?: otherSlot.championId}",
+                                            color = TextMuted,
+                                            fontSize = 10.sp,
+                                        )
+                                    }
                                 }
                             },
                             onClick = {
+                                onUpdateRole?.invoke(slot.turnNumber, roleOption)
                                 menuExpanded = false
-                                if (!isCurrentRole) {
-                                    onUpdateRole?.invoke(slot.turnNumber, roleOption)
-                                }
                             },
                         )
                     }

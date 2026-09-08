@@ -90,15 +90,8 @@ fun AiDecisionPanelView(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .background(GoldAccent, RoundedCornerShape(3.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp),
-                    ) {
-                        Text("AI INTENT", color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("AI INTENT", color = GoldAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Turn $currentTurnNumber: $actingSideName $actionName Prediction",
                         color = TextPrimary,
@@ -113,26 +106,39 @@ fun AiDecisionPanelView(
 
                 if (intentPredictions.isEmpty()) {
                     Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
-                        Text("Draft is complete or calculating intent...", color = TextMuted, fontSize = 11.sp)
+                        Text(
+                            text = if (currentTurnNumber > 20) "Draft Completed" else "No Intent Data",
+                            color = TextMuted,
+                            fontSize = 11.sp,
+                        )
                     }
                 } else {
                     Column(
-                        modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        intentPredictions.take(maxIntentDisplay).forEachIndexed { index, candidate ->
-                            IntentPredictionCard(
-                                rank = index + 1,
+                        intentPredictions.take(maxIntentDisplay).forEachIndexed { idx, candidate ->
+                            AiDecisionCandidateCard(
+                                rank = idx + 1,
                                 candidate = candidate,
-                                isSelected = selectedChampionId?.equals(candidate.championId, ignoreCase = true) == true,
-                                onClick = onChampionSelected?.let { { it(candidate.championId, candidate.predictedRole) } },
+                                isSelected = selectedChampionId == candidate.championId,
+                                onClick =
+                                    if (onChampionSelected != null) {
+                                        { onChampionSelected(candidate.championId, candidate.predictedRole) }
+                                    } else {
+                                        null
+                                    },
                             )
                         }
                     }
                 }
             }
 
-            // Section 2: Tactical Recommendations (Bans or Counter Picks)
+            // Section 2: Tactical Recommendations (Optimal Ban or Synergy/Counter Pick)
             Column(
                 modifier =
                     Modifier
@@ -150,15 +156,8 @@ fun AiDecisionPanelView(
                     val badgeText = if (isBan) "RECOMMEND BAN" else "RECOMMEND PICK"
                     val titleText = if (isBan) "Target & Priority Bans ($actingSideName)" else "Optimal Synergy & Counter ($actingSideName)"
 
-                    Box(
-                        modifier =
-                            Modifier
-                                .background(badgeColor, RoundedCornerShape(3.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp),
-                    ) {
-                        Text(badgeText, color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(badgeText, color = badgeColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = titleText,
                         color = TextPrimary,
@@ -173,11 +172,19 @@ fun AiDecisionPanelView(
 
                 if (recommendations.isEmpty()) {
                     Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
-                        Text("Calculating tactical recommendations...", color = TextMuted, fontSize = 11.sp)
+                        Text(
+                            text = if (currentTurnNumber > 20) "Draft Completed" else "Evaluating Best Options...",
+                            color = TextMuted,
+                            fontSize = 11.sp,
+                        )
                     }
                 } else {
                     Column(
-                        modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         recommendations.take(maxRecommendationsDisplay).forEach { rec ->
@@ -185,15 +192,20 @@ fun AiDecisionPanelView(
                                 rec = rec,
                                 isBan = isBan,
                                 sideColor = actingSideColor,
-                                isSelected = selectedChampionId?.equals(rec.championId, ignoreCase = true) == true,
-                                onClick = onChampionSelected?.let { { it(rec.championId, rec.recommendedRole) } },
+                                isSelected = selectedChampionId == rec.championId,
+                                onClick =
+                                    if (onChampionSelected != null) {
+                                        { onChampionSelected(rec.championId, rec.recommendedRole) }
+                                    } else {
+                                        null
+                                    },
                             )
                         }
                     }
                 }
             }
 
-            // Section 3: Composition Synergy & Flaws
+            // Section 3: Composition Flaws & Tactical Warnings
             Column(
                 modifier =
                     Modifier
@@ -207,15 +219,8 @@ fun AiDecisionPanelView(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .background(OrangeWarning, RoundedCornerShape(3.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp),
-                    ) {
-                        Text("COMPOSITION", color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("COMPOSITION", color = OrangeWarning, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Synergy & Flaw Alerts",
                         color = TextPrimary,
@@ -239,23 +244,25 @@ fun AiDecisionPanelView(
                         contentAlignment = Alignment.Center,
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("✓ Balanced Synergy", color = GreenAccent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Balanced Synergy", color = GreenAccent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "No critical composition flaws or engage voids detected.",
                                 color = TextSecondary,
                                 fontSize = 10.sp,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
                 } else {
                     Column(
-                        modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        compositionFlaws.take(3).forEach { flaw ->
+                        compositionFlaws.forEach { flaw ->
                             CompositionFlawCard(flaw = flaw)
                         }
                     }
@@ -266,7 +273,7 @@ fun AiDecisionPanelView(
 }
 
 @Composable
-fun IntentPredictionCard(
+fun AiDecisionCandidateCard(
     rank: Int,
     candidate: ChampionIntentCandidate,
     isSelected: Boolean = false,
@@ -274,7 +281,6 @@ fun IntentPredictionCard(
     modifier: Modifier = Modifier,
 ) {
     val probPercent = String.format(Locale.US, "%.1f%%", candidate.probability * 100)
-
     val cardBorderColor = if (isSelected) GoldAccent else BorderDark
     val cardBg = if (isSelected) GoldAccent.copy(alpha = 0.12f) else SurfaceDark
 
@@ -399,7 +405,7 @@ fun TacticalRecommendationCard(
         if (rec.reasons.isNotEmpty()) {
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = rec.reasons.first(),
+                text = rec.reasons.joinToString(" • "),
                 color = TextSecondary,
                 fontSize = 9.sp,
                 lineHeight = 11.sp,
@@ -417,7 +423,7 @@ fun CompositionFlawCard(
 ) {
     val color =
         when (flaw.severity) {
-            FlawSeverity.CRITICAL -> Color(0xFFFF5252)
+            FlawSeverity.CRITICAL -> RedSideColor
             FlawSeverity.WARNING -> OrangeWarning
             FlawSeverity.INFO -> BlueSideColor
         }
@@ -431,14 +437,7 @@ fun CompositionFlawCard(
                 .padding(horizontal = 6.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier =
-                Modifier
-                    .background(color, RoundedCornerShape(2.dp))
-                    .padding(horizontal = 4.dp, vertical = 1.dp),
-        ) {
-            Text(flaw.severity.name, color = Color.Black, fontSize = 7.sp, fontWeight = FontWeight.Bold)
-        }
+        Text(flaw.severity.name, color = color, fontSize = 9.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.width(6.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(

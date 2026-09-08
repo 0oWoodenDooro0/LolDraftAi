@@ -74,20 +74,13 @@ fun NextBpPredictionView(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier =
-                        Modifier
-                            .background(GoldAccent, RoundedCornerShape(4.dp))
-                            .padding(horizontal = 8.dp, vertical = 3.dp),
-                ) {
-                    Text(
-                        text = "AI BP 意圖預測",
-                        color = Color.Black,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "AI BP 意圖預測",
+                    color = GoldAccent,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "Turn $currentTurnNumber: $actingSideName $actionName 預測分析",
                     color = TextPrimary,
@@ -96,19 +89,12 @@ fun NextBpPredictionView(
                 )
             }
 
-            Box(
-                modifier =
-                    Modifier
-                        .background(actingSideColor.copy(alpha = 0.2f), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 8.dp, vertical = 3.dp),
-            ) {
-                Text(
-                    text = "$actingSideName NEXT",
-                    color = actingSideColor,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
+            Text(
+                text = "$actingSideName NEXT",
+                color = actingSideColor,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+            )
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -129,32 +115,34 @@ fun NextBpPredictionView(
                 )
             }
         } else {
-            // Vertical stacked candidate list (直的排列)
             Column(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .weight(1f, fill = false)
                         .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 intentPredictions.take(maxDisplay).forEachIndexed { index, candidate ->
-                    val probPercent = String.format(Locale.US, "%.1f%%", candidate.probability * 100)
-                    val isBanned = bannedChampionIds.any { it.equals(candidate.championId, ignoreCase = true) }
-                    val isPicked = pickedChampionIds.any { it.equals(candidate.championId, ignoreCase = true) }
-                    val isFearless = fearlessExcludedChampionIds.any { it.equals(candidate.championId, ignoreCase = true) }
-                    val isUnavailable = isBanned || isPicked || isFearless
-                    val isSelected = selectedChampionId?.equals(candidate.championId, ignoreCase = true) == true
+                    val isSelected = selectedChampionId == candidate.championId
+                    val isBanned = bannedChampionIds.contains(candidate.championId)
+                    val isPicked = pickedChampionIds.contains(candidate.championId)
+                    val isFearlessExcluded = fearlessExcludedChampionIds.contains(candidate.championId)
+                    val isUnavailable = isBanned || isPicked || isFearlessExcluded
 
+                    val probPercent = String.format(Locale.US, "%.1f%%", candidate.probability * 100)
+
+                    // Styling based on state
                     val cardBorder =
                         when {
                             isSelected -> BorderStroke(2.dp, GoldAccent)
-                            index == 0 -> BorderStroke(1.dp, GoldAccent.copy(alpha = 0.6f))
+                            index == 0 -> BorderStroke(1.5.dp, GoldAccent.copy(alpha = 0.6f))
                             else -> BorderStroke(1.dp, BorderDark)
                         }
+
                     val cardBg =
                         when {
                             isSelected -> GoldAccent.copy(alpha = 0.12f)
+                            index == 0 -> CardDark.copy(alpha = 0.85f)
                             else -> CardDark
                         }
 
@@ -170,29 +158,19 @@ fun NextBpPredictionView(
                                 }
                                 .padding(horizontal = 10.dp, vertical = 8.dp),
                     ) {
-                        // Top row: Rank, Avatar, Champ Name, Role badge, Status and Probability
+                        // Top row: Rank, Avatar, Champ Name, Role, Status and Probability
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .background(
-                                                if (isSelected || index == 0) GoldAccent else BorderDark,
-                                                RoundedCornerShape(4.dp),
-                                            )
-                                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                                ) {
-                                    Text(
-                                        text = "#${index + 1}",
-                                        color = if (isSelected || index == 0) Color.Black else TextPrimary,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                }
+                                Text(
+                                    text = "#${index + 1}",
+                                    color = if (isSelected || index == 0) GoldAccent else TextSecondary,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 ChampionAvatar(
                                     championNameOrId = candidate.championId,
@@ -212,37 +190,23 @@ fun NextBpPredictionView(
                                 )
                                 if (candidate.predictedRole != null) {
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Box(
-                                        modifier =
-                                            Modifier
-                                                .background(SurfaceDark, RoundedCornerShape(4.dp))
-                                                .padding(horizontal = 6.dp, vertical = 2.dp),
-                                    ) {
-                                        Text(
-                                            text = candidate.predictedRole.name,
-                                            color = TextSecondary,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                        )
-                                    }
+                                    Text(
+                                        text = "(${candidate.predictedRole.name})",
+                                        color = TextSecondary,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium,
+                                    )
                                 }
                             }
 
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 if (isSelected) {
-                                    Box(
-                                        modifier =
-                                            Modifier
-                                                .background(GoldAccent, RoundedCornerShape(4.dp))
-                                                .padding(horizontal = 6.dp, vertical = 2.dp),
-                                    ) {
-                                        Text(
-                                            text = "已選定 (按中間鎖定)",
-                                            color = Color.Black,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                        )
-                                    }
+                                    Text(
+                                        text = "已選定 (按中間鎖定)",
+                                        color = GoldAccent,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
                                     Spacer(modifier = Modifier.width(6.dp))
                                 } else if (!isUnavailable && onChampionSelected != null) {
                                     Text(

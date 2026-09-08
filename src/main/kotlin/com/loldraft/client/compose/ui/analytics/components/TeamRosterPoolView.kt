@@ -332,32 +332,17 @@ private fun RolePoolCard(
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp,
                     )
-                    Box(
-                        modifier =
-                            Modifier
-                                .background(BorderDark.copy(alpha = 0.6f), RoundedCornerShape(3.dp))
-                                .padding(horizontal = 4.dp, vertical = 2.dp),
-                    ) {
-                        Text("主力", color = TextSecondary, fontSize = 9.sp)
-                    }
+                    Text("(主力)", color = TextSecondary, fontSize = 11.sp)
                 }
             }
 
-            // Champion Pool Count Badge (玩過多少英雄)
-            Box(
-                modifier =
-                    Modifier
-                        .background(BlueSideDark.copy(alpha = 0.35f), RoundedCornerShape(4.dp))
-                        .border(1.dp, BlueSideColor.copy(alpha = 0.45f), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-            ) {
-                Text(
-                    text = "英雄池: ${slot.championPoolCount} 隻",
-                    color = BlueSideColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 11.sp,
-                )
-            }
+            // Champion Pool Count (玩過多少英雄)
+            Text(
+                text = "英雄池: ${slot.championPoolCount}",
+                color = BlueSideColor,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+            )
         }
 
         HorizontalDivider(color = BorderDark, thickness = 1.dp)
@@ -452,7 +437,7 @@ private fun RolePoolCard(
                             modifier = Modifier.weight(1.1f),
                         )
 
-                        // Opponent Ban Rate Badge
+                        // Opponent Ban Rate
                         val banPct = champ.opponentBanRate * 100
                         val banText = String.format(Locale.US, "%.0f%%", banPct)
                         val isHighBan = banPct >= 25.0

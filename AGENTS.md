@@ -99,8 +99,7 @@ Always use the Gradle wrapper (`./gradlew`) for Kotlin, and Docker commands for 
 ## 5. Coding Standards & Conventions
 
 ### 5.1 Kotlin Idioms
-- **Immutability First**: Default to `val` and immutable collections (`List`, `Set`, `Map`). Avoid `var` and mutable collections in public API contracts.
-- **Sealed Hierarchies for BP State**: Use `sealed interface` or `sealed class` to represent turns, draft actions (`PickAction`, `BanAction`), and state transitions.
+- **Immutability First**: Default to `val` and immutable collections (`List`, `Set`, `Map`). Avoid `var` and mutable collections in public API contracts.\n- **Sealed Hierarchies for BP State**: Use `sealed interface` or `sealed class` to represent turns, draft actions (`PickAction`, `BanAction`), and state transitions.
 - **Null Safety**: Strict adherence to non-null types. Avoid `!!` operator.
 - **Data Classes**: Use `data class` with `@Serializable` for all DTOs and domain records (`Match`, `Game`, `DraftTurn`, `Team`).
 - **Exhaustive `when`**: When handling actions or turn phases, use expression `when` without `else` where possible to guarantee compiler-enforced exhaustiveness.
@@ -126,7 +125,7 @@ To maintain a clean, professional, and consistent user interface and respect thi
 - In all tabular interfaces (such as `ExcelDataGrid`, `TeamRosterPoolView`, `SoloQIntelligenceView`, `PlayersGridView`, `TeamsGridView`), table headers and data cells **MUST NEVER WRAP onto multiple lines**.
 - Always specify `maxLines = 1`, `softWrap = false`, and `overflow = TextOverflow.Ellipsis` on all header and cell `Text` composables.
 - **Strictly use exact numbers without redundant words (表格只要精確數字，無冗餘贅字)**:
-  - Do NOT clutter table cells with redundant characters or verbose descriptions (e.g. avoid `"15場 · 10勝5敗"`, `"0 場 🚨 未登場"`, `"MIDDLE 本職"`).
+  - Do NOT clutter table cells with redundant characters or verbose descriptions (e.g. avoid `"15場 · 10勝5敗"`, `"0 場 未登場"`, `"MIDDLE 本職"`).
   - Instead, display clean, exact numbers or standard codes directly:
     - Games: `15`
     - W-L: `10-5`
@@ -161,3 +160,19 @@ To maintain a clean, professional, and consistent user interface and respect thi
     1. The user explicitly clicks the "同步天梯數據" / "立即同步" button for the currently selected player.
     2. The user registers a brand new player account ("新增選手帳號").
   - Under all other circumstances (viewing, switching players, changing filters), read solely from local cache (`cached ?: emptyList()`).
+
+### 6.5 No Emojis - Prefer Clean Icons or Pure Text (禁止使用 Emoji，文字或 Icon 擇一)
+- **嚴禁在 UI 中使用 Emoji 字符**（例如 ⚡, 📥, 📊, 🎮, ✏️, 🗑️, 🔑, 🚨, ⚠️, ➕, 🔍 等）。
+- **文字或 Icon 擇一原則**：
+  - 若使用標準向量圖標（Icon）即能維持清晰可讀性（例如關閉按鈕、刪除按鈕、搜尋欄圖標、警告指示等），應使用單一標準 Icon，不要在文字旁堆疊裝飾性圖標。
+  - 若文字已足夠清楚明瞭（例如按鈕「全局BP」、「匯出 CSV」、「數據中心」、「複製表格」、「同步天梯數據」），則直接使用純文字，不附加任何 Emoji 或裝飾圖標。
+  - 不得在文字前贅加裝飾符號（例如避免「⚡ 全局BP」、「📥 匯出 CSV」、「📊 數據中心」、「🔍 搜尋」，直接使用「全局BP」、「匯出 CSV」、「數據中心」、「搜尋」）。
+
+### 6.6 Avoid Badge-Like / Pill Tag UI Elements (禁止使用 Badge 膠囊圓角標籤 UI)
+- **嚴禁使用類似 Badge 的 UI 樣式**：即一個文字被一個長方形圓角、帶有背景色的框圍住（例如 `Box(Modifier.background(color, RoundedCornerShape(...))) { Text(...) }` 或類似的 Pill / Tag 標籤）。
+- **禁止為了標示狀態、分類或標題而加上圓角有色小方塊**：
+  - 避免將標題或標籤以色塊包裹（例如 `[LOL DRAFT AI]`, `[ANALYTICS]`, `[FEARLESS DRAFT]`, `[AI BP 意圖預測]`, `[AI INTENT]`, `[RECOMMEND BAN]`, `[COMPOSITION]`, `[BLUE]`, `[RED]` 等）。
+  - 避免將序號、角色位置、狀態或特定屬性以圓角背景包裹（例如 `[T1]`, `[#1]`, `[MID]`, `[主力]`, `[英雄池: 5 隻]`, `[秘密武器]`, `[已選定]`, `[CRITICAL]` 等）。
+- **正確呈現方式**：
+  - 直接依賴乾淨的排版層次、標準字重（`FontWeight.Bold` / `SemiBold`）、字級以及語意化文字顏色（如 `GoldAccent`, `BlueSideColor`, `RedSideColor`, `TextSecondary`）。
+  - 如需輔助標註，可使用自然括號或簡潔文字格式（例如 `(MID)`, `T1`, `#1`），保持專業簡潔的高階電競分析儀表板視覺風格。

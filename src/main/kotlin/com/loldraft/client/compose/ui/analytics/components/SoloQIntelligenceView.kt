@@ -22,6 +22,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Icon
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -133,20 +139,22 @@ fun SoloQIntelligenceView(viewModel: AnalyticsViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         Text(
-                            text = "🎮 ${account.riotId} (${account.platformId})",
+                            text = "${account.riotId} (${account.platformId})",
                             color = TextSecondary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                         )
-                        Text(
-                            text = "✏️",
-                            modifier = Modifier.clickable { viewModel.openAddPlayerDialog(true, account.playerId) },
-                            fontSize = 11.sp,
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "編輯",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(14.dp).clickable { viewModel.openAddPlayerDialog(true, account.playerId) },
                         )
-                        Text(
-                            text = "🗑️",
-                            modifier = Modifier.clickable { viewModel.deletePlayerAccount(account.playerId) },
-                            fontSize = 11.sp,
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "刪除",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(14.dp).clickable { viewModel.deletePlayerAccount(account.playerId) },
                         )
                     }
                 } else if (!state.selectedSoloQPlayer.isNullOrBlank()) {
@@ -239,7 +247,7 @@ fun SoloQIntelligenceView(viewModel: AnalyticsViewModel) {
                     border = androidx.compose.foundation.BorderStroke(1.dp, if (apiKey.isNullOrBlank()) OrangeWarning else BorderDark),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = if (apiKey.isNullOrBlank()) OrangeWarning else TextSecondary),
                 ) {
-                    Text(if (apiKey.isNullOrBlank()) "⚠️ 設定 API Key" else "🔑 API Key", fontSize = 11.sp)
+                    Text(if (apiKey.isNullOrBlank()) "設定 API Key" else "API Key", fontSize = 11.sp)
                 }
 
                 Button(
@@ -262,7 +270,7 @@ fun SoloQIntelligenceView(viewModel: AnalyticsViewModel) {
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("同步中...", fontSize = 11.sp)
                     } else {
-                        Text("⚡ 同步天梯數據", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Text("同步天梯數據", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -289,7 +297,7 @@ fun SoloQIntelligenceView(viewModel: AnalyticsViewModel) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Text("⚠️", fontSize = 16.sp)
+                    Icon(Icons.Default.Warning, contentDescription = null, tint = RedSideColor, modifier = Modifier.size(16.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
                             text = "天梯數據同步失敗",
@@ -378,7 +386,7 @@ fun SoloQIntelligenceView(viewModel: AnalyticsViewModel) {
                 EmptyStateCard(
                     title = "尚未抓取到 ${account.playerId} · ${account.riotId} 的天梯紀錄",
                     subtitle = "請確認 Riot ID 與伺服器 ${account.platformId} 正確無誤，然後點擊下方按鈕進行同步。",
-                    actionText = "⚡ 立即同步天梯數據",
+                    actionText = "立即同步天梯數據",
                     onAction = viewModel::syncRiotApiData,
                 )
             }
@@ -511,7 +519,6 @@ fun SecretPicksRadarBanner(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("🚨", fontSize = 14.sp)
             Text(
                 text = "秘密武器雷達：比賽未曾登場特殊練角",
                 color = GoldAccent,
@@ -570,19 +577,12 @@ fun SecretPickCard(pick: SoloQChampionSummary) {
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                 )
-                Box(
-                    modifier =
-                        Modifier
-                            .background(BlueSideDark.copy(alpha = 0.5f), RoundedCornerShape(3.dp))
-                            .padding(horizontal = 5.dp, vertical = 1.dp),
-                ) {
-                    Text(
-                        text = "${pick.playedRole.name} 本職",
-                        color = BlueSideColor,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
+                Text(
+                    text = "(${pick.playedRole.name} 本職)",
+                    color = BlueSideColor,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
 
             Row(
@@ -602,19 +602,12 @@ fun SecretPickCard(pick: SoloQChampionSummary) {
                 )
             }
 
-            Box(
-                modifier =
-                    Modifier
-                        .background(RedSideDark.copy(alpha = 0.4f), RoundedCornerShape(3.dp))
-                        .padding(horizontal = 5.dp, vertical = 1.dp),
-            ) {
-                Text(
-                    text = "職業賽 0 場 🚨 ${pick.secretBadgeText ?: "秘密武器"}",
-                    color = RedSideColor,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
+            Text(
+                text = "職業賽 0 場 · ${pick.secretBadgeText ?: "秘密武器"}",
+                color = RedSideColor,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+            )
         }
     }
 }
@@ -797,12 +790,11 @@ fun ChampionSummaryRow(champ: SoloQChampionSummary) {
                 softWrap = false,
             )
             if (champ.isSecretPick) {
-                Text(
-                    text = "★",
-                    color = GoldAccent,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    softWrap = false,
+                Icon(
+                    Icons.Default.Star,
+                    contentDescription = "秘密武器",
+                    tint = GoldAccent,
+                    modifier = Modifier.size(12.dp),
                 )
             }
         }
@@ -916,38 +908,21 @@ fun MatchHistoryCard(match: SoloQMatchRecord) {
                         softWrap = false,
                     )
                     if (match.isSecretPick) {
-                        Box(
-                            modifier =
-                                Modifier
-                                    .background(GoldAccent.copy(alpha = 0.2f), RoundedCornerShape(3.dp))
-                                    .padding(horizontal = 4.dp, vertical = 1.dp),
-                        ) {
-                            Text(
-                                text = "★ 秘密武器",
-                                color = GoldAccent,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
+                        Text(
+                            text = "(秘密武器)",
+                            color = GoldAccent,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
                     }
                 }
 
-                Box(
-                    modifier =
-                        Modifier
-                            .background(
-                                if (match.isPrimaryRole) BlueSideDark.copy(alpha = 0.4f) else CardDark,
-                                RoundedCornerShape(3.dp),
-                            )
-                            .padding(horizontal = 4.dp, vertical = 1.dp),
-                ) {
-                    Text(
-                        text = if (match.isPrimaryRole) "${match.playedRole.name} 本職" else "${match.playedRole.name} 副路",
-                        color = if (match.isPrimaryRole) BlueSideColor else TextMuted,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
+                Text(
+                    text = if (match.isPrimaryRole) "(${match.playedRole.name} 本職)" else "(${match.playedRole.name} 副路)",
+                    color = if (match.isPrimaryRole) BlueSideColor else TextMuted,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
         }
 
@@ -1169,7 +1144,7 @@ fun AddPlayerAccountDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "➕ 新增 / 綁定選手天梯帳號",
+                text = "新增 / 綁定選手天梯帳號",
                 color = GoldAccent,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
@@ -1354,7 +1329,7 @@ fun RiotApiKeyDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "🔑 Riot Developer API Token",
+                text = "Riot Developer API Token",
                 color = GoldAccent,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,

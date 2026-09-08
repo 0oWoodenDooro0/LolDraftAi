@@ -59,14 +59,7 @@ fun EvalBarView(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier =
-                        Modifier
-                            .background(BlueSideColor, RoundedCornerShape(3.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                ) {
-                    Text("BLUE", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                }
+                Text("BLUE", color = BlueSideColor, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text =
@@ -81,27 +74,19 @@ fun EvalBarView(
                 )
             }
 
-            // Center Advantage / Score Chip
-            Box(
-                modifier =
-                    Modifier
-                        .background(CardDark, RoundedCornerShape(12.dp))
-                        .border(1.dp, BorderDark, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 14.dp, vertical = 3.dp),
-            ) {
-                Text(
-                    text = evalBar.phaseDescription,
-                    color =
-                        when {
-                            !evalBar.isEvaluated -> GoldAccent
-                            evalBar.evalScore > 0.15 -> BlueSideColor
-                            evalBar.evalScore < -0.15 -> RedSideColor
-                            else -> GoldAccent
-                        },
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
+            // Center Advantage / Score text (no badge)
+            Text(
+                text = evalBar.phaseDescription,
+                color =
+                    when {
+                        !evalBar.isEvaluated -> GoldAccent
+                        evalBar.evalScore > 0.15 -> BlueSideColor
+                        evalBar.evalScore < -0.15 -> RedSideColor
+                        else -> GoldAccent
+                    },
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -116,14 +101,7 @@ fun EvalBarView(
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Box(
-                    modifier =
-                        Modifier
-                            .background(RedSideColor, RoundedCornerShape(3.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                ) {
-                    Text("RED", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                }
+                Text("RED", color = RedSideColor, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
 

@@ -25,8 +25,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -118,19 +121,12 @@ fun FearlessDraftDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .background(GoldAccent, RoundedCornerShape(4.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                    ) {
-                        Text(
-                            text = "FEARLESS DRAFT",
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                        )
-                    }
+                    Text(
+                        text = "FEARLESS DRAFT",
+                        color = GoldAccent,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                    )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "全局 BP 歷史角色排除管理",
@@ -148,7 +144,12 @@ fun FearlessDraftDialog(
                             .clickable(onClick = onDismiss),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("✕", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "關閉",
+                        tint = TextSecondary,
+                        modifier = Modifier.size(16.dp),
+                    )
                 }
             }
 
@@ -159,28 +160,26 @@ fun FearlessDraftDialog(
                 fontSize = 12.sp,
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Search & Quick Add Section
+            // Search Bar to add champions
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("搜尋英雄加入全局 BP 排除名單...", color = TextMuted, fontSize = 12.sp) },
+                label = { Text("搜尋英雄以加入排除名單", fontSize = 12.sp) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
                 colors =
                     OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = GoldAccent,
                         unfocusedBorderColor = BorderDark,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
-                        focusedContainerColor = CardDark,
-                        unfocusedContainerColor = CardDark,
+                        cursorColor = GoldAccent,
                     ),
             )
 
-            // Autocomplete candidate suggestions
+            // Auto-complete suggestion drop-down list
             if (candidateChampions.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(6.dp))
                 LazyColumn(
@@ -189,10 +188,9 @@ fun FearlessDraftDialog(
                             .fillMaxWidth()
                             .heightIn(max = 140.dp)
                             .background(CardDark, RoundedCornerShape(6.dp))
-                            .border(1.dp, BorderDark, RoundedCornerShape(6.dp))
-                            .padding(4.dp),
+                            .border(1.dp, BorderDark, RoundedCornerShape(6.dp)),
                 ) {
-                    items(candidateChampions, key = { it.id }) { champ ->
+                    items(candidateChampions) { champ ->
                         Row(
                             modifier =
                                 Modifier
@@ -201,7 +199,7 @@ fun FearlessDraftDialog(
                                         onAddChampion(champ.id)
                                         searchQuery = ""
                                     }
-                                    .padding(horizontal = 10.dp, vertical = 5.dp),
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
@@ -229,10 +227,10 @@ fun FearlessDraftDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = "已排除英雄 (${excludedChampionIds.size})",
-                    color = TextPrimary,
+                    text = "目前已排除英雄 (${excludedChampionIds.size})",
+                    color = GoldAccent,
                     fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                 )
 
                 if (excludedChampionIds.isNotEmpty()) {
@@ -241,7 +239,10 @@ fun FearlessDraftDialog(
                         color = RedSideColor,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { onClearAll() },
+                        modifier =
+                            Modifier
+                                .clickable(onClick = onClearAll)
+                                .padding(4.dp),
                     )
                 }
             }
@@ -271,9 +272,10 @@ fun FearlessDraftDialog(
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         excludedChampionIds.forEach { champId ->
-                            val champName = allChampions.find { it.id.equals(champId, ignoreCase = true) }?.name ?: champId
+                            val champName = allChampions.find { it.id.equals(champId, ignoreCase = true) || it.name.equals(champId, ignoreCase = true) }?.name ?: champId
                             Row(
                                 modifier =
                                     Modifier
@@ -295,12 +297,14 @@ fun FearlessDraftDialog(
                                     fontWeight = FontWeight.Medium,
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "✕",
-                                    color = RedSideColor,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.clickable { onRemoveChampion(champId) },
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "移除",
+                                    tint = RedSideColor,
+                                    modifier =
+                                        Modifier
+                                            .size(14.dp)
+                                            .clickable { onRemoveChampion(champId) },
                                 )
                             }
                         }
@@ -324,7 +328,7 @@ fun FearlessDraftDialog(
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                 ) {
                     Text(
-                        text = "📥 導入本局選角 ($currentPicksCount 英雄)",
+                        text = "導入本局選角 ($currentPicksCount 英雄)",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                     )

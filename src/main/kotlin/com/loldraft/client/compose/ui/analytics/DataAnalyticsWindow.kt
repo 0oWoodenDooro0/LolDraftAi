@@ -12,10 +12,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,14 +38,12 @@ import com.loldraft.client.compose.ui.analytics.components.SoloQIntelligenceView
 import com.loldraft.client.compose.ui.analytics.components.TeamRosterPoolView
 import com.loldraft.client.compose.ui.analytics.components.TeamsGridView
 import com.loldraft.client.compose.ui.theme.BgDark
-import com.loldraft.client.compose.ui.theme.BlueSideColor
 import com.loldraft.client.compose.ui.theme.BorderDark
 import com.loldraft.client.compose.ui.theme.CardDark
 import com.loldraft.client.compose.ui.theme.GoldAccent
 import com.loldraft.client.compose.ui.theme.GreenAccent
 import com.loldraft.client.compose.ui.theme.LolDraftAiTheme
 import com.loldraft.client.compose.ui.theme.SurfaceDark
-import com.loldraft.client.compose.ui.theme.TextMuted
 import com.loldraft.client.compose.ui.theme.TextPrimary
 import com.loldraft.client.compose.ui.theme.TextSecondary
 import com.loldraft.client.compose.viewmodel.AnalyticsViewModel
@@ -83,19 +85,12 @@ fun DataAnalyticsApp(viewModel: AnalyticsViewModel) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        Box(
-                            modifier =
-                                Modifier
-                                    .background(GoldAccent, RoundedCornerShape(4.dp))
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                        ) {
-                            Text(
-                                text = "ANALYTICS",
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                            )
-                        }
+                        Text(
+                            text = "ANALYTICS",
+                            color = GoldAccent,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                        )
                         Text(
                             text = "賽事數據與戰隊英雄池中心",
                             color = TextPrimary,
@@ -113,24 +108,31 @@ fun DataAnalyticsApp(viewModel: AnalyticsViewModel) {
                             Box(
                                 modifier =
                                     Modifier
-                                        .background(
-                                            if (isSelected) CardDark else Color.Transparent,
-                                            RoundedCornerShape(6.dp),
-                                        )
-                                        .border(
-                                            1.dp,
-                                            if (isSelected) GoldAccent else BorderDark,
-                                            RoundedCornerShape(6.dp),
-                                        )
                                         .clickable { viewModel.selectTab(tab) }
                                         .padding(horizontal = 12.dp, vertical = 6.dp),
                             ) {
-                                Text(
-                                    text = tab.title,
-                                    color = if (isSelected) GoldAccent else TextSecondary,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    fontSize = 12.sp,
-                                )
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text =
+                                            when (tab) {
+                                                AnalyticsTab.TEAM_ROSTER_MATRIX -> "戰隊英雄池看板"
+                                                AnalyticsTab.PLAYERS_GRID -> "選手數據總表"
+                                                AnalyticsTab.TEAMS_GRID -> "戰隊數據總表"
+                                                AnalyticsTab.SOLOQ_TRACKER -> "選手天梯情報"
+                                            },
+                                        color = if (isSelected) GoldAccent else TextSecondary,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        fontSize = 13.sp,
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .width(36.dp)
+                                                .height(2.dp)
+                                                .background(if (isSelected) GoldAccent else Color.Transparent),
+                                    )
+                                }
                             }
                         }
                     }
@@ -139,6 +141,7 @@ fun DataAnalyticsApp(viewModel: AnalyticsViewModel) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(
                             onClick = viewModel::copyToClipboard,
+                            modifier = Modifier.height(34.dp),
                             shape = RoundedCornerShape(6.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark),
                             colors =
@@ -146,11 +149,12 @@ fun DataAnalyticsApp(viewModel: AnalyticsViewModel) {
                                     contentColor = TextPrimary,
                                 ),
                         ) {
-                            Text("⎘ 複製表格", fontSize = 12.sp)
+                            Text("複製表格", fontSize = 12.sp)
                         }
 
                         Button(
                             onClick = viewModel::exportToCsv,
+                            modifier = Modifier.height(34.dp),
                             shape = RoundedCornerShape(6.dp),
                             colors =
                                 ButtonDefaults.buttonColors(
@@ -159,7 +163,7 @@ fun DataAnalyticsApp(viewModel: AnalyticsViewModel) {
                                 ),
                             border = androidx.compose.foundation.BorderStroke(1.dp, GoldAccent.copy(alpha = 0.5f)),
                         ) {
-                            Text("📥 匯出 CSV", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Text("匯出 CSV", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -188,7 +192,12 @@ fun DataAnalyticsApp(viewModel: AnalyticsViewModel) {
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                Text("✔", color = GreenAccent, fontSize = 14.sp)
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = GreenAccent,
+                                    modifier = Modifier.size(16.dp),
+                                )
                                 Text(
                                     text = state.notificationMessage!!,
                                     color = TextPrimary,

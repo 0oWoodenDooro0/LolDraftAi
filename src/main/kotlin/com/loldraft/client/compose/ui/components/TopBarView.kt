@@ -74,19 +74,12 @@ fun TopBarView(
     ) {
         // Logo & Title
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier =
-                    Modifier
-                        .background(GoldAccent, RoundedCornerShape(4.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-            ) {
-                Text(
-                    text = "LOL DRAFT AI",
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                )
-            }
+            Text(
+                text = "LOL DRAFT AI",
+                color = GoldAccent,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+            )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "BP Intelligence System",
@@ -213,7 +206,7 @@ fun TopBarView(
                     ),
             ) {
                 Text(
-                    text = if (fearlessCount == 0) "⚡ 全局BP" else "⚡ 全局BP ($fearlessCount)",
+                    text = if (fearlessCount == 0) "全局BP" else "全局BP ($fearlessCount)",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                 )
@@ -262,7 +255,7 @@ fun TopBarView(
                     ),
                 border = BorderStroke(1.dp, GoldAccent.copy(alpha = 0.6f)),
             ) {
-                Text("📊 數據中心", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("數據中心", fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -317,21 +310,16 @@ fun PatchInputSelector(
 
         val cleanCurrent = inputVal.trim().removePrefix("v").removePrefix("V")
         if (cleanCurrent != selectedPatch && cleanCurrent.isNotBlank()) {
-            Box(
+            Text(
+                text = "套用",
+                color = GoldAccent,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
                 modifier =
                     Modifier
-                        .background(GoldAccent.copy(alpha = 0.25f), RoundedCornerShape(4.dp))
                         .clickable { onSelectPatch(cleanCurrent) }
-                        .padding(horizontal = 4.dp, vertical = 2.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "套用",
-                    color = GoldAccent,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
+                        .padding(horizontal = 4.dp),
+            )
         }
 
         Box(

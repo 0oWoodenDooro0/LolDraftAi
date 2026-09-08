@@ -12,11 +12,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -131,7 +135,6 @@ fun PlayersGridView(viewModel: AnalyticsViewModel) {
                 DataGridColumn("champions", "英雄池數", 75.dp, TextAlign.End) { item ->
                     Text("${item.championPoolCount}", color = TextPrimary, fontSize = 12.sp, textAlign = TextAlign.End, maxLines = 1, softWrap = false)
                 },
-
             )
         }
 
@@ -157,7 +160,13 @@ fun PlayersGridView(viewModel: AnalyticsViewModel) {
                         .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("🔍 ", fontSize = 11.sp)
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = null,
+                    tint = TextMuted,
+                    modifier = Modifier.size(14.dp),
+                )
+                Spacer(modifier = Modifier.width(6.dp))
                 BasicTextField(
                     value = state.playerSearchQuery,
                     onValueChange = viewModel::setPlayerSearchQuery,

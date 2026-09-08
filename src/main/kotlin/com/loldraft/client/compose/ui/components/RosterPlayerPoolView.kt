@@ -116,14 +116,7 @@ fun PlayerRolePoolItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier =
-                        Modifier
-                            .background(BorderDark, RoundedCornerShape(3.dp))
-                            .padding(horizontal = 4.dp, vertical = 1.dp),
-                ) {
-                    Text(role.name, color = GoldAccent, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                }
+                Text(role.name, color = GoldAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(playerName, color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
